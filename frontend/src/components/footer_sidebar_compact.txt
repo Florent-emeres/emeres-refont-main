@@ -1,0 +1,20 @@
+{!sidebarCollapsed && (
+              <div className="mt-4 p-2 bg-gradient-emeres-subtle rounded-lg border border-teal-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-5 h-5 bg-gradient-emeres-primary rounded-full flex items-center justify-center">
+                    <Sparkles className="h-3 w-3 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-900">ÉMÉRÉS</div>
+                  </div>
+                </div>
+                <EmeresButton
+                  variant="primary"
+                  size="sm"
+                  fullWidth
+                  className="text-xs py-1"
+                >
+                  Découvrir
+                </EmeresButton>
+              </div>
+            )}

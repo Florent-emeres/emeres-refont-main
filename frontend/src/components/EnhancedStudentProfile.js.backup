@@ -1,0 +1,864 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Textarea } from './ui/textarea';
+import { Checkbox } from './ui/checkbox';
+import { Progress } from './ui/progress';
+import { toast } from 'sonner';
+import { 
+  User, 
+  Plus, 
+  Trash2, 
+  GraduationCap, 
+  Briefcase, 
+  Award, 
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  Calendar,
+  Building,
+  Target,
+  Star,
+  Code,
+  Heart,
+  Brain,
+  Users,
+  Zap
+} from 'lucide-react';
+
+const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
+  const [profileForm, setProfileForm] = useState({
+    // Informations personnelles
+    first_name: '',
+    last_name: '',
+    phone: '',
+    address: '',
+    city: '',
+    postal_code: '',
+    country: 'France',
+    birth_date: '',
+    nationality: '',
+    
+    // Formation
+    education_level: '',
+    field_of_study: '',
+    school_name: '',
+    graduation_year: '',
+    current_year: '',
+    specialization: '',
+    
+    // Expérience professionnelle
+    experience_level: '',
+    previous_internships: [],
+    work_experiences: [],
+    
+    // Compétences
+    hard_skills: [],
+    soft_skills: [],
+    languages: [],
+    certifications: [],
+    
+    // Préférences
+    preferred_sectors: [],
+    preferred_locations: [],
+    preferred_company_sizes: [],
+    preferred_contract_types: [],
+    salary_expectations: '',
+    availability_start: '',
+    
+    // Profil professionnel
+    bio: '',
+    career_objectives: '',
+    linkedin_url: '',
+    portfolio_url: '',
+    github_url: '',
+    
+    // Autres
+    interests: [],
+    volunteer_work: [],
+    achievements: []
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  // Listes prédéfinies pour les multi-selects
+  const hardSkillsOptions = [
+    // Informatique/Tech
+    'JavaScript', 'Python', 'React', 'Node.js', 'PHP', 'Java', 'C++', 'SQL', 'MongoDB', 'Git',
+    'Docker', 'AWS', 'Azure', 'HTML/CSS', 'TypeScript', 'Vue.js', 'Angular', 'Spring Boot',
+    'Machine Learning', 'Data Analysis', 'Kubernetes', 'Linux', 'DevOps', 'API REST',
+    
+    // Marketing/Communication
+    'Google Analytics', 'SEO/SEO', 'Adobe Creative Suite', 'Canva', 'WordPress', 'Email Marketing',
+    'Social Media Marketing', 'Content Marketing', 'PPC/AdWords', 'Facebook Ads', 'Hootsuite',
+    
+    // Finance/Gestion
+    'Excel avancé', 'Power BI', 'Tableau', 'SAP', 'Comptabilité', 'Analyse financière',
+    'Contrôle de gestion', 'Audit', 'Fiscalité', 'Budget prévisionnel',
+    
+    // Design
+    'Photoshop', 'Illustrator', 'InDesign', 'Figma', 'Sketch', 'UI/UX Design', 'Prototypage',
+    'After Effects', 'Premiere Pro', 'Blender',
+    
+    // Autres
+    'Gestion de projet', 'Scrum/Agile', 'Microsoft Office', 'Présentation', 'Rédaction',
+    'Traduction', 'Recherche', 'Analyse de données'
+  ];
+
+  const softSkillsOptions = [
+    'Communication', 'Leadership', 'Travail en équipe', 'Adaptabilité', 'Créativité',
+    'Résolution de problèmes', 'Pensée critique', 'Gestion du temps', 'Organisation',
+    'Initiative', 'Autonomie', 'Écoute active', 'Empathie', 'Négociation', 'Persuasion',
+    'Gestion du stress', 'Flexibilité', 'Curiosité', 'Persévérance', 'Esprit d\'analyse',
+    'Sens du détail', 'Orientation client', 'Innovation', 'Prise de décision', 'Diplomatie',
+    'Gestion de conflit', 'Mentorat', 'Présentation orale', 'Networking', 'Multitâche'
+  ];
+
+  const languagesOptions = [
+    'Français', 'Anglais', 'Espagnol', 'Allemand', 'Italien', 'Portugais', 'Chinois',
+    'Japonais', 'Arabe', 'Russe', 'Néerlandais', 'Suédois', 'Norvégien', 'Danois'
+  ];
+
+  const sectorsOptions = [
+    'Technologie/IT', 'Finance/Banque', 'Conseil/Stratégie', 'Marketing/Communication',
+    'Santé/Médical', 'Éducation/Formation', 'Industrie/Manufacturing', 'Énergie/Environnement',
+    'Commerce/Retail', 'Transport/Logistique', 'Immobilier', 'Média/Divertissement',
+    'ONG/Associatif', 'Fonction publique', 'Startup', 'Automobile', 'Aéronautique',
+    'Pharmaceutique', 'Cosmétique', 'Agroalimentaire', 'Mode/Luxe', 'Sport', 'Tourisme'
+  ];
+
+  const companySizeOptions = [
+    'Startup (<10 employés)', 'PME (10-50 employés)', 'ETI (50-250 employés)', 
+    'Grande entreprise (250+ employés)', 'Multinationale', 'Administration publique'
+  ];
+
+  const contractTypeOptions = [
+    'Stage', 'Apprentissage', 'Alternance', 'CDD', 'CDI', 'Freelance/Mission', 'Bénévolat'
+  ];
+
+  const educationLevels = [
+    'Bac', 'Bac+1', 'Bac+2 (BTS/DUT)', 'Bac+3 (Licence)', 'Bac+4', 'Bac+5 (Master)', 
+    'Bac+6', 'Bac+8 (Doctorat)', 'Formation professionnelle', 'Autodidacte'
+  ];
+
+  // Système de suggestions de compétences basé sur les domaines d'études
+  const skillSuggestionsByField = {
+    'développement-web': {
+      hardSkills: ['HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'SQL', 'Git', 'Python', 'MongoDB', 'Express', 'Vue.js', 'Angular', 'TypeScript', 'Docker', 'AWS'],
+      softSkills: ['résolution de problèmes', 'logique', 'collaboration agile', 'pensée critique', 'adaptabilité', 'curiosité', 'attention aux détails', 'apprentissage continu', 'communication technique', 'innovation']
+    },
+    'data-ia': {
+      hardSkills: ['Python', 'SQL', 'Machine Learning', 'PowerBI', 'Tableau', 'R', 'pandas', 'NumPy', 'TensorFlow', 'scikit-learn', 'Jupyter', 'Statistics', 'Deep Learning', 'Data Visualization', 'Excel avancé'],
+      softSkills: ['esprit analytique', 'curiosité', 'rigueur', 'communication claire', 'pensée critique', 'résolution de problèmes', 'patience', 'attention aux détails', 'créativité', 'apprentissage continu']
+    },
+    'marketing-communication': {
+      hardSkills: ['SEO', 'SEA', 'réseaux sociaux', 'Canva', 'Google Analytics', 'Adobe Creative Suite', 'WordPress', 'Email Marketing', 'Content Marketing', 'Hootsuite', 'Facebook Ads', 'Copywriting', 'Photoshop', 'Video Editing', 'CRM'],
+      softSkills: ['créativité', 'storytelling', 'empathie', 'gestion du temps', 'communication', 'persuasion', 'adaptabilité', 'sens esthétique', 'networking', 'orientation client']
+    },
+    'commerce-vente': {
+      hardSkills: ['CRM (HubSpot, Salesforce)', 'prospection', 'négociation', 'Excel', 'PowerPoint', 'LinkedIn Sales Navigator', 'Email Marketing', 'Cold Calling', 'Lead Generation', 'Sales Analytics', 'Pipedrive', 'ZoomInfo', 'Account Management', 'Product Knowledge', 'Market Research'],
+      softSkills: ['persuasion', 'écoute active', 'résilience', 'relationnel', 'empathie', 'confiance en soi', 'gestion du stress', 'persistence', 'communication', 'adaptabilité']
+    },
+    'ressources-humaines': {
+      hardSkills: ['droit du travail', 'recrutement', 'gestion paie', 'ATS', 'SIRH', 'Excel', 'PowerPoint', 'LinkedIn Recruiter', 'entretiens', 'assessment', 'formation', 'GPEC', 'paie', 'relations sociales', 'compliance'],
+      softSkills: ['empathie', 'organisation', 'discrétion', 'leadership', 'écoute active', 'diplomatie', 'gestion de conflit', 'sens des responsabilités', 'intégrité', 'communication']
+    },
+    'logistique-supply': {
+      hardSkills: ['gestion stocks', 'ERP (SAP, Odoo)', 'transport', 'Lean', 'WMS', 'Excel', 'planification', 'procurement', 'inventory management', 'supply chain', 'logistics', 'Six Sigma', 'RFID', 'forecasting', 'vendor management'],
+      softSkills: ['planification', 'réactivité', 'rigueur', 'travail d\'équipe', 'gestion du stress', 'adaptabilité', 'organisation', 'attention aux détails', 'résolution de problèmes', 'coordination']
+    },
+    'administration-gestion': {
+      hardSkills: ['Excel avancé', 'facturation', 'comptabilité', 'ERP', 'Word', 'PowerPoint', 'gestion administrative', 'archivage', 'procédures', 'bureautique', 'SAP', 'Sage', 'QuickBooks', 'documentation', 'reporting'],
+      softSkills: ['organisation', 'autonomie', 'communication écrite', 'rigueur', 'discrétion', 'méthodologie', 'gestion du temps', 'attention aux détails', 'fiabilité', 'polyvalence']
+    },
+    'design-création': {
+      hardSkills: ['Photoshop', 'Illustrator', 'Figma', 'UX/UI', 'motion design', 'InDesign', 'After Effects', 'Sketch', 'Adobe XD', 'Canva', 'Premiere Pro', 'typography', 'color theory', 'prototyping', 'wireframing'],
+      softSkills: ['créativité', 'sens critique', 'adaptabilité', 'collaboration', 'sens esthétique', 'patience', 'innovation', 'communication visuelle', 'attention aux détails', 'curiosité']
+    }
+  };
+
+  const fieldOfStudyOptions = [
+    { value: 'développement-web', label: 'Développement & Web' },
+    { value: 'data-ia', label: 'Data & IA' },
+    { value: 'marketing-communication', label: 'Marketing & Communication' },
+    { value: 'commerce-vente', label: 'Commerce & Vente' },
+    { value: 'ressources-humaines', label: 'Ressources Humaines' },
+    { value: 'logistique-supply', label: 'Logistique & Supply Chain' },
+    { value: 'administration-gestion', label: 'Administration & Gestion' },
+    { value: 'design-création', label: 'Design & Création' },
+    { value: 'autre', label: 'Autre' }
+  ];
+
+  // Fonction pour obtenir les suggestions basées sur le domaine d'études
+  const getSkillSuggestions = (fieldOfStudy) => {
+    if (!fieldOfStudy || fieldOfStudy === 'autre') {
+      return { hardSkills: [], softSkills: [] };
+    }
+    
+    return skillSuggestionsByField[fieldOfStudy] || { hardSkills: [], softSkills: [] };
+  };
+
+  const getSuggestedSkills = () => {
+    return getSkillSuggestions(profileForm.field_of_study);
+  };
+
+  const addSuggestedSkill = (skill, type) => {
+    const currentSkills = profileForm[type] || [];
+    const maxSkills = 5;
+    
+    if (currentSkills.length >= maxSkills) {
+      toast.warning(`Vous ne pouvez sélectionner que ${maxSkills} ${type === 'hard_skills' ? 'compétences techniques' : 'compétences comportementales'} maximum`);
+      return;
+    }
+    
+    if (!currentSkills.includes(skill)) {
+      setProfileForm(prev => ({
+        ...prev,
+        [type]: [...currentSkills, skill]
+      }));
+      toast.success(`${skill} ajouté avec succès !`);
+    }
+  };
+    }
+    
+    if (!currentSkills.includes(skill)) {
+      setProfileForm(prev => ({
+        ...prev,
+        [type]: [...currentSkills, skill]
+      }));
+      toast.success(`${skill} ajouté avec succès !`);
+    }
+  };
+
+  useEffect(() => {
+    if (profile) {
+      setProfileForm({
+        ...profileForm,
+        ...profile
+      });
+    }
+  }, [profile]);
+
+  const addToMultiSelect = (field, value) => {
+    if (value && !profileForm[field].includes(value)) {
+      setProfileForm(prev => ({
+        ...prev,
+        [field]: [...prev[field], value]
+      }));
+    }
+  };
+
+  const removeFromMultiSelect = (field, valueToRemove) => {
+    setProfileForm(prev => ({
+      ...prev,
+      [field]: prev[field].filter(item => item !== valueToRemove)
+    }));
+  };
+
+  const addExperience = () => {
+    const newExp = {
+      id: Date.now().toString(),
+      title: '',
+      company: '',
+      location: '',
+      start_date: '',
+      end_date: '',
+      description: '',
+      current: false
+    };
+    setProfileForm(prev => ({
+      ...prev,
+      work_experiences: [...prev.work_experiences, newExp]
+    }));
+  };
+
+  const updateExperience = (id, field, value) => {
+    setProfileForm(prev => ({
+      ...prev,
+      work_experiences: prev.work_experiences.map(exp => 
+        exp.id === id ? { ...exp, [field]: value } : exp
+      )
+    }));
+  };
+
+  const removeExperience = (id) => {
+    setProfileForm(prev => ({
+      ...prev,
+      work_experiences: prev.work_experiences.filter(exp => exp.id !== id)
+    }));
+  };
+
+  const calculateCompletionPercentage = () => {
+    const requiredFields = [
+      'first_name', 'last_name', 'phone', 'education_level', 'field_of_study', 
+      'school_name', 'bio', 'career_objectives'
+    ];
+    
+    const arrayFields = [
+      'hard_skills', 'soft_skills', 'preferred_sectors', 'preferred_locations'
+    ];
+
+    let completed = 0;
+    let total = requiredFields.length + arrayFields.length;
+
+    // Check required string fields
+    requiredFields.forEach(field => {
+      if (profileForm[field] && profileForm[field].trim() !== '') {
+        completed++;
+      }
+    });
+
+    // Check array fields
+    arrayFields.forEach(field => {
+      if (profileForm[field] && profileForm[field].length > 0) {
+        completed++;
+      }
+    });
+
+    return Math.round((completed / total) * 100);
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await updateProfile(profileForm);
+      toast.success('Profil mis à jour avec succès !');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Erreur lors de la mise à jour du profil');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completionPercentage = calculateCompletionPercentage();
+
+  return (
+    <div className="space-y-6">
+      {/* Completion Progress */}
+      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Target className="h-5 w-5 text-blue-600" />
+              <span>Complétion du profil</span>
+            </div>
+            <Badge className={completionPercentage >= 80 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+              {completionPercentage}%
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Progress value={completionPercentage} className="h-3 mb-2" />
+          <p className="text-sm text-gray-600">
+            {completionPercentage >= 80 ? 
+              'Excellent ! Votre profil est bien complété.' : 
+              'Complétez votre profil pour maximiser vos chances de matching.'
+            }
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Informations personnelles */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <User className="h-5 w-5" />
+            <span>Informations personnelles</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="first_name">Prénom *</Label>
+              <Input
+                id="first_name"
+                value={profileForm.first_name}
+                onChange={(e) => setProfileForm({...profileForm, first_name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="last_name">Nom *</Label>
+              <Input
+                id="last_name"
+                value={profileForm.last_name}
+                onChange={(e) => setProfileForm({...profileForm, last_name: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Téléphone *</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="phone"
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                  className="pl-10"
+                  placeholder="06 12 34 56 78"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="birth_date">Date de naissance</Label>
+              <Input
+                id="birth_date"
+                type="date"
+                value={profileForm.birth_date}
+                onChange={(e) => setProfileForm({...profileForm, birth_date: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">Ville</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="city"
+                  value={profileForm.city}
+                  onChange={(e) => setProfileForm({...profileForm, city: e.target.value})}
+                  className="pl-10"
+                  placeholder="Paris"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="postal_code">Code postal</Label>
+              <Input
+                id="postal_code"
+                value={profileForm.postal_code}
+                onChange={(e) => setProfileForm({...profileForm, postal_code: e.target.value})}
+                placeholder="75001"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nationality">Nationalité</Label>
+              <Input
+                id="nationality"
+                value={profileForm.nationality}
+                onChange={(e) => setProfileForm({...profileForm, nationality: e.target.value})}
+                placeholder="Française"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Formation */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <GraduationCap className="h-5 w-5" />
+            <span>Formation académique</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="education_level">Niveau d'études *</Label>
+              <Select 
+                value={profileForm.education_level || 'non-specifie'} 
+                onValueChange={(value) => setProfileForm({...profileForm, education_level: value === 'non-specifie' ? '' : value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionnez votre niveau" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="non-specifie">Non spécifié</SelectItem>
+                  {educationLevels.map(level => (
+                    <SelectItem key={level} value={level}>{level}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="current_year">Année actuelle</Label>
+              <Input
+                id="current_year"
+                value={profileForm.current_year}
+                onChange={(e) => setProfileForm({...profileForm, current_year: e.target.value})}
+                placeholder="2ème année, 1ère année Master..."
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="field_of_study">Domaine d'études *</Label>
+              <Input
+                id="field_of_study"
+                value={profileForm.field_of_study}
+                onChange={(e) => setProfileForm({...profileForm, field_of_study: e.target.value})}
+                placeholder="Informatique, Marketing, Finance..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="specialization">Spécialisation</Label>
+              <Input
+                id="specialization"
+                value={profileForm.specialization}
+                onChange={(e) => setProfileForm({...profileForm, specialization: e.target.value})}
+                placeholder="Intelligence Artificielle, Marketing Digital..."
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="school_name">Établissement *</Label>
+              <div className="relative">
+                <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="school_name"
+                  value={profileForm.school_name}
+                  onChange={(e) => setProfileForm({...profileForm, school_name: e.target.value})}
+                  className="pl-10"
+                  placeholder="École Supérieure d'Informatique"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="graduation_year">Année de diplôme</Label>
+              <Input
+                id="graduation_year"
+                value={profileForm.graduation_year}
+                onChange={(e) => setProfileForm({...profileForm, graduation_year: e.target.value})}
+                placeholder="2025"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Compétences techniques */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Code className="h-5 w-5" />
+            <span>Compétences techniques (Hard Skills)</span>
+          </CardTitle>
+          <CardDescription>
+            Sélectionnez vos compétences techniques et outils maîtrisés
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Rechercher et ajouter des compétences</Label>
+            <Select onValueChange={(value) => addToMultiSelect('hard_skills', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez une compétence technique" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {hardSkillsOptions
+                  .filter(skill => !profileForm.hard_skills.includes(skill))
+                  .map(skill => (
+                    <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {profileForm.hard_skills.map((skill, index) => (
+              <Badge key={index} variant="secondary" className="flex items-center space-x-2 px-3 py-1">
+                <Code className="h-3 w-3" />
+                <span>{skill}</span>
+                <button
+                  onClick={() => removeFromMultiSelect('hard_skills', skill)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+
+          {profileForm.hard_skills.length === 0 && (
+            <p className="text-sm text-gray-500 italic">
+              Aucune compétence technique ajoutée. Ajoutez vos compétences pour améliorer votre profil.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Compétences comportementales */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Heart className="h-5 w-5" />
+            <span>Compétences comportementales (Soft Skills)</span>
+          </CardTitle>
+          <CardDescription>
+            Sélectionnez vos qualités humaines et relationnelles
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Rechercher et ajouter des soft skills</Label>
+            <Select onValueChange={(value) => addToMultiSelect('soft_skills', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez une compétence comportementale" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {softSkillsOptions
+                  .filter(skill => !profileForm.soft_skills.includes(skill))
+                  .map(skill => (
+                    <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {profileForm.soft_skills.map((skill, index) => (
+              <Badge key={index} variant="outline" className="flex items-center space-x-2 px-3 py-1 border-pink-200 text-pink-700">
+                <Heart className="h-3 w-3" />
+                <span>{skill}</span>
+                <button
+                  onClick={() => removeFromMultiSelect('soft_skills', skill)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Langues */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Globe className="h-5 w-5" />
+            <span>Langues parlées</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Ajouter des langues</Label>
+            <Select onValueChange={(value) => addToMultiSelect('languages', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez une langue" />
+              </SelectTrigger>
+              <SelectContent>
+                {languagesOptions
+                  .filter(lang => !profileForm.languages.includes(lang))
+                  .map(lang => (
+                    <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {profileForm.languages.map((lang, index) => (
+              <Badge key={index} variant="outline" className="flex items-center space-x-2 px-3 py-1 border-blue-200 text-blue-700">
+                <Globe className="h-3 w-3" />
+                <span>{lang}</span>
+                <button
+                  onClick={() => removeFromMultiSelect('languages', lang)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Préférences professionnelles */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Target className="h-5 w-5" />
+            <span>Préférences professionnelles</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Secteurs préférés */}
+          <div className="space-y-2">
+            <Label>Secteurs d'activité recherchés *</Label>
+            <Select onValueChange={(value) => addToMultiSelect('preferred_sectors', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez des secteurs" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {sectorsOptions
+                  .filter(sector => !profileForm.preferred_sectors.includes(sector))
+                  .map(sector => (
+                    <SelectItem key={sector} value={sector}>{sector}</SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mb-4">
+            {profileForm.preferred_sectors.map((sector, index) => (
+              <Badge key={index} variant="default" className="flex items-center space-x-2 px-3 py-1">
+                <Briefcase className="h-3 w-3" />
+                <span>{sector}</span>
+                <button
+                  onClick={() => removeFromMultiSelect('preferred_sectors', sector)}
+                  className="text-white hover:text-red-200"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+
+          {/* Taille d'entreprise */}
+          <div className="space-y-2">
+            <Label>Taille d'entreprise préférée</Label>
+            <Select onValueChange={(value) => addToMultiSelect('preferred_company_sizes', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez des tailles d'entreprise" />
+              </SelectTrigger>
+              <SelectContent>
+                {companySizeOptions
+                  .filter(size => !profileForm.preferred_company_sizes.includes(size))
+                  .map(size => (
+                    <SelectItem key={size} value={size}>{size}</SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mb-4">
+            {profileForm.preferred_company_sizes.map((size, index) => (
+              <Badge key={index} variant="outline" className="flex items-center space-x-2 px-3 py-1">
+                <Building className="h-3 w-3" />
+                <span>{size}</span>
+                <button
+                  onClick={() => removeFromMultiSelect('preferred_company_sizes', size)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+
+          {/* Autres préférences */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="salary_expectations">Rémunération souhaitée</Label>
+              <Input
+                id="salary_expectations"
+                value={profileForm.salary_expectations}
+                onChange={(e) => setProfileForm({...profileForm, salary_expectations: e.target.value})}
+                placeholder="600€/mois, Gratification légale..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="availability_start">Disponibilité</Label>
+              <Input
+                id="availability_start"
+                type="date"
+                value={profileForm.availability_start}
+                onChange={(e) => setProfileForm({...profileForm, availability_start: e.target.value})}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Présentation professionnelle */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Brain className="h-5 w-5" />
+            <span>Présentation professionnelle</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="bio">À propos de moi *</Label>
+            <Textarea
+              id="bio"
+              value={profileForm.bio}
+              onChange={(e) => setProfileForm({...profileForm, bio: e.target.value})}
+              placeholder="Présentez-vous en quelques phrases : votre parcours, vos passions, ce qui vous motive..."
+              rows={4}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="career_objectives">Objectifs de carrière *</Label>
+            <Textarea
+              id="career_objectives"
+              value={profileForm.career_objectives}
+              onChange={(e) => setProfileForm({...profileForm, career_objectives: e.target.value})}
+              placeholder="Décrivez vos objectifs professionnels à court et moyen terme..."
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="linkedin_url">LinkedIn</Label>
+              <Input
+                id="linkedin_url"
+                value={profileForm.linkedin_url}
+                onChange={(e) => setProfileForm({...profileForm, linkedin_url: e.target.value})}
+                placeholder="https://linkedin.com/in/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="portfolio_url">Portfolio</Label>
+              <Input
+                id="portfolio_url"
+                value={profileForm.portfolio_url}
+                onChange={(e) => setProfileForm({...profileForm, portfolio_url: e.target.value})}
+                placeholder="https://monportfolio.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="github_url">GitHub</Label>
+              <Input
+                id="github_url"
+                value={profileForm.github_url}
+                onChange={(e) => setProfileForm({...profileForm, github_url: e.target.value})}
+                placeholder="https://github.com/username"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bouton de sauvegarde */}
+      <div className="flex justify-end">
+        <Button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="w-full md:w-auto bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 px-8 py-3"
+        >
+          {loading ? (
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Mise à jour...</span>
+            </div>
+          ) : (
+            <>
+              <Star className="h-4 w-4 mr-2" />
+              Sauvegarder le profil
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default EnhancedStudentProfile;
