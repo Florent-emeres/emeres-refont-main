@@ -1,0 +1,8 @@
+﻿id: company
+tools:
+  allowed:
+    - company_shortlisting
+    - company_matching
+    - company_job_posting
+    - company_interview_guide
+    - company_onboarding_pack

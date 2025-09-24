@@ -1,0 +1,8 @@
+﻿id: school
+tools:
+  allowed:
+    - school_cohort_tracking
+    - school_reports
+    - school_documents
+    - school_compliance
+    - school_partnerships

@@ -1,0 +1,8 @@
+﻿id: mentor
+tools:
+  allowed:
+    - mentor_mentor_plan
+    - mentor_mentor_feedback
+    - mentor_risk_detection
+    - mentor_mentor_advice
+    - mentor_final_evaluation

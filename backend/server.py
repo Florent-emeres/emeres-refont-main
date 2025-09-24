@@ -48,6 +48,8 @@ from premium_modules import (
     create_premium_modules_service, PREMIUM_MODULES_CONFIG, SUBSCRIPTION_TIERS_CONFIG
 )
 
+from app.utils.legacy import legacy_endpoint
+
 # Import des outils API
 from api_tools import create_tools_router
 
@@ -2337,6 +2339,12 @@ async def get_student_public_profile(student_id: str, current_user: User = Depen
     return public_profile
 
 # AI Matching System
+# ===== LEGACY DISABLED (PASS 4) =====
+# Function: calculate_ai_match_score(...)
+# Status : legacy, kept for backward compatibility (legacy routes still active)
+# New API: /ai/v2/{agent}/{tool}  (see app/ai/tools/<persona>/<tool>.py)
+# NOTE   : do not modify; remove only after PASS 4 cleanup
+@legacy_endpoint
 async def calculate_ai_match_score(student_profile: Dict, offer: Dict) -> Dict[str, Any]:
     """Calculate AI-powered matching score between student and offer"""
     try:
@@ -2483,7 +2491,13 @@ async def get_personalized_recommendations(current_user: User = Depends(verify_t
     return recommendations
 
 # Cover Letter Generation with AI
+# ===== LEGACY DISABLED (PASS 4) =====
+# Function: generate_cover_letter(...)
+# Status : legacy, kept for backward compatibility (legacy routes still active)
+# New API: /ai/v2/{agent}/{tool}  (see app/ai/tools/<persona>/<tool>.py)
+# NOTE   : do not modify; remove only after PASS 4 cleanup
 @api_router.post("/ai/generate-cover-letter", response_model=CoverLetterResponse)
+@legacy_endpoint
 async def generate_cover_letter(request: CoverLetterRequest):
     """Generate AI-powered personalized cover letter"""
     try:
@@ -4596,6 +4610,7 @@ def _get_context_label(context_type: str) -> str:
 # =====================================
 
 @api_router.post("/messaging/threads/candidature/create")
+@legacy_endpoint
 async def create_candidature_thread(request_data: dict, current_user: User = Depends(verify_token)):
     """Crée un thread Candidature (Étudiant ↔ Entreprise)"""
     
@@ -4691,6 +4706,7 @@ async def create_candidature_thread(request_data: dict, current_user: User = Dep
     return {"thread_id": thread.id, "created": True}
 
 @api_router.post("/messaging/threads/mentorat/create")
+@legacy_endpoint
 async def create_mentorat_thread(request_data: dict, current_user: User = Depends(verify_token)):
     """Crée un thread Mentorat (Étudiant ↔ Mentor)"""
     
@@ -4796,6 +4812,7 @@ async def create_mentorat_thread(request_data: dict, current_user: User = Depend
     return {"thread_id": thread.id, "created": True}
 
 @api_router.post("/messaging/threads/scolaire/create")
+@legacy_endpoint
 async def create_scolaire_thread(request_data: dict, current_user: User = Depends(verify_token)):
     """Crée un thread Scolaire (Étudiant ↔ École)"""
     
@@ -4938,6 +4955,7 @@ async def get_student_dashboard_stats(current_user: User = Depends(verify_token)
         }
 
 @api_router.post("/messaging/threads/{thread_id}/messages")
+@legacy_endpoint
 async def send_message_to_thread(thread_id: str, message_data: dict, current_user: User = Depends(verify_token)):
     """Envoie un message dans un thread"""
     
@@ -5032,6 +5050,7 @@ async def send_message_to_thread(thread_id: str, message_data: dict, current_use
     }
 
 @api_router.get("/messaging/search")
+@legacy_endpoint
 async def search_messages(query: str, context_type: str = None, current_user: User = Depends(verify_token)):
     """Recherche full-text dans les messages de l'utilisateur"""
     
@@ -5099,6 +5118,7 @@ async def search_messages(query: str, context_type: str = None, current_user: Us
     }
 
 @api_router.put("/messaging/threads/{thread_id}/archive")
+@legacy_endpoint
 async def archive_thread(thread_id: str, current_user: User = Depends(verify_token)):
     """Archive un thread (le masque de l'inbox mais conserve les données)"""
     
@@ -5120,6 +5140,7 @@ async def archive_thread(thread_id: str, current_user: User = Depends(verify_tok
     return {"success": True, "message": "Thread archivé avec succès"}
 
 @api_router.get("/messaging/export/{thread_id}")
+@legacy_endpoint
 async def export_thread_pdf(thread_id: str, current_user: User = Depends(verify_token)):
     """Exporte un thread en PDF (pour conformité et archivage)"""
     
@@ -5232,6 +5253,7 @@ async def export_thread_pdf(thread_id: str, current_user: User = Depends(verify_
 # Continuation des contextes et endpoints principaux
 
 @api_router.post("/messaging/threads/partenariat/create")
+@legacy_endpoint
 async def create_partenariat_thread(request_data: dict, current_user: User = Depends(verify_token)):
     """Crée un thread Partenariat (Entreprise ↔ École) - accessible aussi aux étudiants pour tests"""
     
@@ -5338,6 +5360,7 @@ async def create_partenariat_thread(request_data: dict, current_user: User = Dep
     return {"thread_id": thread.id, "created": True}
 
 @api_router.post("/messaging/threads/support/create")
+@legacy_endpoint
 async def create_support_thread(request_data: dict, current_user: User = Depends(verify_token)):
     """Crée un thread Support (Utilisateur ↔ Institution ÉMÉRÉS)"""
     
@@ -5396,6 +5419,7 @@ async def create_support_thread(request_data: dict, current_user: User = Depends
 # =====================================
 
 @api_router.get("/messaging/inbox/{user_role}")
+@legacy_endpoint
 async def get_user_inbox(user_role: str, current_user: User = Depends(verify_token)):
     """Récupère l'inbox spécifique au rôle de l'utilisateur"""
     
@@ -5509,6 +5533,7 @@ def get_context_label(context_type: str) -> str:
     return labels.get(context_type, context_type.title())
 
 @api_router.get("/messaging/threads/{thread_id}")
+@legacy_endpoint
 async def get_thread_details(thread_id: str, current_user: User = Depends(verify_token)):
     """Récupère les détails complets d'un thread"""
     
@@ -8297,6 +8322,7 @@ async def manual_award_credits(
 # =============================================================================
 
 @api_router.get("/messaging/threads")
+@legacy_endpoint
 async def get_messaging_threads(current_user: User = Depends(verify_token)):
     """Get user messaging threads"""
     try:
@@ -8322,6 +8348,7 @@ async def get_messaging_threads(current_user: User = Depends(verify_token)):
         raise HTTPException(status_code=500, detail=f"Erreur récupération threads: {str(e)}")
 
 @api_router.post("/messaging/send")
+@legacy_endpoint
 async def send_message(data: dict, current_user: User = Depends(verify_token)):
     """Send a message in a thread"""
     try:
@@ -8428,7 +8455,13 @@ async def get_ai_coach_session(session_id: str, current_user: User = Depends(ver
     session.pop("_id", None)
     return session
 
+# ===== LEGACY DISABLED (PASS 4) =====
+# Function: ai_coach_chat(...)
+# Status : legacy, kept for backward compatibility (legacy routes still active)
+# New API: /ai/v2/{agent}/{tool}  (see app/ai/tools/<persona>/<tool>.py)
+# NOTE   : do not modify; remove only after PASS 4 cleanup
 @api_router.post("/ai-coach/chat")
+@legacy_endpoint
 async def ai_coach_chat(data: dict, current_user: User = Depends(verify_token)):
     """Send message to AI Coach"""
     try:
@@ -8478,7 +8511,13 @@ async def ai_coach_chat(data: dict, current_user: User = Depends(verify_token)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur AI Coach: {str(e)}")
 
+# ===== LEGACY DISABLED (PASS 4) =====
+# Function: cv_evaluator_analyze(...)
+# Status : legacy, kept for backward compatibility (legacy routes still active)
+# New API: /ai/v2/{agent}/{tool}  (see app/ai/tools/<persona>/<tool>.py)
+# NOTE   : do not modify; remove only after PASS 4 cleanup
 @api_router.post("/cv-evaluator/analyze")
+@legacy_endpoint
 async def cv_evaluator_analyze(data: dict, current_user: User = Depends(verify_token)):
     """Analyze CV with AI Evaluator"""
     try:
@@ -8528,7 +8567,13 @@ async def cv_evaluator_analyze(data: dict, current_user: User = Depends(verify_t
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur CV Evaluator: {str(e)}")
 
+# ===== LEGACY DISABLED (PASS 4) =====
+# Function: start_interview_simulation(...)
+# Status : legacy, kept for backward compatibility (legacy routes still active)
+# New API: /ai/v2/{agent}/{tool}  (see app/ai/tools/<persona>/<tool>.py)
+# NOTE   : do not modify; remove only after PASS 4 cleanup
 @api_router.post("/interview/start")
+@legacy_endpoint
 async def start_interview_simulation(data: dict, current_user: User = Depends(verify_token)):
     """Start interview simulation"""
     try:
@@ -8571,7 +8616,13 @@ async def start_interview_simulation(data: dict, current_user: User = Depends(ve
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur Interview IA: {str(e)}")
 
+# ===== LEGACY DISABLED (PASS 4) =====
+# Function: submit_interview_answer(...)
+# Status : legacy, kept for backward compatibility (legacy routes still active)
+# New API: /ai/v2/{agent}/{tool}  (see app/ai/tools/<persona>/<tool>.py)
+# NOTE   : do not modify; remove only after PASS 4 cleanup
 @api_router.post("/interview/answer")
+@legacy_endpoint
 async def submit_interview_answer(data: dict, current_user: User = Depends(verify_token)):
     """Submit answer to interview question"""
     try:

@@ -1,0 +1,8 @@
+﻿id: admin
+tools:
+  allowed:
+    - admin_moderation
+    - admin_observability
+    - admin_catalogs
+    - admin_rgpd
+    - admin_ab_testing

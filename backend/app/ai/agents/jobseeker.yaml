@@ -1,0 +1,9 @@
+id: jobseeker
+tools:
+  allowed:
+    - jobseeker_cover_letter
+    - jobseeker_cv_optimizer
+    - jobseeker_career_explorer
+    - jobseeker_coach
+    - jobseeker_interview_start
+    - jobseeker_interview_answer
