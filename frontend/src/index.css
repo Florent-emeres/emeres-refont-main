@@ -206,7 +206,8 @@
 @layer components {
   /* Boutons ÉMÉRÉS optimisés */
   .btn-emeres-primary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-white rounded-lg transition-emeres cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-white rounded-lg cursor-pointer;
+    transition: all var(--emeres-duration-normal) var(--emeres-easing-out);
     background: var(--emeres-gradient-primary);
     box-shadow: var(--emeres-shadow-md);
   }
@@ -217,7 +218,8 @@
   }
 
   .btn-emeres-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium rounded-lg transition-emeres cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium rounded-lg cursor-pointer;
+    transition: all var(--emeres-duration-normal) var(--emeres-easing-out);
     background: var(--emeres-bg-primary);
     color: var(--emeres-text-primary);
     border: 1px solid var(--emeres-border-primary);
@@ -229,7 +231,8 @@
   }
 
   .btn-emeres-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium rounded-lg transition-emeres cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium rounded-lg cursor-pointer;
+    transition: all var(--emeres-duration-normal) var(--emeres-easing-out);
     background: transparent;
     color: var(--emeres-text-secondary);
   }
@@ -249,7 +252,7 @@
   }
 
   .card-emeres-interactive {
-    @apply card-emeres cursor-pointer;
+    @apply rounded-xl overflow-hidden transition-all duration-300 bg-white border border-gray-200 shadow-sm cursor-pointer;
   }
 
   .card-emeres-interactive:hover {
@@ -263,7 +266,8 @@
 
   /* Inputs ÉMÉRÉS optimisés */
   .input-emeres {
-    @apply w-full px-4 py-3 text-sm rounded-lg transition-emeres-fast focus-emeres;
+    @apply w-full px-4 py-3 text-sm rounded-lg;
+    transition: all var(--emeres-duration-fast) var(--emeres-easing-out);
     background: var(--emeres-bg-primary);
     border: 1px solid var(--emeres-border-primary);
     color: var(--emeres-text-primary);
@@ -284,7 +288,8 @@
   }
 
   .nav-item-emeres {
-    @apply flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-emeres cursor-pointer;
+    @apply flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer;
+    transition: all var(--emeres-duration-normal) var(--emeres-easing-out);
     color: var(--emeres-text-secondary);
   }
 
@@ -478,8 +483,7 @@ html {
 /* Focus states */
 .focus-ring:focus {
   outline: none;
-  ring: 2px solid #3B82F6;
-  ring-opacity: 50%;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
 }
 
 /* Gradient backgrounds */
@@ -592,7 +596,9 @@ html {
   }
 
   .btn-hero-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold shadow-emeres-md transition-emeres-fast;
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold;
+    box-shadow: var(--emeres-shadow-md);
+    transition: all var(--emeres-duration-fast) var(--emeres-easing-out);
     background-color: #ffffff;
     color: #0f4c81;
   }
@@ -603,7 +609,8 @@ html {
   }
 
   .btn-hero-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border font-semibold transition-emeres-fast;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border font-semibold;
+    transition: all var(--emeres-duration-fast) var(--emeres-easing-out);
     border-color: rgba(255, 255, 255, 0.6);
     color: rgba(255, 255, 255, 0.92);
   }

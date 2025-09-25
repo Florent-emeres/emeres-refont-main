@@ -4,6 +4,8 @@ import os
 import importlib
 import yaml
 from app.repo import users_repo
+from app.middleware.timed_execution import timed_execute_tool
+from app.policy.forbidden_tools_guard import ToolCall
 from pathlib import Path
 
 router = APIRouter(prefix="/ai/v2")
@@ -86,7 +88,33 @@ def run_tool(agent: str, tool: str, payload: dict, request: Request):
     req = ReqModel(**payload)
     module = importlib.import_module(module_path)
     handler = getattr(module, func_name)
-    result = handler(req)
+
+    context_dict = payload.get("context") if isinstance(payload.get("context"), dict) else None
+    context_mode = str(context_dict.get("mode", "sync")) if context_dict else "sync"
+    prompt_value = None
+    for key in ("prompt", "question", "content"):
+        value = payload.get(key)
+        if isinstance(value, str) and value:
+            prompt_value = value
+            break
+
+    tool_call = ToolCall(
+        name=tool,
+        display_name=f"{agent}:{tool}",
+        parent=agent,
+        context=context_mode,
+        prompt=prompt_value,
+    )
+    request_id = request.headers.get("X-Request-Id", "request-local")
+
+    result = timed_execute_tool(
+        handler,
+        call=tool_call,
+        ancestry=[agent],
+        request_id=request_id,
+        user_id=user_id,
+        req=req,
+    )
     if hasattr(result, "model_dump"):
         result_payload = result.model_dump()
     elif hasattr(result, "dict"):

@@ -1,0 +1,11 @@
+version: 1
+tools:
+  forbidden:
+    - web.run
+  aliases:
+    internet: web.run
+    browse: web.run
+rules:
+  forbid_async: true
+  forbid_multiline_with_forbidden: true
+  forbid_nested_ancestors: true
