@@ -64,6 +64,9 @@ const SchoolDashboard = ({ user }) => {
     description: ''
   });
   const [profileForm, setProfileForm] = useState(null);
+  const [availableStudents, setAvailableStudents] = useState([]);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [searchingStudents, setSearchingStudents] = useState(false);
   const [schoolStats, setSchoolStats] = useState({
     total_students: 0,
     active_students: 0,
@@ -419,6 +422,57 @@ const SchoolDashboard = ({ user }) => {
     } catch (error) {
       console.error('Error updating partnership:', error);
       toast.error('Impossible de mettre à jour le partenariat.');
+    }
+  };
+
+  const handleSearchStudents = async () => {
+    try {
+      setSearchingStudents(true);
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const res = await axios.get(`${backendUrl}/api/school/students/available?q=${encodeURIComponent(studentSearch)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setAvailableStudents(res.data);
+    } catch (error) {
+      console.error('Error searching students:', error);
+      toast.error('Impossible de rechercher les étudiants.');
+    } finally {
+      setSearchingStudents(false);
+    }
+  };
+
+  const handleAttachStudent = async (studentUserId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      await axios.post(`${backendUrl}/api/school/students/${studentUserId}/attach`, {}, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setAvailableStudents(availableStudents.filter(s => s.user_id !== studentUserId));
+      toast.success('Étudiant rattaché à votre établissement.');
+      const refresh = await axios.get(`${backendUrl}/api/school/students`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setStudents(refresh.data);
+    } catch (error) {
+      console.error('Error attaching student:', error);
+      toast.error(error.response?.data?.detail || 'Impossible de rattacher l\'étudiant.');
+    }
+  };
+
+  const handleDetachStudent = async (studentUserId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      await axios.post(`${backendUrl}/api/school/students/${studentUserId}/detach`, {}, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setStudents(students.filter(s => s.user_id !== studentUserId));
+      toast.success('Étudiant détaché de votre établissement.');
+    } catch (error) {
+      console.error('Error detaching student:', error);
+      toast.error('Impossible de détacher l\'étudiant.');
     }
   };
 
@@ -1177,18 +1231,21 @@ const SchoolDashboard = ({ user }) => {
 
               {/* Gestion des étudiants - données réelles */}
               {activePage === 'students-management' && (
+                <div className="space-y-6">
                 <EmeresCard>
                   <EmeresCardHeader>
-                    <EmeresCardTitle>Étudiants rattachés à l'école</EmeresCardTitle>
+                    <EmeresCardTitle>Étudiants de l'école</EmeresCardTitle>
                     <EmeresCardDescription>
-                      {students.length} étudiant(s) avec le profil renseigné à votre établissement
+                      {students.filter(s => s.attachment_status === 'attached').length} rattaché(s) ·{' '}
+                      {students.filter(s => s.attachment_status === 'declared').length} ayant déclaré votre établissement
                     </EmeresCardDescription>
                   </EmeresCardHeader>
                   <EmeresCardContent>
                     {students.length === 0 ? (
                       <p className="text-sm text-gray-500 text-center py-8">
-                        Aucun étudiant rattaché. Les étudiants qui renseignent votre établissement
-                        dans leur profil apparaîtront ici automatiquement.
+                        Aucun étudiant. Recherchez ci-dessous les comptes étudiants indépendants
+                        pour les rattacher, ou attendez que des étudiants déclarent votre
+                        établissement dans leur profil.
                       </p>
                     ) : (
                       <div className="overflow-x-auto">
@@ -1199,7 +1256,8 @@ const SchoolDashboard = ({ user }) => {
                               <th className="py-2 pr-4 font-medium">Formation</th>
                               <th className="py-2 pr-4 font-medium">Candidatures</th>
                               <th className="py-2 pr-4 font-medium">Acceptées</th>
-                              <th className="py-2 font-medium">Statut</th>
+                              <th className="py-2 pr-4 font-medium">Rattachement</th>
+                              <th className="py-2 font-medium">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1213,10 +1271,32 @@ const SchoolDashboard = ({ user }) => {
                                 </td>
                                 <td className="py-3 pr-4 text-gray-600">{student.applications_count}</td>
                                 <td className="py-3 pr-4 text-gray-600">{student.accepted_count}</td>
-                                <td className="py-3">
-                                  <EmeresBadge variant={student.is_active ? 'primary' : 'secondary'} size="sm">
-                                    {student.is_active ? 'Actif' : 'Inactif'}
+                                <td className="py-3 pr-4">
+                                  <EmeresBadge
+                                    variant={student.attachment_status === 'attached' ? 'primary' : 'secondary'}
+                                    size="sm"
+                                  >
+                                    {student.attachment_status === 'attached' ? 'Rattaché' : 'A rattaché'}
                                   </EmeresBadge>
+                                </td>
+                                <td className="py-3">
+                                  {student.attachment_status === 'attached' ? (
+                                    <EmeresButton
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDetachStudent(student.user_id)}
+                                    >
+                                      Détacher
+                                    </EmeresButton>
+                                  ) : (
+                                    <EmeresButton
+                                      variant="primary"
+                                      size="sm"
+                                      onClick={() => handleAttachStudent(student.user_id)}
+                                    >
+                                      Rattacher
+                                    </EmeresButton>
+                                  )}
                                 </td>
                               </tr>
                             ))}
@@ -1226,9 +1306,62 @@ const SchoolDashboard = ({ user }) => {
                     )}
                   </EmeresCardContent>
                 </EmeresCard>
-              )}
 
-              {/* Partenariats - données réelles */}
+                <EmeresCard>
+                  <EmeresCardHeader>
+                    <EmeresCardTitle>Rechercher un compte étudiant indépendant</EmeresCardTitle>
+                    <EmeresCardDescription>
+                      Les étudiants ayant créé leur compte sans établissement peuvent être rattachés ici
+                    </EmeresCardDescription>
+                  </EmeresCardHeader>
+                  <EmeresCardContent>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <EmeresInput
+                        placeholder="Nom, email ou établissement..."
+                        value={studentSearch}
+                        onChange={(e) => setStudentSearch(e.target.value)}
+                      />
+                      <EmeresButton
+                        variant="primary"
+                        onClick={handleSearchStudents}
+                        disabled={searchingStudents}
+                      >
+                        {searchingStudents ? 'Recherche...' : 'Rechercher'}
+                      </EmeresButton>
+                    </div>
+                    {availableStudents.length > 0 && (
+                      <div className="mt-4 space-y-3">
+                        {availableStudents.map((student) => (
+                          <div key={student.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-gray-900">
+                                {student.first_name} {student.last_name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {student.institution_name || 'Sans établissement'}
+                                {student.email ? ` · ${student.email}` : ''}
+                              </p>
+                            </div>
+                            <EmeresButton
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleAttachStudent(student.user_id)}
+                            >
+                              Rattacher
+                            </EmeresButton>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {studentSearch && !searchingStudents && availableStudents.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Aucun compte indépendant trouvé pour cette recherche.
+                      </p>
+                    )}
+                  </EmeresCardContent>
+                </EmeresCard>
+                </div>
+              )}
               {activePage === 'partnerships' && (
                 <div className="space-y-6">
                   <EmeresCard>

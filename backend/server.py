@@ -1931,6 +1931,8 @@ async def get_notifications(current_user: User = Depends(verify_token)):
             .limit(50)
             .to_list(50)
         )
+        for notification in notifications:
+            notification.pop("_id", None)
 
         unread_count = await db.notifications.count_documents(
             {"user_id": current_user.id, "is_read": False}

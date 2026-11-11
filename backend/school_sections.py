@@ -86,13 +86,34 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
             ]
         }
 
-    async def get_school_students(school_name: str) -> list[dict]:
-        if not school_name.strip():
-            return []
+    async def get_attached_students(school_user_id: str) -> list[dict]:
         return (
-            await db.student_profiles.find(school_name_filters(school_name))
+            await db.student_profiles.find({"school_id": school_user_id})
             .sort("created_at", -1)
             .to_list(None)
+        )
+
+    async def get_declared_students(school_name: str) -> list[dict]:
+        if not school_name.strip():
+            return []
+        declared = school_name_filters(school_name)
+        declared["school_id"] = None
+        return await db.student_profiles.find(declared).sort("created_at", -1).to_list(None)
+
+    async def notify_user(user_id: str, title: str, message: str, notification_type: str):
+        await db.notifications.insert_one(
+            {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": title,
+                "message": message,
+                "type": notification_type,
+                "data": {},
+                "is_read": False,
+                "is_sent": True,
+                "created_at": now().isoformat(),
+                "read_at": None,
+            }
         )
 
     # ==========================================================================
@@ -135,7 +156,8 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
     @router.get("/school/stats")
     async def get_school_stats(current_user: dict = Depends(require_school)):
         profile = await get_school_profile(current_user)
-        students = await get_school_students(profile.get("school_name", ""))
+        students = await get_attached_students(current_user["id"])
+        declared = await get_declared_students(profile.get("school_name", ""))
         student_user_ids = [s.get("user_id") for s in students if s.get("user_id")]
 
         applications: list[dict] = []
@@ -161,6 +183,7 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
             "active_students": len(
                 {a.get("student_id") for a in applications if a.get("student_id")}
             ),
+            "declared_students": len(declared),
             "partnerships_count": partnerships_count,
             "placement_rate": placement_rate,
             "average_satisfaction": average_satisfaction,
@@ -173,8 +196,10 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
     @router.get("/school/students")
     async def list_school_students(current_user: dict = Depends(require_school)):
         profile = await get_school_profile(current_user)
-        students = await get_school_students(profile.get("school_name", ""))
-        student_user_ids = [s.get("user_id") for s in students if s.get("user_id")]
+        attached = await get_attached_students(current_user["id"])
+        declared = await get_declared_students(profile.get("school_name", ""))
+        students = [(s, "attached") for s in attached] + [(s, "declared") for s in declared]
+        student_user_ids = [s.get("user_id") for s, _ in students if s.get("user_id")]
 
         applications: list[dict] = []
         if student_user_ids:
@@ -187,12 +212,13 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
             by_student.setdefault(key, []).append(application)
 
         enriched = []
-        for student in students:
+        for student, attachment_status in students:
             student_applications = by_student.get(student.get("user_id") or "", [])
             enriched.append(
                 clean(
                     {
                         **student,
+                        "attachment_status": attachment_status,
                         "applications_count": len(student_applications),
                         "accepted_count": sum(
                             1 for a in student_applications if a.get("status") == "accepted"
@@ -202,6 +228,79 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
                 )
             )
         return enriched
+
+    @router.get("/school/students/available")
+    async def list_available_students(q: str = "", current_user: dict = Depends(require_school)):
+        profile = await get_school_profile(current_user)
+        query_filter: dict = {"school_id": None}
+        declared = school_name_filters(profile.get("school_name", ""))
+        query_filter["$nor"] = [declared]
+        if q.strip():
+            escaped = re.escape(q.strip())
+            search = {"$regex": escaped, "$options": "i"}
+            query_filter["$or"] = [
+                {"first_name": search},
+                {"last_name": search},
+                {"email": search},
+                {"institution_name": search},
+            ]
+        students = (
+            await db.student_profiles.find(query_filter)
+            .sort("created_at", -1)
+            .limit(20)
+            .to_list(None)
+        )
+        return [clean(s) for s in students]
+
+    @router.post("/school/students/{student_user_id}/attach")
+    async def attach_student(student_user_id: str, current_user: dict = Depends(require_school)):
+        profile = await get_school_profile(current_user)
+        student = await db.student_profiles.find_one({"user_id": student_user_id})
+        if not student:
+            raise HTTPException(status_code=404, detail="Étudiant non trouvé")
+        if student.get("school_id") and student["school_id"] != current_user["id"]:
+            raise HTTPException(
+                status_code=409, detail="Étudiant déjà rattaché à un autre établissement"
+            )
+        await db.student_profiles.update_one(
+            {"user_id": student_user_id},
+            {
+                "$set": {
+                    "school_id": current_user["id"],
+                    "school_name": profile.get("school_name", ""),
+                    "updated_at": now(),
+                }
+            },
+        )
+        school_label = profile.get("school_name", "votre établissement")
+        await notify_user(
+            student_user_id,
+            "Rattachement à un établissement",
+            f"Vous avez été rattaché à {school_label}.",
+            "school",
+        )
+        return {"success": True, "school_id": current_user["id"]}
+
+    @router.post("/school/students/{student_user_id}/detach")
+    async def detach_student(student_user_id: str, current_user: dict = Depends(require_school)):
+        student = await db.student_profiles.find_one({"user_id": student_user_id})
+        if not student:
+            raise HTTPException(status_code=404, detail="Étudiant non trouvé")
+        if student.get("school_id") != current_user["id"]:
+            raise HTTPException(
+                status_code=404, detail="Étudiant non rattaché à votre établissement"
+            )
+        await db.student_profiles.update_one(
+            {"user_id": student_user_id},
+            {"$set": {"school_id": None, "school_name": None, "updated_at": now()}},
+        )
+        await notify_user(
+            student_user_id,
+            "Détachement d'un établissement",
+            "Votre rattachement à l'établissement a été retiré.",
+            "school",
+        )
+        return {"success": True}
 
     # ==========================================================================
     # PARTENARIATS
@@ -311,8 +410,7 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
 
     @router.get("/school/analytics")
     async def get_school_analytics(current_user: dict = Depends(require_school)):
-        profile = await get_school_profile(current_user)
-        students = await get_school_students(profile.get("school_name", ""))
+        students = await get_attached_students(current_user["id"])
         student_user_ids = [s.get("user_id") for s in students if s.get("user_id")]
 
         status_counts = {
@@ -358,8 +456,7 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
 
     @router.get("/school/activity")
     async def get_school_activity(current_user: dict = Depends(require_school)):
-        profile = await get_school_profile(current_user)
-        students = await get_school_students(profile.get("school_name", ""))
+        students = await get_attached_students(current_user["id"])
         recent_students = sorted(
             students, key=lambda s: s.get("created_at") or now(), reverse=True
         )[:5]
