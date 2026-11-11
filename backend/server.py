@@ -2836,708 +2836,6 @@ async def generate_cover_letter(request: CoverLetterRequest):
 # MENTOR SYSTEM ENDPOINTS
 # ========================================
 
-# Données fictives de mentors disponibles pour étudiants
-AVAILABLE_MENTORS_FOR_STUDENTS = [
-    {
-        "id": "mentor-001",
-        "user_id": "user-mentor-001",
-        "first_name": "Jean-Pierre",
-        "last_name": "Lambert",
-        "company": "Google France",
-        "position": "Senior Software Engineer",
-        "experience_years": 12,
-        "specializations": [
-            "Développement Web",
-            "Intelligence Artificielle",
-            "Architecture Logicielle",
-            "Mentoring",
-        ],
-        "bio": "Ingénieur logiciel senior chez Google avec 12 ans d'expérience. Passionné par l'IA et le développement web. J'ai accompagné plus de 20 étudiants dans leur transition vers le monde professionnel.",
-        "availability_hours_per_week": 6,
-        "preferred_communication": ["video", "email", "chat"],
-        "linkedin_url": "https://linkedin.com/in/jp-lambert",
-        "current_students_count": 2,
-        "max_students": 5,
-        "mentorship_style": "Pratique et orienté projet",
-        "success_stories": 23,
-        "matching_keywords": [
-            "développement",
-            "web",
-            "intelligence artificielle",
-            "ia",
-            "python",
-            "javascript",
-            "react",
-            "machine learning",
-        ],
-    },
-    {
-        "id": "mentor-002",
-        "user_id": "user-mentor-002",
-        "first_name": "Sophie",
-        "last_name": "Moreau",
-        "company": "L'Oréal",
-        "position": "Directrice Marketing Digital",
-        "experience_years": 10,
-        "specializations": ["Marketing Digital", "Stratégie de Marque", "E-commerce", "Leadership"],
-        "bio": "Directrice Marketing Digital chez L'Oréal. Experte en stratégies digitales et e-commerce. J'aide les étudiants à développer leur vision stratégique et leurs compétences en marketing.",
-        "availability_hours_per_week": 4,
-        "preferred_communication": ["video", "email"],
-        "linkedin_url": "https://linkedin.com/in/sophie-moreau-marketing",
-        "current_students_count": 1,
-        "max_students": 3,
-        "mentorship_style": "Stratégique et analytique",
-        "success_stories": 15,
-        "matching_keywords": [
-            "marketing",
-            "digital",
-            "e-commerce",
-            "stratégie",
-            "marque",
-            "publicité",
-            "réseaux sociaux",
-        ],
-    },
-    {
-        "id": "mentor-003",
-        "user_id": "user-mentor-003",
-        "first_name": "Marc",
-        "last_name": "Dubois",
-        "company": "BCG (Boston Consulting Group)",
-        "position": "Senior Consultant",
-        "experience_years": 8,
-        "specializations": [
-            "Conseil en Stratégie",
-            "Transformation Digitale",
-            "Management",
-            "Analytics",
-        ],
-        "bio": "Consultant senior chez BCG, spécialisé en transformation digitale et stratégie d'entreprise. J'accompagne les étudiants dans le développement de leur pensée analytique et stratégique.",
-        "availability_hours_per_week": 5,
-        "preferred_communication": ["video", "phone", "email"],
-        "linkedin_url": "https://linkedin.com/in/marc-dubois-bcg",
-        "current_students_count": 3,
-        "max_students": 4,
-        "mentorship_style": "Analytique et structuré",
-        "success_stories": 18,
-        "matching_keywords": [
-            "conseil",
-            "stratégie",
-            "management",
-            "consulting",
-            "analytique",
-            "transformation",
-            "digital",
-        ],
-    },
-    {
-        "id": "mentor-004",
-        "user_id": "user-mentor-004",
-        "first_name": "Amélie",
-        "last_name": "Chen",
-        "company": "Figma",
-        "position": "Lead UX Designer",
-        "experience_years": 7,
-        "specializations": ["UX Design", "UI Design", "Design Thinking", "Prototypage"],
-        "bio": "Lead UX Designer chez Figma. Passionnée par l'expérience utilisateur et le design thinking. J'aide les étudiants à développer leur portfolio et leurs compétences en design.",
-        "availability_hours_per_week": 3,
-        "preferred_communication": ["video", "chat"],
-        "linkedin_url": "https://linkedin.com/in/amelie-chen-ux",
-        "current_students_count": 2,
-        "max_students": 4,
-        "mentorship_style": "Créatif et hands-on",
-        "success_stories": 12,
-        "matching_keywords": [
-            "ux",
-            "ui",
-            "design",
-            "figma",
-            "prototypage",
-            "design thinking",
-            "user experience",
-        ],
-    },
-    {
-        "id": "mentor-005",
-        "user_id": "user-mentor-005",
-        "first_name": "Thomas",
-        "last_name": "Rodriguez",
-        "company": "Crédit Agricole",
-        "position": "Directeur Innovation & Fintech",
-        "experience_years": 15,
-        "specializations": ["Finance", "Fintech", "Innovation", "Entrepreneuriat"],
-        "bio": "Directeur Innovation chez Crédit Agricole. Expert en fintech et innovation financière. J'accompagne les étudiants intéressés par la finance et l'entrepreneuriat.",
-        "availability_hours_per_week": 4,
-        "preferred_communication": ["video", "email", "phone"],
-        "linkedin_url": "https://linkedin.com/in/thomas-rodriguez-fintech",
-        "current_students_count": 1,
-        "max_students": 3,
-        "mentorship_style": "Expérientiel et networking",
-        "success_stories": 25,
-        "matching_keywords": [
-            "finance",
-            "fintech",
-            "innovation",
-            "entrepreneuriat",
-            "startup",
-            "investissement",
-            "banking",
-        ],
-    },
-    {
-        "id": "mentor-006",
-        "user_id": "user-mentor-006",
-        "first_name": "Camille",
-        "last_name": "Martin",
-        "company": "Startup Studio",
-        "position": "CEO & Founder",
-        "experience_years": 9,
-        "specializations": ["Entrepreneuriat", "Startup", "Levée de fonds", "Product Management"],
-        "bio": "CEO et fondatrice d'un startup studio. J'ai créé 3 entreprises et levé plus de 10M€. Je partage mon expérience avec les futurs entrepreneurs.",
-        "availability_hours_per_week": 6,
-        "preferred_communication": ["video", "chat", "email"],
-        "linkedin_url": "https://linkedin.com/in/camille-martin-entrepreneur",
-        "current_students_count": 0,
-        "max_students": 4,
-        "mentorship_style": "Entrepreneurial et pragmatique",
-        "success_stories": 20,
-        "matching_keywords": [
-            "entrepreneuriat",
-            "startup",
-            "création entreprise",
-            "levée de fonds",
-            "product management",
-            "innovation",
-        ],
-    },
-]
-
-# Données fictives d'annonces d'étudiants
-STUDENT_MENTORSHIP_ADS = [
-    {
-        "id": "ad-001",
-        "student_id": "student-ad-001",
-        "student_name": "Alice Petit",
-        "title": "Recherche mentor en Data Science pour projet de fin d'études",
-        "description": "Étudiante en Master 2 Data Science à l'ENSAI, je travaille sur un projet d'analyse prédictive dans le domaine de la santé. Je recherche un mentor expérimenté pour m'aider à affiner ma méthodologie et préparer ma soutenance.",
-        "field_of_study": "Data Science",
-        "desired_expertise": ["Machine Learning", "Python", "Statistiques", "Santé"],
-        "mentorship_goals": [
-            "Finaliser projet de fin d'études",
-            "Préparer soutenance",
-            "Orientation professionnelle",
-        ],
-        "mentorship_type": "individual",
-        "duration_expected": "3 mois",
-        "time_commitment": "2h/semaine",
-        "preferred_communication": ["video", "email"],
-        "availability_schedule": "Mardis et jeudis 18h-20h",
-        "urgency_level": "high",
-        "is_active": True,
-        "responses_count": 2,
-        "created_at": "2024-12-01T00:00:00Z",
-    },
-    {
-        "id": "ad-002",
-        "student_id": "student-ad-002",
-        "student_name": "Kevin Zhao",
-        "title": "Étudiant en développement web cherche mentor startup",
-        "description": "Développeur web junior passionné par l'écosystème startup. Je souhaite créer ma première application SaaS et recherche un mentor qui a l'expérience de la création d'entreprise tech.",
-        "field_of_study": "Développement Web",
-        "desired_expertise": ["Entrepreneuriat", "Startup", "SaaS", "Product Management"],
-        "mentorship_goals": [
-            "Créer une startup",
-            "Développer un MVP",
-            "Comprendre le business model",
-        ],
-        "mentorship_type": "individual",
-        "duration_expected": "6 mois",
-        "time_commitment": "3h/semaine",
-        "preferred_communication": ["video", "chat"],
-        "availability_schedule": "Flexibles, weekends préférés",
-        "urgency_level": "medium",
-        "is_active": True,
-        "responses_count": 1,
-        "created_at": "2024-11-28T00:00:00Z",
-    },
-    {
-        "id": "ad-003",
-        "student_id": "student-ad-003",
-        "student_name": "Sarah Ben Ali",
-        "title": "Recherche mentor en Marketing Digital - Alternance",
-        "description": "En recherche d'alternance en marketing digital, j'aimerais être accompagnée par un professionnel expérimenté pour améliorer mes compétences en SEO/SEM et stratégie de contenu.",
-        "field_of_study": "Marketing Digital",
-        "desired_expertise": ["SEO/SEM", "Content Marketing", "Analytics", "Stratégie digitale"],
-        "mentorship_goals": [
-            "Trouver une alternance",
-            "Améliorer portfolio",
-            "Développer expertise SEO",
-        ],
-        "mentorship_type": "individual",
-        "duration_expected": "4 mois",
-        "time_commitment": "1h/semaine",
-        "preferred_communication": ["video", "email"],
-        "availability_schedule": "Vendredis 17h-19h",
-        "urgency_level": "medium",
-        "is_active": True,
-        "responses_count": 3,
-        "created_at": "2024-11-25T00:00:00Z",
-    },
-]
-
-# Données fictives d'étudiants disponibles pour mentorat
-AVAILABLE_STUDENTS_FOR_MENTORSHIP = [
-    {
-        "id": "available-student-001",
-        "user_id": "user-available-001",
-        "last_name": "Rodriguez",
-        "first_name": "Pablo",
-        "email": "pablo.rodriguez@student.emeres.fr",
-        "institution_name": "EPITECH Paris",
-        "field_of_study": "Intelligence Artificielle",
-        "degree_preparing": "Master",
-        "study_year": "1ère",
-        "graduation_year": "2026",
-        "main_skills": ["Python", "Machine Learning", "TensorFlow", "Data Analysis"],
-        "search_objective": "Stage",
-        "search_domain": "IA et Data Science",
-        "mentorship_goals": [
-            "Développer expertise en IA",
-            "Préparer entretiens techniques",
-            "Améliorer portfolio GitHub",
-        ],
-        "preferred_mentor_profile": "Expert en IA/ML avec expérience en entreprise",
-        "is_seeking_mentor": True,
-        "max_mentors": 1,
-        "current_mentors_count": 0,
-        "availability_schedule": "Lundis et mercredis 18h-20h",
-        "matching_keywords": [
-            "intelligence artificielle",
-            "machine learning",
-            "data science",
-            "python",
-            "tensorflow",
-        ],
-    },
-    {
-        "id": "available-student-002",
-        "user_id": "user-available-002",
-        "last_name": "Chen",
-        "first_name": "Li Wei",
-        "email": "liwei.chen@student.emeres.fr",
-        "institution_name": "HEC Paris",
-        "field_of_study": "Marketing Digital",
-        "degree_preparing": "Master",
-        "study_year": "2e",
-        "graduation_year": "2025",
-        "main_skills": ["SEO/SEM", "Analytics", "Réseaux sociaux", "Content Marketing"],
-        "search_objective": "Alternance",
-        "search_domain": "Marketing Digital et E-commerce",
-        "mentorship_goals": [
-            "Stratégies marketing avancées",
-            "Leadership d'équipe",
-            "Lancement de campagnes",
-        ],
-        "preferred_mentor_profile": "Directeur Marketing avec expérience startup/scale-up",
-        "is_seeking_mentor": True,
-        "max_mentors": 1,
-        "current_mentors_count": 0,
-        "availability_schedule": "Mardis et jeudis 19h-21h",
-        "matching_keywords": [
-            "marketing digital",
-            "e-commerce",
-            "seo",
-            "sem",
-            "analytics",
-            "réseaux sociaux",
-        ],
-    },
-    {
-        "id": "available-student-003",
-        "user_id": "user-available-003",
-        "last_name": "Johnson",
-        "first_name": "Sarah",
-        "email": "sarah.johnson@student.emeres.fr",
-        "institution_name": "École Supérieure de Design",
-        "field_of_study": "UX/UI Design",
-        "degree_preparing": "Master",
-        "study_year": "1ère",
-        "graduation_year": "2026",
-        "main_skills": ["Figma", "Adobe Creative Suite", "Prototypage", "User Research"],
-        "search_objective": "Stage",
-        "search_domain": "UX Design et Product Design",
-        "mentorship_goals": [
-            "Méthodologies UX avancées",
-            "Portfolio professionnel",
-            "Préparation entretiens design",
-        ],
-        "preferred_mentor_profile": "Lead UX Designer ou Design Manager",
-        "is_seeking_mentor": True,
-        "max_mentors": 1,
-        "current_mentors_count": 0,
-        "availability_schedule": "Vendredis 14h-16h et samedis 10h-12h",
-        "matching_keywords": [
-            "ux design",
-            "ui design",
-            "figma",
-            "adobe",
-            "prototypage",
-            "user research",
-            "product design",
-        ],
-    },
-    {
-        "id": "available-student-004",
-        "user_id": "user-available-004",
-        "last_name": "Patel",
-        "first_name": "Arjun",
-        "email": "arjun.patel@student.emeres.fr",
-        "institution_name": "École Centrale Lyon",
-        "field_of_study": "Ingénierie Logicielle",
-        "degree_preparing": "Master",
-        "study_year": "2e",
-        "graduation_year": "2025",
-        "main_skills": ["Java", "Spring Boot", "React", "DevOps", "Cloud"],
-        "search_objective": "Premier emploi",
-        "search_domain": "Développement Full-Stack",
-        "mentorship_goals": [
-            "Architecture logicielle",
-            "Bonnes pratiques dev",
-            "Évolution de carrière",
-        ],
-        "preferred_mentor_profile": "Architecte logiciel ou CTO avec vision technique",
-        "is_seeking_mentor": True,
-        "max_mentors": 1,
-        "current_mentors_count": 0,
-        "availability_schedule": "Lundis, mercredis, vendredis 20h-22h",
-        "matching_keywords": [
-            "développement",
-            "java",
-            "spring",
-            "react",
-            "devops",
-            "cloud",
-            "architecture",
-            "full-stack",
-        ],
-    },
-    {
-        "id": "available-student-005",
-        "user_id": "user-available-005",
-        "last_name": "Müller",
-        "first_name": "Anna",
-        "email": "anna.muller@student.emeres.fr",
-        "institution_name": "ESSEC Business School",
-        "field_of_study": "Entrepreneuriat",
-        "degree_preparing": "Master",
-        "study_year": "2e",
-        "graduation_year": "2025",
-        "main_skills": ["Business Plan", "Pitch", "Finance", "Négociation"],
-        "search_objective": "Création d'entreprise",
-        "search_domain": "Entrepreneuriat et Innovation",
-        "mentorship_goals": [
-            "Validation d'idée business",
-            "Levée de fonds",
-            "Réseau d'entrepreneurs",
-        ],
-        "preferred_mentor_profile": "Entrepreneur expérimenté ou Business Angel",
-        "is_seeking_mentor": True,
-        "max_mentors": 2,
-        "current_mentors_count": 0,
-        "availability_schedule": "Tous les jours 18h-20h (flexible)",
-        "matching_keywords": [
-            "entrepreneuriat",
-            "startup",
-            "business plan",
-            "innovation",
-            "finance",
-            "investissement",
-        ],
-    },
-    {
-        "id": "available-student-006",
-        "user_id": "user-available-006",
-        "last_name": "Garcia",
-        "first_name": "Maria",
-        "email": "maria.garcia@student.emeres.fr",
-        "institution_name": "Université Sorbonne",
-        "field_of_study": "Communication Digitale",
-        "degree_preparing": "Master",
-        "study_year": "1ère",
-        "graduation_year": "2026",
-        "main_skills": ["Content Strategy", "Community Management", "Relations Presse", "Event"],
-        "search_objective": "Alternance",
-        "search_domain": "Communication et Relations Publiques",
-        "mentorship_goals": [
-            "Stratégie de communication",
-            "Personal branding",
-            "Réseau professionnel",
-        ],
-        "preferred_mentor_profile": "Directeur Communication ou Relations Publiques",
-        "is_seeking_mentor": True,
-        "max_mentors": 1,
-        "current_mentors_count": 0,
-        "availability_schedule": "Mardis et jeudis 17h-19h",
-        "matching_keywords": [
-            "communication",
-            "relations publiques",
-            "content strategy",
-            "community management",
-            "event",
-        ],
-    },
-]
-FAKE_STUDENTS_DATA = [
-    {
-        "id": "student-001",
-        "user_id": "user-student-001",
-        "last_name": "Martin",
-        "first_name": "Sophie",
-        "gender": "Mme.",
-        "birth_date": "2002-03-15",
-        "nationality": "Française",
-        "address_street": "45 rue des Étudiants",
-        "postal_code": "75006",
-        "city": "Paris",
-        "country": "France",
-        "phone": "+33 6 12 34 56 78",
-        "email": "sophie.martin@student.emeres.fr",
-        "institution_name": "Université Paris-Sorbonne",
-        "institution_city": "Paris",
-        "institution_type": "Université",
-        "field_of_study": "Informatique",
-        "degree_preparing": "Master",
-        "study_year": "2e",
-        "graduation_year": "2025",
-        "main_skills": ["Python", "JavaScript", "React", "Base de données"],
-        "languages": [
-            {"language": "Français", "level": "Natif"},
-            {"language": "Anglais", "level": "B2"},
-            {"language": "Espagnol", "level": "A2"},
-        ],
-        "past_experiences": [
-            {
-                "company": "StartupTech",
-                "position": "Développeur stagiaire",
-                "duration": "3 mois",
-                "description": "Développement d'applications web",
-            }
-        ],
-        "search_objective": "Stage",
-        "search_domain": "Développement Web",
-        "contract_type": "Stage obligatoire",
-        "desired_duration": "6 mois",
-        "geographic_mobility": "Île-de-France",
-        "remote_work_accepted": True,
-        "availability_start": "2025-02-01",
-        "status": "active",
-        "program_type": "stage",
-        "objectives_count": 3,
-        "sessions_count": 8,
-        "last_session_date": "2024-12-20T14:00:00Z",
-        "next_session_date": "2025-01-10T10:00:00Z",
-    },
-    {
-        "id": "student-002",
-        "user_id": "user-student-002",
-        "last_name": "Dubois",
-        "first_name": "Thomas",
-        "gender": "M.",
-        "birth_date": "2001-09-22",
-        "nationality": "Française",
-        "address_street": "12 avenue de la République",
-        "postal_code": "69001",
-        "city": "Lyon",
-        "country": "France",
-        "phone": "+33 7 23 45 67 89",
-        "email": "thomas.dubois@student.emeres.fr",
-        "institution_name": "École de Commerce de Lyon",
-        "institution_city": "Lyon",
-        "institution_type": "École",
-        "field_of_study": "Commerce et Marketing",
-        "degree_preparing": "Master",
-        "study_year": "1ère",
-        "graduation_year": "2026",
-        "main_skills": [
-            "Marketing Digital",
-            "Analyse de données",
-            "Communication",
-            "Gestion de projet",
-        ],
-        "languages": [
-            {"language": "Français", "level": "Natif"},
-            {"language": "Anglais", "level": "C1"},
-            {"language": "Allemand", "level": "B1"},
-        ],
-        "past_experiences": [
-            {
-                "company": "Agence Marketing Plus",
-                "position": "Assistant Marketing",
-                "duration": "4 mois",
-                "description": "Campagnes digitales et réseaux sociaux",
-            }
-        ],
-        "search_objective": "Alternance",
-        "search_domain": "Marketing Digital",
-        "contract_type": "Alternance",
-        "desired_duration": "12 mois",
-        "geographic_mobility": "France",
-        "remote_work_accepted": True,
-        "availability_start": "2025-09-01",
-        "status": "active",
-        "program_type": "alternance",
-        "objectives_count": 5,
-        "sessions_count": 12,
-        "last_session_date": "2024-12-18T16:00:00Z",
-        "next_session_date": "2025-01-08T14:00:00Z",
-    },
-    {
-        "id": "student-003",
-        "user_id": "user-student-003",
-        "last_name": "Leroy",
-        "first_name": "Emma",
-        "gender": "Mme.",
-        "birth_date": "2003-01-10",
-        "nationality": "Française",
-        "address_street": "8 rue de la Paix",
-        "postal_code": "31000",
-        "city": "Toulouse",
-        "country": "France",
-        "phone": "+33 6 34 56 78 90",
-        "email": "emma.leroy@student.emeres.fr",
-        "institution_name": "IUT Toulouse",
-        "institution_city": "Toulouse",
-        "institution_type": "IUT",
-        "field_of_study": "Design Graphique",
-        "degree_preparing": "BUT",
-        "study_year": "3e",
-        "graduation_year": "2025",
-        "main_skills": ["Photoshop", "Illustrator", "Figma", "UX/UI Design"],
-        "languages": [
-            {"language": "Français", "level": "Natif"},
-            {"language": "Anglais", "level": "B2"},
-            {"language": "Italien", "level": "A1"},
-        ],
-        "past_experiences": [
-            {
-                "company": "Studio Créatif",
-                "position": "Designer junior",
-                "duration": "2 mois",
-                "description": "Conception graphique et identité visuelle",
-            }
-        ],
-        "search_objective": "Premier emploi",
-        "search_domain": "Design UX/UI",
-        "contract_type": "CDI",
-        "desired_duration": "Permanent",
-        "geographic_mobility": "Sud de la France",
-        "remote_work_accepted": False,
-        "availability_start": "2025-06-01",
-        "status": "active",
-        "program_type": "emploi",
-        "objectives_count": 2,
-        "sessions_count": 6,
-        "last_session_date": "2024-12-15T11:00:00Z",
-        "next_session_date": "2025-01-12T15:00:00Z",
-    },
-    {
-        "id": "student-004",
-        "user_id": "user-student-004",
-        "last_name": "Bernard",
-        "first_name": "Lucas",
-        "gender": "M.",
-        "birth_date": "2000-07-05",
-        "nationality": "Française",
-        "address_street": "25 boulevard Saint-Germain",
-        "postal_code": "75005",
-        "city": "Paris",
-        "country": "France",
-        "phone": "+33 7 45 67 89 01",
-        "email": "lucas.bernard@student.emeres.fr",
-        "institution_name": "École Centrale Paris",
-        "institution_city": "Paris",
-        "institution_type": "École d'ingénieurs",
-        "field_of_study": "Génie Industriel",
-        "degree_preparing": "Master",
-        "study_year": "2e",
-        "graduation_year": "2025",
-        "main_skills": [
-            "Gestion de production",
-            "Optimisation",
-            "Lean Management",
-            "Analyse de données",
-        ],
-        "languages": [
-            {"language": "Français", "level": "Natif"},
-            {"language": "Anglais", "level": "B2"},
-            {"language": "Chinois", "level": "A2"},
-        ],
-        "past_experiences": [
-            {
-                "company": "Industrie France",
-                "position": "Ingénieur stagiaire",
-                "duration": "6 mois",
-                "description": "Optimisation des processus de production",
-            }
-        ],
-        "search_objective": "Stage",
-        "search_domain": "Industrie 4.0",
-        "contract_type": "Stage obligatoire",
-        "desired_duration": "5 mois",
-        "geographic_mobility": "Europe",
-        "remote_work_accepted": False,
-        "availability_start": "2025-03-01",
-        "status": "paused",
-        "program_type": "stage",
-        "objectives_count": 1,
-        "sessions_count": 3,
-        "last_session_date": "2024-11-30T09:00:00Z",
-        "next_session_date": None,
-    },
-    {
-        "id": "student-005",
-        "user_id": "user-student-005",
-        "last_name": "Moreau",
-        "first_name": "Camille",
-        "gender": "Autre",
-        "birth_date": "2002-11-18",
-        "nationality": "Française",
-        "address_street": "14 rue Victor Hugo",
-        "postal_code": "44000",
-        "city": "Nantes",
-        "country": "France",
-        "phone": "+33 6 56 78 90 12",
-        "email": "camille.moreau@student.emeres.fr",
-        "institution_name": "Université de Nantes",
-        "institution_city": "Nantes",
-        "institution_type": "Université",
-        "field_of_study": "Communication",
-        "degree_preparing": "Licence",
-        "study_year": "3e",
-        "graduation_year": "2025",
-        "main_skills": ["Rédaction", "Réseaux sociaux", "Relations publiques", "Événementiel"],
-        "languages": [
-            {"language": "Français", "level": "Natif"},
-            {"language": "Anglais", "level": "C1"},
-            {"language": "Portugais", "level": "B1"},
-        ],
-        "past_experiences": [],
-        "search_objective": "Stage",
-        "search_domain": "Communication digitale",
-        "contract_type": "Stage facultatif",
-        "desired_duration": "3 mois",
-        "geographic_mobility": "Pays de la Loire",
-        "remote_work_accepted": True,
-        "availability_start": "2025-04-01",
-        "status": "completed",
-        "program_type": "stage",
-        "objectives_count": 4,
-        "sessions_count": 15,
-        "last_session_date": "2024-12-01T13:00:00Z",
-        "next_session_date": None,
-    },
-]
-
 
 # Mentor Profile Management
 @api_router.get("/mentor/profile", response_model=MentorProfile)
@@ -3702,49 +3000,22 @@ async def get_student_objectives(student_id: str, current_user: User = Depends(v
     if current_user.role != "mentor":
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Find the student in fake data
-    student = None
-    for s in FAKE_STUDENTS_DATA:
-        if s["user_id"] == student_id or s["id"] == student_id:
-            student = s
-            break
+    relations = await db.mentor_student_relations.find(
+        {"mentor_id": current_user.id, "student_id": student_id}
+    ).to_list(None)
 
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
+    if not relations:
+        raise HTTPException(status_code=404, detail="No relationship with this student")
 
-    # Generate fake objectives for this student
-    objectives = []
-    objectives_titles = [
-        f"Améliorer les compétences en {student['field_of_study']}",
-        f"Préparer l'entretien pour {student['search_domain']}",
-        f"Développer le réseau professionnel",
-        f"Finaliser le CV et la lettre de motivation",
-        f"Acquérir une nouvelle compétence technique",
-    ]
+    relation_ids = [relation["id"] for relation in relations]
 
-    for i in range(student["objectives_count"]):
-        objectives.append(
-            {
-                "id": f"obj-{student['id']}-{i+1}",
-                "mentor_student_relation_id": f"relation-{student['id']}",
-                "title": objectives_titles[i % len(objectives_titles)],
-                "description": f"Objectif de développement professionnel pour {student['first_name']} {student['last_name']}",
-                "specific": f"Développer spécifiquement les compétences en {student['field_of_study']}",
-                "measurable": "Mesurer les progrès par des exercices pratiques et des évaluations",
-                "achievable": f"Objectif réalisable compte tenu du niveau actuel de {student['first_name']}",
-                "relevant": f"Pertinent pour l'objectif de {student['search_objective']} en {student['search_domain']}",
-                "time_bound": f"À atteindre avant {student['availability_start']}",
-                "due_date": student.get("next_session_date", "2025-01-15T00:00:00Z"),
-                "priority": ["high", "medium", "low"][i % 3],
-                "status": ["active", "in_progress", "completed"][i % 3],
-                "progress_percentage": [25.0, 60.0, 100.0][i % 3],
-                "created_by": current_user.id,
-                "created_at": "2024-12-01T00:00:00Z",
-                "updated_at": "2024-12-20T00:00:00Z",
-            }
-        )
+    objectives = (
+        await db.smart_objectives.find({"mentor_student_relation_id": {"$in": relation_ids}})
+        .sort("created_at", -1)
+        .to_list(None)
+    )
 
-    return objectives
+    return [{k: v for k, v in objective.items() if k != "_id"} for objective in objectives]
 
 
 # STUDENT DISCOVERY & MATCHING SYSTEM
@@ -3852,28 +3123,6 @@ async def discover_available_students(current_user: User = Depends(verify_token)
         }
         students_with_matching.append(student_data)
 
-    for student in AVAILABLE_STUDENTS_FOR_MENTORSHIP:
-        # Skip if already contacted or if student doesn't seek mentor
-        if student["user_id"] in contacted_student_ids or not student.get(
-            "is_seeking_mentor", True
-        ):
-            continue
-
-        # Skip if student already has max mentors
-        if student.get("current_mentors_count", 0) >= student.get("max_mentors", 1):
-            continue
-
-        # Calculate matching score
-        matching_score = calculate_matching_score(
-            mentor_specializations,
-            student.get("matching_keywords", []),
-            student.get("mentorship_goals", []),
-        )
-
-        student_data = student.copy()
-        student_data["matching_score"] = round(matching_score, 1)
-        students_with_matching.append(student_data)
-
     # Sort by matching score (highest first)
     students_with_matching.sort(key=lambda x: x["matching_score"], reverse=True)
 
@@ -3908,15 +3157,17 @@ async def request_mentorship(request_data: dict, current_user: User = Depends(ve
     if existing_request:
         raise HTTPException(status_code=400, detail="Request already exists for this student")
 
-    # Find student in available list
-    student = None
-    for s in AVAILABLE_STUDENTS_FOR_MENTORSHIP:
-        if s["user_id"] == student_id:
-            student = s
-            break
-
-    if not student:
+    # Find the student in the database
+    student_user = await db.users.find_one({"id": student_id, "role": "student"})
+    if not student_user:
         raise HTTPException(status_code=404, detail="Student not found or not available")
+
+    student_profile = await db.student_profiles.find_one({"user_id": student_id})
+    student_interests = []
+    if student_profile:
+        student_interests = (student_profile.get("main_skills", []) or []) + [
+            student_profile.get("field_of_study", "") or ""
+        ]
 
     # Get mentor profile
     mentor_profile = await db.mentor_profiles.find_one({"user_id": current_user.id})
@@ -3925,8 +3176,8 @@ async def request_mentorship(request_data: dict, current_user: User = Depends(ve
     # Calculate matching score
     matching_score = calculate_matching_score(
         mentor_specializations,
-        student.get("matching_keywords", []),
-        student.get("mentorship_goals", []),
+        student_interests,
+        student_interests,
     )
 
     # Create mentorship request
@@ -3935,7 +3186,7 @@ async def request_mentorship(request_data: dict, current_user: User = Depends(ve
         student_id=student_id,
         message=message,
         mentor_specializations=mentor_specializations,
-        student_interests=student.get("mentorship_goals", []),
+        student_interests=student_interests,
         matching_score=matching_score,
         expires_at=datetime.now(timezone.utc) + timedelta(days=7),  # Expire after 7 days
     )
@@ -3986,7 +3237,7 @@ async def get_mentorship_requests(current_user: User = Depends(verify_token)):
         .to_list(None)
     )
 
-    # Enrich with student data (real students first, fake data as fallback)
+    # Enrich with real student data
     enriched_requests = []
     for request in requests:
         student = None
@@ -4010,11 +3261,6 @@ async def get_mentorship_requests(current_user: User = Depends(verify_token)):
                 "graduation_year": (student_profile or {}).get("graduation_year", ""),
                 "main_skills": (student_profile or {}).get("main_skills", []),
             }
-        else:
-            for s in AVAILABLE_STUDENTS_FOR_MENTORSHIP:
-                if s["user_id"] == request["student_id"]:
-                    student = s
-                    break
 
         if student:
             request_data = {k: v for k, v in request.items() if k != "_id"}
@@ -4120,11 +3366,6 @@ async def get_student_mentorship_requests(current_user: User = Depends(verify_to
                 "experience_years": mentor_profile.get("experience_years", 0),
                 "bio": mentor_profile.get("bio", ""),
             }
-        else:
-            for m in AVAILABLE_MENTORS_FOR_STUDENTS:
-                if m["user_id"] == request["mentor_id"]:
-                    mentor = m
-                    break
 
         if mentor:
             request_data = {k: v for k, v in request.items() if k != "_id"}
@@ -4453,24 +3694,6 @@ async def discover_available_mentors(current_user: User = Depends(verify_token))
 
         mentors_with_matching.append(mentor_data)
 
-    # If no real mentors or very few, add some fake ones for demonstration
-    if len(mentors_with_matching) < 3:
-        for mentor in AVAILABLE_MENTORS_FOR_STUDENTS:
-            # Skip if already contacted
-            if mentor["user_id"] in contacted_mentor_ids:
-                continue
-
-            # Calculate matching score
-            matching_score = calculate_matching_score(
-                mentor.get("specializations", []),
-                mentor.get("matching_keywords", []),
-                student_interests,
-            )
-
-            mentor_data = mentor.copy()
-            mentor_data["matching_score"] = round(matching_score, 1)
-            mentors_with_matching.append(mentor_data)
-
     # Sort by matching score (highest first)
     mentors_with_matching.sort(key=lambda x: x["matching_score"], reverse=True)
 
@@ -4526,13 +3749,6 @@ async def request_mentor(request_data: dict, current_user: User = Depends(verify
             "availability": mentor_profile.get("availability", {}),
             "bio": mentor_profile.get("bio", ""),
         }
-
-    # If not found in database, search in fake data array as fallback
-    if not mentor:
-        for m in AVAILABLE_MENTORS_FOR_STUDENTS:
-            if m["user_id"] == mentor_id:
-                mentor = m
-                break
 
     if not mentor:
         raise HTTPException(status_code=404, detail="Mentor not found or not available")
@@ -4716,24 +3932,6 @@ async def get_mentorship_ads_for_mentors(current_user: User = Depends(verify_tok
         ad_data["matching_score"] = round(matching_score, 1)
         ads_with_matching.append(ad_data)
 
-    # If no real ads or very few, add some fake ones for demonstration
-    if len(ads_with_matching) < 2:
-        for ad in STUDENT_MENTORSHIP_ADS:
-            # Skip if already responded or if ad is inactive
-            if ad["id"] in responded_ad_ids or not ad.get("is_active", True):
-                continue
-
-            # Calculate matching score
-            matching_score = calculate_matching_score(
-                mentor_specializations,
-                ad.get("desired_expertise", []),
-                ad.get("mentorship_goals", []),
-            )
-
-            ad_data = ad.copy()
-            ad_data["matching_score"] = round(matching_score, 1)
-            ads_with_matching.append(ad_data)
-
     # Sort by matching score and urgency
     ads_with_matching.sort(
         key=lambda x: (x["matching_score"], x["urgency_level"] == "high"), reverse=True
@@ -4764,15 +3962,8 @@ async def respond_to_mentorship_ad(
     if existing_response:
         raise HTTPException(status_code=400, detail="Response already exists for this ad")
 
-    # Find ad in database first
+    # Find ad in database
     ad = await db.mentorship_ads.find_one({"id": ad_id})
-
-    # If not found in database, search in fake data array as fallback
-    if not ad:
-        for fake_ad in STUDENT_MENTORSHIP_ADS:
-            if fake_ad["id"] == ad_id:
-                ad = fake_ad
-                break
 
     if not ad:
         raise HTTPException(status_code=404, detail="Ad not found")

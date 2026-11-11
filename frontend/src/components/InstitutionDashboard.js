@@ -66,9 +66,7 @@ const InstitutionDashboard = () => {
     offres: {
       ouvertes: 0,
       nouvelles: 0,
-      pourvues: 0,
-      delaiMoyenPourvoi: 0,
-      tauxConversion: 0
+      total: 0
     },
     competencesDemandees: []
   });
@@ -128,17 +126,14 @@ const InstitutionDashboard = () => {
         .slice(0, 5)
         .map(([nom, demande]) => ({
           nom,
-          demande,
-          croissance: Math.random() * 30 // TODO: Calculer la vraie croissance
+          demande
         }));
 
       setMarketData({
         offres: {
           ouvertes: openOffers,
           nouvelles: newOffers,
-          pourvues: Math.round(offers.length * 0.1), // Estimation
-          delaiMoyenPourvoi: offers.length > 0 ? 18.5 : 0,
-          tauxConversion: offers.length > 0 ? Math.round((openOffers / offers.length) * 100) : 0
+          total: offers.length
         },
         competencesDemandees: topSkills
       });
@@ -1157,7 +1152,7 @@ const InstitutionDashboard = () => {
                             Top Compétences
                           </EmeresCardTitle>
                           <EmeresCardDescription>
-                            Demande marché & croissance
+                            Compétences les plus demandées dans les offres actives
                           </EmeresCardDescription>
                         </EmeresCardHeader>
                         <EmeresCardContent className="space-y-3">
@@ -1168,12 +1163,10 @@ const InstitutionDashboard = () => {
                                 <p className="text-xs text-gray-600">{competence.demande} offres</p>
                               </div>
                               <div className="text-right">
-                                <div className="flex items-center gap-1">
-                                  <ArrowUp className="h-3 w-3 text-green-600" />
-                                  <span className="text-sm font-medium text-green-600">
-                                    +{competence.croissance}%
-                                  </span>
-                                </div>
+                                <span className="text-sm font-semibold text-teal-700">
+                                  {competence.demande}
+                                </span>
+                                <span className="text-xs text-gray-500 ml-1">offres</span>
                               </div>
                             </div>
                           ))}

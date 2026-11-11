@@ -3,7 +3,7 @@ import EmeresButton from '../ui/EmeresButton';
 import EmeresCard, { EmeresCardContent, EmeresCardDescription, EmeresCardHeader, EmeresCardTitle } from '../ui/EmeresCard';
 import EmeresBadge from '../ui/EmeresBadge';
 import EmeresInput from '../ui/EmeresInput';
-import { 
+import {
   Search,
   Filter,
   Star,
@@ -102,7 +102,7 @@ const MentorDiscovery = () => {
     // Filter by search term
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(mentor => 
+      filtered = filtered.filter(mentor =>
         `${mentor.first_name} ${mentor.last_name}`.toLowerCase().includes(term) ||
         mentor.company.toLowerCase().includes(term) ||
         mentor.position.toLowerCase().includes(term) ||
@@ -112,8 +112,8 @@ const MentorDiscovery = () => {
 
     // Filter by specialization
     if (selectedFilters.specialization !== 'all') {
-      filtered = filtered.filter(mentor => 
-        mentor.specializations.some(spec => 
+      filtered = filtered.filter(mentor =>
+        mentor.specializations.some(spec =>
           spec.toLowerCase().includes(selectedFilters.specialization.toLowerCase())
         )
       );
@@ -147,7 +147,7 @@ const MentorDiscovery = () => {
     }
 
     // Filter by matching score
-    filtered = filtered.filter(mentor => 
+    filtered = filtered.filter(mentor =>
       mentor.matching_score >= selectedFilters.matchingScore
     );
 
@@ -192,7 +192,7 @@ Cordialement`);
         setShowRequestModal(false);
         setSelectedMentor(null);
         setRequestMessage('');
-        
+
         // Reload mentors and requests
         loadAvailableMentors();
         loadMyRequests();
@@ -279,7 +279,7 @@ Cordialement`);
             Trouvez des mentors expérimentés dans vos domaines d'intérêt
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Users className="h-4 w-4" />
           <span>{filteredMentors.length} mentor{filteredMentors.length > 1 ? 's' : ''} disponible{filteredMentors.length > 1 ? 's' : ''}</span>
@@ -384,7 +384,7 @@ Cordialement`);
         {filteredMentors.map((mentor) => {
           const requestStatus = getRequestStatus(mentor.user_id);
           const available = mentor.max_students - mentor.current_students_count;
-          
+
           return (
             <EmeresCard key={mentor.id} className="hover:shadow-lg transition-shadow duration-200">
               <EmeresCardHeader>
@@ -402,14 +402,14 @@ Cordialement`);
                       </EmeresCardDescription>
                     </div>
                   </div>
-                  
+
                   <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getMatchingScoreColor(mentor.matching_score)}`}>
                     {getMatchingScoreIcon(mentor.matching_score)}
                     {mentor.matching_score}%
                   </div>
                 </div>
               </EmeresCardHeader>
-              
+
               <EmeresCardContent className="space-y-4">
                 {/* Company & Experience */}
                 <div className="space-y-2">
@@ -480,8 +480,8 @@ Cordialement`);
                       )}
                     </div>
                   ) : (
-                    <EmeresButton 
-                      variant="primary" 
+                    <EmeresButton
+                      variant="primary"
                       size="sm"
                       icon={<Send />}
                       onClick={() => handleRequestMentor(mentor)}
@@ -503,7 +503,9 @@ Cordialement`);
           <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun mentor trouvé</h3>
           <p className="text-gray-600">
-            Essayez de modifier vos critères de recherche ou vos filtres.
+            {mentors.length === 0
+              ? "Aucun mentor n'est encore disponible sur la plateforme. Revenez bientôt : de nouveaux mentors rejoignent Émérés régulièrement."
+              : "Essayez de modifier vos critères de recherche ou vos filtres."}
           </p>
         </div>
       )}
@@ -515,7 +517,7 @@ Cordialement`);
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Demande de mentorat à {selectedMentor.first_name} {selectedMentor.last_name}
             </h3>
-            
+
             <div className="space-y-4 mb-6">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
@@ -535,7 +537,7 @@ Cordialement`);
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Message de présentation
@@ -549,7 +551,7 @@ Cordialement`);
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <EmeresButton
                 variant="outline"

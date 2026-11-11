@@ -63,6 +63,17 @@ Voir `.env.example` pour la liste complète.
 - **Institutions** : cohortes, analytics d'insertion
 - **Transverse** : messagerie, calendrier, crédits, modules premium, coach IA
 
+## Données du pilote (seed)
+
+Pour alimenter la plateforme avec un jeu de données réaliste (1 école, 1 institution, 10 entreprises, 50 étudiants, 5 mentors, offres/candidatures/sessions/évaluations) :
+
+```bash
+cd backend
+python3 seed_pilot.py --base-url http://127.0.0.1:8001
+```
+
+Le script est idempotent (aucun effet si le pilote existe déjà) et passe par l'API publique. Comptes sur le domaine `pilot.emeres.fr`, mot de passe commun `Pilote!2024` — à changer avant toute mise en production.
+
 ## Tests et qualité
 
 ```bash
