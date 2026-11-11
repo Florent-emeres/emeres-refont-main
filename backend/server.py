@@ -3555,54 +3555,59 @@ async def get_mentor_students(current_user: User = Depends(verify_token)):
     if current_user.role != "mentor":
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Return fake students data for testing
+    relations = (
+        await db.mentor_student_relations.find({"mentor_id": current_user.id})
+        .sort("created_at", -1)
+        .to_list(None)
+    )
+
     students_data = []
-    for student in FAKE_STUDENTS_DATA:
-        # Create relation data
-        relation_data = {
-            "id": f"relation-{student['id']}",
-            "mentor_id": current_user.id,
-            "student_id": student["user_id"],
-            "status": student["status"],
-            "start_date": "2024-09-01T00:00:00Z",
-            "program_type": student["program_type"],
-            "objectives_count": student["objectives_count"],
-            "sessions_count": student["sessions_count"],
-            "last_session_date": student["last_session_date"],
-            "created_at": "2024-09-01T00:00:00Z",
+    for relation in relations:
+        student_id = relation.get("student_id")
+        student_user = await db.users.find_one({"id": student_id})
+        if not student_user:
+            continue
+        student_profile = await db.student_profiles.find_one({"user_id": student_id})
+
+        student = {
+            "id": student_user.get("id"),
+            "user_id": student_user.get("id"),
+            "last_name": (student_profile or {}).get(
+                "last_name", student_user.get("last_name", "")
+            ),
+            "first_name": (student_profile or {}).get(
+                "first_name", student_user.get("first_name", "")
+            ),
+            "email": student_user.get("email", ""),
+            "institution_name": (student_profile or {}).get("institution_name")
+            or (student_profile or {}).get("school_name", ""),
+            "field_of_study": (student_profile or {}).get("field_of_study", ""),
+            "degree_preparing": (student_profile or {}).get("degree_preparing")
+            or (student_profile or {}).get("education_level", ""),
+            "study_year": (student_profile or {}).get("study_year", ""),
+            "main_skills": (student_profile or {}).get("main_skills", []),
+            "search_objective": (student_profile or {}).get("search_objective", ""),
+            "search_domain": (student_profile or {}).get("search_domain", ""),
         }
 
-        # Create recent objectives (fake data)
-        recent_objectives = []
-        for i in range(min(3, student["objectives_count"])):
-            recent_objectives.append(
-                {
-                    "id": f"obj-{student['id']}-{i+1}",
-                    "title": f"Objectif {i+1} - {student['first_name']}",
-                    "description": f"Objectif de développement pour {student['first_name']} {student['last_name']}",
-                    "priority": ["high", "medium", "low"][i % 3],
-                    "status": ["active", "in_progress", "completed"][i % 3],
-                    "due_date": student.get("next_session_date", "2025-01-15T00:00:00Z"),
-                    "progress_percentage": [25.0, 60.0, 100.0][i % 3],
-                    "created_at": "2024-12-01T00:00:00Z",
-                }
-            )
+        relation_id = relation.get("id")
+        relation_data = {k: v for k, v in relation.items() if k != "_id"}
 
-        # Create recent sessions (fake data)
-        recent_sessions = []
-        for i in range(min(3, student["sessions_count"])):
-            recent_sessions.append(
-                {
-                    "id": f"session-{student['id']}-{i+1}",
-                    "title": f"Session {i+1} avec {student['first_name']}",
-                    "type": "individual",
-                    "status": ["completed", "scheduled", "cancelled"][i % 3],
-                    "scheduled_start": student["last_session_date"],
-                    "duration_minutes": 60,
-                    "platform": "Google Meet",
-                    "created_at": "2024-12-01T00:00:00Z",
-                }
-            )
+        recent_objectives = (
+            await db.smart_objectives.find({"mentor_student_relation_id": relation_id})
+            .sort("created_at", -1)
+            .limit(3)
+            .to_list(3)
+        )
+        recent_objectives = [{k: v for k, v in o.items() if k != "_id"} for o in recent_objectives]
+
+        recent_sessions = (
+            await db.mentor_sessions.find({"mentor_student_relation_id": relation_id})
+            .sort("scheduled_start", -1)
+            .limit(3)
+            .to_list(3)
+        )
+        recent_sessions = [{k: v for k, v in s.items() if k != "_id"} for s in recent_sessions]
 
         students_data.append(
             {
@@ -4344,7 +4349,7 @@ async def request_mentor(request_data: dict, current_user: User = Depends(verify
             "matching_keywords": mentor_profile.get("specializations", [])
             + mentor_profile.get("skills", []),
             "expertise_level": (
-                "Expert" if mentor_profile.get("experience_years", 0) > 10 else "Senior"
+                "Expert" if (mentor_profile.get("experience_years") or 0) > 10 else "Senior"
             ),
             "availability": mentor_profile.get("availability", {}),
             "bio": mentor_profile.get("bio", ""),
@@ -7498,6 +7503,10 @@ async def create_internship_journal(
 
         # Convert date strings to datetime objects
         journal_dict = journal_data.dict()
+        if current_user.role == "student":
+            journal_dict["student_id"] = current_user.id
+        elif current_user.role == "company":
+            journal_dict["company_id"] = current_user.id
         journal_dict["start_date"] = datetime.fromisoformat(
             journal_data.start_date.replace("Z", "+00:00")
         )
@@ -7538,6 +7547,17 @@ async def get_internship_journal(journal_id: str, current_user: dict = Depends(v
         if not journal:
             raise HTTPException(status_code=404, detail="Journal non trouvé")
 
+        if current_user.role not in ("admin", "institution"):
+            is_party = current_user.id in (
+                journal.get("student_id"),
+                journal.get("company_id"),
+                journal.get("mentor_id"),
+                journal.get("school_tutor_id"),
+                journal.get("company_tutor_id"),
+            )
+            if not is_party:
+                raise HTTPException(status_code=403, detail="Accès refusé à ce journal")
+
         # Get related data
         objectives = await db.internship_objectives.find({"internship_id": journal_id}).to_list(
             None
@@ -7552,12 +7572,14 @@ async def get_internship_journal(journal_id: str, current_user: dict = Depends(v
         )
 
         return {
-            "journal": journal,
-            "objectives": objectives,
-            "weekly_reports": reports,
-            "evaluations": evaluations,
+            "journal": {k: v for k, v in journal.items() if k != "_id"},
+            "objectives": [{k: v for k, v in o.items() if k != "_id"} for o in objectives],
+            "weekly_reports": [{k: v for k, v in r.items() if k != "_id"} for r in reports],
+            "evaluations": [{k: v for k, v in e.items() if k != "_id"} for e in evaluations],
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erreur lors de la récupération du journal: {str(e)}"
@@ -7584,6 +7606,7 @@ async def get_my_internship_journals(current_user: dict = Depends(verify_token))
             query = {}
 
         journals = await db.internship_journals.find(query).sort("created_at", -1).to_list(50)
+        journals = [{k: v for k, v in j.items() if k != "_id"} for j in journals]
 
         return {"journals": journals, "count": len(journals), "user_role": user_role}
 
