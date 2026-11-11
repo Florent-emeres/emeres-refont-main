@@ -36,6 +36,23 @@ class CoachResponse(BaseModel):
     answer: str
 
 
+class AssistantAction(BaseModel):
+    label: str
+    path: str
+    description: str = ""
+
+
+class AssistantRequest(BaseModel):
+    question: str = ""
+    context: dict[str, Any] = {}
+
+
+class AssistantResponse(BaseModel):
+    answer: str
+    suggestions: list[str] = []
+    actions: list[AssistantAction] = []
+
+
 class CVEvalRequest(BaseModel):
     cv_text: str
 

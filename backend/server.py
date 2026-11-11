@@ -73,6 +73,8 @@ from premium_modules import (
     SUBSCRIPTION_TIERS_CONFIG,
 )
 
+from app.models.schemas import AssistantRequest, AssistantResponse
+from app.ai.tools.student.assistant import student_assistant as run_student_assistant
 from app.utils.legacy import legacy_endpoint
 
 # Import des outils API
@@ -2511,6 +2513,58 @@ async def get_my_applications(current_user: User = Depends(verify_token)):
         if "offer_id" in app:
             app["job_offer_id"] = app.pop("offer_id")
     return [Application(**app) for app in applications]
+
+
+# ===== Assistant IA Étudiant (Émé) =====
+@api_router.post("/student/assistant", response_model=AssistantResponse)
+async def student_assistant_chat(
+    request: AssistantRequest, current_user: User = Depends(verify_token)
+):
+    """Assistant conversationnel Étudiant : guidage personnalisé basé sur les données réelles."""
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    profile = await db.student_profiles.find_one({"user_id": current_user.id}) or {}
+    completion_fields = ["first_name", "last_name", "email", "school", "field", "level"]
+    filled = [f for f in completion_fields if profile.get(f)]
+    missing = [f for f in completion_fields if not profile.get(f)]
+
+    applications = await db.applications.find({"student_id": current_user.id}).to_list(length=None)
+    app_counts: Dict[str, int] = {"total": len(applications)}
+    for st in ("received", "reviewing", "interview", "accepted", "rejected"):
+        app_counts[st] = sum(1 for a in applications if a.get("status") == st)
+
+    offers_count = await db.internship_offers.count_documents({"status": "active"})
+    mentorships = await db.mentorship_requests.find({"student_id": current_user.id}).to_list(
+        length=None
+    )
+    mentor_counts = {
+        "total": len(mentorships),
+        "accepted": sum(1 for m in mentorships if m.get("status") == "accepted"),
+    }
+
+    context = {
+        "user_id": current_user.id,
+        "first_name": profile.get("first_name") or current_user.first_name or "",
+        "field": profile.get("field") or "",
+        "level": profile.get("level") or "",
+        "school": profile.get("school") or "",
+        "profile_completion": round(len(filled) / len(completion_fields) * 100),
+        "profile_missing": missing,
+        "applications": app_counts,
+        "offers_available": offers_count,
+        "mentorships": mentor_counts,
+    }
+
+    try:
+        return await run_student_assistant(
+            AssistantRequest(question=request.question, context=context)
+        )
+    except Exception as exc:
+        logger.error("Assistant error for user %s: %s", current_user.id, exc)
+        from app.ai.tools.student.assistant import build_local_answer
+
+        return build_local_answer(request.question, context)
 
 
 # Company Applications Management (ATS)

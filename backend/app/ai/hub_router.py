@@ -48,6 +48,12 @@ SCHEMA_MAP = {
         "app.ai.tools.student.interview",
         "student_interview_answer",
     ),
+    "student_assistant": (
+        schemas.AssistantRequest,
+        schemas.AssistantResponse,
+        "app.ai.tools.student.assistant",
+        "student_assistant_tool",
+    ),
 }
 
 

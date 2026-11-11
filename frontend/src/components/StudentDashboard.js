@@ -58,6 +58,7 @@ import {
 import AIMatchingResults from './AIMatchingResults';
 import CVGenerator from './CVGenerator';
 import EvolutionPortfolio from './portfolio-evolution/EvolutionPortfolio';
+import StudentAssistant from './student/StudentAssistant';
 import ProgressBadges from './ProgressBadges';
 import CoverLetterGenerator from './CoverLetterGenerator';
 import InterviewSimulator from './InterviewSimulator';
@@ -1823,6 +1824,7 @@ const StudentDashboard = () => {
           </div>
         </main>
       </div>
+      <StudentAssistant onNavigate={navigateToPage} />
     </div>
   );
 };
