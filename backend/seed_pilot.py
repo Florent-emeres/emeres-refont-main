@@ -131,12 +131,148 @@ def login(email):
     return (data.get("access_token") or data.get("token")) if status == 200 else None
 
 
+def seed_mentors(student_ids, counts):
+    """Mentors : relations, sessions, objectifs, évaluations."""
+    for i, (first, last, company, position, specializations) in enumerate(MENTOR_PROFILES, 1):
+        email = f"mentor{i}@{DOMAIN}"
+        token = login(email)
+        if token:
+            print(f"mentor{i}: déjà présent, relations omises")
+            continue
+        token, mentor_id = register("mentor", first, last, email)
+        status, _ = req(
+            "PUT",
+            "/mentor/profile",
+            token=token,
+            body={
+                "company": company,
+                "position": position,
+                "specializations": specializations,
+                "experience_years": random.randint(6, 15),
+                "bio": f"{first} {last}, {position} chez {company}.",
+                "availability_hours_per_week": random.randint(2, 6),
+            },
+        )
+        mentees = random.sample(student_ids, k=random.randint(4, 8))
+        for student_id in mentees:
+            status, rel = req(
+                "POST",
+                "/mentor/students",
+                token=token,
+                body={
+                    "student_id": student_id,
+                    "program_type": random.choice(["Mentorat insertion", "Mentorat académique"]),
+                    "start_date": "2025-01-15",
+                },
+            )
+            if status != 200:
+                continue
+            counts["relations"] += 1
+            for s in range(random.randint(1, 3)):
+                status, sess = req(
+                    "POST",
+                    "/mentor/sessions",
+                    token=token,
+                    body={
+                        "student_id": student_id,
+                        "title": f"Session {s + 1}",
+                        "scheduled_start": "2025-02-10T10:00:00Z",
+                        "scheduled_end": "2025-02-10T11:00:00Z",
+                    },
+                )
+                if status != 200:
+                    continue
+                req("PUT", f"/mentor/sessions/{sess['id']}/checkin", token=token)
+                status3, _ = req(
+                    "PUT",
+                    f"/mentor/sessions/{sess['id']}/checkout",
+                    token=token,
+                    body={"notes": "Session pilote"},
+                )
+                if status3 == 200:
+                    counts["sessions"] += 1
+            for o in range(random.randint(1, 2)):
+                status, obj = req(
+                    "POST",
+                    f"/mentor/students/{student_id}/objectives",
+                    token=token,
+                    body={
+                        "title": f"Objectif pilote {o + 1}",
+                        "description": "Objectif du seed pilote",
+                        "specific": "spécifique",
+                        "measurable": "mesurable",
+                        "achievable": "réaliste",
+                        "relevant": "pertinent",
+                        "time_bound": "avant fin de parcours",
+                        "due_date": "2025-06-30T00:00:00Z",
+                    },
+                )
+                if status == 200:
+                    counts["objectives"] += 1
+                    if random.random() < 0.5:
+                        status2, _ = req(
+                            "PUT",
+                            f"/mentor/objectives/{obj['id']}",
+                            token=token,
+                            body={"status": "completed", "progress_percentage": 100},
+                        )
+                        if status2 == 200:
+                            counts["objectives_completed"] += 1
+            if random.random() < 0.7:
+                status, _ = req(
+                    "POST",
+                    f"/mentor/students/{student_id}/evaluations",
+                    token=token,
+                    body={
+                        "student_id": student_id,
+                        "evaluation_period": "monthly",
+                        "period_start": "2025-02-01T00:00:00Z",
+                        "period_end": "2025-02-28T00:00:00Z",
+                        "autonomy_score": round(random.uniform(3, 5), 1),
+                        "communication_score": round(random.uniform(3, 5), 1),
+                        "quality_score": round(random.uniform(3, 5), 1),
+                        "progression_score": round(random.uniform(3, 5), 1),
+                    },
+                )
+                if status == 200:
+                    counts["evaluations"] += 1
+
+
 def main():
     global BASE
     parser = argparse.ArgumentParser(description="Seed pilote Émérés")
     parser.add_argument("--base-url", default="http://127.0.0.1:8001")
+    parser.add_argument(
+        "--mentors-only",
+        action="store_true",
+        help="Crée uniquement les mentors (complète un seed interrompu)",
+    )
     args = parser.parse_args()
     BASE = args.base_url.rstrip("/") + "/api"
+
+    if args.mentors_only:
+        school_token = login(f"school@{DOMAIN}")
+        if not school_token:
+            raise RuntimeError("École pilote absente — lancez le seed complet d'abord")
+        status, students = req("GET", "/school/students", token=school_token)
+        if status != 200 or not isinstance(students, list):
+            raise RuntimeError(f"Impossible de lister les étudiants: {status}")
+        student_ids = [s["user_id"] for s in students if s.get("user_id")]
+        counts = {
+            "relations": 0,
+            "sessions": 0,
+            "objectives": 0,
+            "objectives_completed": 0,
+            "evaluations": 0,
+        }
+        seed_mentors(student_ids, counts)
+        print(
+            f"mentors: {len(MENTOR_PROFILES)}, relations: {counts['relations']}, "
+            f"sessions: {counts['sessions']}, objectifs: {counts['objectives']} "
+            f"({counts['objectives_completed']} complétés), "
+            f"évaluations: {counts['evaluations']}"
+        )
+        return
 
     if login(f"school@{DOMAIN}"):
         print(f"Pilote déjà présent ({DOMAIN}). Rien à faire.")
@@ -290,105 +426,8 @@ def main():
         )
     print("partenariats école: 6")
 
-    # 7. Mentors : relations, sessions, objectifs, évaluations
-    for i, (first, last, company, position, specializations) in enumerate(MENTOR_PROFILES, 1):
-        token, mentor_id = register("mentor", first, last, f"mentor{i}@{DOMAIN}")
-        status, _ = req(
-            "PUT",
-            "/mentor/profile",
-            token=token,
-            body={
-                "company": company,
-                "position": position,
-                "specializations": specializations,
-                "experience_years": random.randint(6, 15),
-                "bio": f"{first} {last}, {position} chez {company}.",
-                "availability_hours_per_week": random.randint(2, 6),
-            },
-        )
-        mentees = random.sample(student_ids, k=random.randint(4, 8))
-        for student_id in mentees:
-            status, rel = req(
-                "POST",
-                "/mentor/students",
-                token=token,
-                body={
-                    "student_id": student_id,
-                    "program_type": random.choice(["Mentorat insertion", "Mentorat académique"]),
-                    "start_date": "2025-01-15",
-                },
-            )
-            if status != 200:
-                continue
-            counts["relations"] += 1
-            for s in range(random.randint(1, 3)):
-                status, sess = req(
-                    "POST",
-                    "/mentor/sessions",
-                    token=token,
-                    body={
-                        "student_id": student_id,
-                        "title": f"Session {s + 1}",
-                        "scheduled_start": "2025-02-10T10:00:00Z",
-                        "scheduled_end": "2025-02-10T11:00:00Z",
-                    },
-                )
-                if status != 200:
-                    continue
-                req("PUT", f"/mentor/sessions/{sess['id']}/checkin", token=token)
-                status3, _ = req(
-                    "PUT",
-                    f"/mentor/sessions/{sess['id']}/checkout",
-                    token=token,
-                    body={"notes": "Session pilote"},
-                )
-                if status3 == 200:
-                    counts["sessions"] += 1
-            for o in range(random.randint(1, 2)):
-                status, obj = req(
-                    "POST",
-                    f"/mentor/students/{student_id}/objectives",
-                    token=token,
-                    body={
-                        "title": f"Objectif pilote {o + 1}",
-                        "description": "Objectif du seed pilote",
-                        "specific": "spécifique",
-                        "measurable": "mesurable",
-                        "achievable": "réaliste",
-                        "relevant": "pertinent",
-                        "time_bound": "avant fin de parcours",
-                        "due_date": "2025-06-30T00:00:00Z",
-                    },
-                )
-                if status == 200:
-                    counts["objectives"] += 1
-                    if random.random() < 0.5:
-                        status2, _ = req(
-                            "PUT",
-                            f"/mentor/objectives/{obj['id']}",
-                            token=token,
-                            body={"status": "completed", "progress_percentage": 100},
-                        )
-                        if status2 == 200:
-                            counts["objectives_completed"] += 1
-            if random.random() < 0.7:
-                status, _ = req(
-                    "POST",
-                    f"/mentor/students/{student_id}/evaluations",
-                    token=token,
-                    body={
-                        "student_id": student_id,
-                        "evaluation_period": "monthly",
-                        "period_start": "2025-02-01T00:00:00Z",
-                        "period_end": "2025-02-28T00:00:00Z",
-                        "autonomy_score": round(random.uniform(3, 5), 1),
-                        "communication_score": round(random.uniform(3, 5), 1),
-                        "quality_score": round(random.uniform(3, 5), 1),
-                        "progression_score": round(random.uniform(3, 5), 1),
-                    },
-                )
-                if status == 200:
-                    counts["evaluations"] += 1
+    seed_mentors(student_ids, counts)
+
     print(
         f"mentors: {len(MENTOR_PROFILES)}, relations: {counts['relations']}, "
         f"sessions: {counts['sessions']}, objectifs: {counts['objectives']} "
