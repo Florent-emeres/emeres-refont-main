@@ -75,7 +75,7 @@ class ToolUsageStats(BaseModel):
 class EmereToolsManager:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
-        self.llm_key = os.getenv("EMERGENT_LLM_KEY")
+        self.llm_key = os.getenv("OPENAI_API_KEY") or os.getenv("EMERGENT_LLM_KEY")
 
         # Configuration des outils disponibles
         self.available_tools = {
@@ -271,19 +271,25 @@ IMPORTANT: Reste toujours dans ton rôle de coach bienveillant et expert."""
             chat_history = (
                 await self.db.chat_messages.find({"session_id": session_id})
                 .sort("timestamp", 1)
-                .to_list(length=50)
+                .to_list(length=10)
             )
 
             # Initialiser le chat LLM
             chat = LlmChat(
                 api_key=self.llm_key, session_id=session_id, system_message=self.system_message
-            ).with_model("openai", "gpt-4o")
+            ).with_model(
+                os.getenv("LLM_PROVIDER", "openai").strip().lower() or "openai",
+                os.getenv("LLM_MODEL", "gpt-4o-mini"),
+            )
 
             # Créer le message utilisateur
             user_message = UserMessage(text=message)
 
             # Envoyer le message et obtenir la réponse
             response = await chat.send_message(user_message)
+
+            provider = os.getenv("LLM_PROVIDER", "openai").strip().lower() or "openai"
+            model = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
             # Enregistrer le message utilisateur
             user_msg_id = str(uuid.uuid4())
@@ -306,7 +312,7 @@ IMPORTANT: Reste toujours dans ton rôle de coach bienveillant et expert."""
                 role="assistant",
                 content=response,
                 timestamp=datetime.now(timezone.utc).isoformat(),
-                metadata={"model": "gpt-4o", "provider": "openai"},
+                metadata={"model": model, "provider": provider},
             )
             await self.db.chat_messages.insert_one(ai_chat_message.dict())
 
@@ -317,10 +323,13 @@ IMPORTANT: Reste toujours dans ton rôle de coach bienveillant et expert."""
                 upsert=True,
             )
 
-            # Mettre à jour la session
+            # Mettre à jour la session (avec compteur de consommation LLM)
             await self.db.tool_sessions.update_one(
                 {"session_id": session_id},
-                {"$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
+                {
+                    "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+                    "$inc": {"usage.llm_calls": 1},
+                },
             )
 
             return {

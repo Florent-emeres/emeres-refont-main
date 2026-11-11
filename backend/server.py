@@ -2700,7 +2700,10 @@ async def calculate_ai_match_score(student_profile: Dict, offer: Dict) -> Dict[s
                 "reasoning": "Explication détaillée du score",
                 "compatibility_factors": ["facteur1", "facteur2", "facteur3"]
             }""",
-        ).with_model("openai", "gpt-4o")
+        ).with_model(
+            os.getenv("LLM_PROVIDER", "openai").strip().lower() or "openai",
+            os.getenv("LLM_MODEL", "gpt-4o-mini"),
+        )
 
         # Prepare matching prompt
         student_summary = f"""
@@ -2828,6 +2831,23 @@ async def get_personalized_recommendations(current_user: User = Depends(verify_t
 
 
 # Cover Letter Generation with AI
+# Rate limiting simple en mémoire pour les endpoints LLM coûteux
+_LLM_RATE_HITS: Dict[str, List[float]] = {}
+
+
+def _check_llm_rate_limit(user_id: str, max_calls: int = 10, window_s: float = 60.0) -> bool:
+    import time as _time
+
+    now = _time.time()
+    hits = [t for t in _LLM_RATE_HITS.get(user_id, []) if now - t < window_s]
+    if len(hits) >= max_calls:
+        _LLM_RATE_HITS[user_id] = hits
+        return False
+    hits.append(now)
+    _LLM_RATE_HITS[user_id] = hits
+    return True
+
+
 # ===== LEGACY DISABLED (PASS 4) =====
 # Function: generate_cover_letter(...)
 # Status : legacy, kept for backward compatibility (legacy routes still active)
@@ -2835,13 +2855,30 @@ async def get_personalized_recommendations(current_user: User = Depends(verify_t
 # NOTE   : do not modify; remove only after PASS 4 cleanup
 @api_router.post("/ai/generate-cover-letter", response_model=CoverLetterResponse)
 @legacy_endpoint
-async def generate_cover_letter(request: CoverLetterRequest):
+async def generate_cover_letter(
+    request: CoverLetterRequest, current_user: User = Depends(verify_token)
+):
     """Generate AI-powered personalized cover letter"""
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Access denied")
+    if not _check_llm_rate_limit(current_user.id, max_calls=10, window_s=60.0):
+        raise HTTPException(
+            status_code=429, detail="Trop de générations — réessayez dans une minute"
+        )
+
+    provider = os.getenv("LLM_PROVIDER", "stub").strip().lower() or "stub"
+    api_key = bool(os.getenv("OPENAI_API_KEY") or os.getenv("EMERGENT_LLM_KEY"))
+    if provider not in {"openai", "ollama"} or (provider == "openai" and not api_key):
+        raise HTTPException(
+            status_code=503,
+            detail="Génération IA indisponible : aucune clé LLM configurée sur cette installation.",
+        )
+
     try:
         # Initialize AI chat
         chat = LlmChat(
-            api_key=os.environ.get("EMERGENT_LLM_KEY"),
-            session_id=f"cover_letter_{datetime.now().isoformat()}",
+            api_key=os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY"),
+            session_id=f"cover_letter_{current_user.id}_{datetime.now().isoformat()}",
             system_message="""Tu es un expert en rédaction de lettres de motivation et recrutement RH.
             Ton rôle est de créer des lettres de motivation personnalisées, professionnelles et convaincantes.
 
@@ -2854,7 +2891,10 @@ async def generate_cover_letter(request: CoverLetterRequest):
 
             Format attendu : lettre complète avec formules de politesse.
             Style : français professionnel, sans fautes.""",
-        ).with_model("openai", "gpt-4o")
+        ).with_model(
+            os.getenv("LLM_PROVIDER", "openai").strip().lower() or "openai",
+            os.getenv("LLM_MODEL", "gpt-4o-mini"),
+        )
 
         student = request.studentProfile
         job = request.jobInfo

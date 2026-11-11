@@ -1,5 +1,9 @@
 ﻿import importlib
 import os
+import uuid
+
+import jwt
+import pymongo
 from fastapi.testclient import TestClient
 import pytest
 
@@ -18,6 +22,21 @@ def test_legacy_generate_cover_letter_returns_410(monkeypatch):
     _ensure_env(monkeypatch)
     legacy_module = importlib.import_module("backend.server")
     importlib.reload(legacy_module)
+
+    user_id = str(uuid.uuid4())
+    mongo = pymongo.MongoClient(os.environ["MONGO_URL"], serverSelectionTimeoutMS=5000)
+    mongo[os.environ["DB_NAME"]].users.insert_one(
+        {
+            "id": user_id,
+            "email": "legacy410@test.emeres.fr",
+            "role": "student",
+            "first_name": "Legacy",
+            "last_name": "Test",
+        }
+    )
+    mongo.close()
+    token = jwt.encode({"sub": user_id}, os.environ["SECRET_KEY"], algorithm="HS256")
+
     client = TestClient(legacy_module.app)
     response = client.post(
         "/api/ai/generate-cover-letter",
@@ -26,5 +45,6 @@ def test_legacy_generate_cover_letter_returns_410(monkeypatch):
             "jobInfo": {},
             "preferences": {},
         },
+        headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 410
