@@ -78,6 +78,7 @@ from app.utils.legacy import legacy_endpoint
 # Import des outils API
 from api_tools import create_tools_router
 from company_sections import create_company_sections_router
+from institution_sections import create_institution_sections_router
 from school_sections import create_school_sections_router
 
 ROOT_DIR = Path(__file__).parent
@@ -405,6 +406,10 @@ async def startup_event():
     # Sections du tableau de bord école
     school_sections_router = create_school_sections_router(db)
     app.include_router(school_sections_router)
+
+    # Sections du tableau de bord institution
+    institution_sections_router = create_institution_sections_router(db)
+    app.include_router(institution_sections_router)
 
 
 # User Role Constants
@@ -1776,6 +1781,23 @@ async def register(user_data: UserCreate):
             "updated_at": datetime.now(timezone.utc),
         }
         await db.school_profiles.insert_one(school_profile)
+    elif user_data.role == "institution":
+        institution_profile = {
+            "id": str(uuid.uuid4()),
+            "user_id": user.id,
+            "institution_name": f"{user_data.first_name} {user_data.last_name}".strip(),
+            "institution_type": None,
+            "address": None,
+            "city": None,
+            "postal_code": None,
+            "phone": None,
+            "website": None,
+            "description": None,
+            "region": None,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        await db.institution_profiles.insert_one(institution_profile)
 
     # Return access token immediately (email confirmation disabled for testing)
     access_token = create_access_token(data={"sub": user.id})
@@ -2311,21 +2333,18 @@ async def get_institution_profile(current_user: User = Depends(verify_token)):
     if current_user.role != "institution":
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # For now, return a mock profile since we don't have institution profile model yet
-    return {
-        "id": f"inst_{current_user.id}",
-        "user_id": current_user.id,
-        "institution_name": "Institution ÉMÉRÉS",
-        "type": "université",
-        "address": "123 Avenue de l'Éducation, 75000 Paris",
-        "contact_email": current_user.email,
-        "website": "https://institution-emeres.fr",
-        "description": "Institution d'enseignement supérieur",
-        "programs": ["Informatique", "Business", "Ingénierie"],
-        "student_count": 5000,
-        "partnership_count": 150,
-        "placement_rate": 92.5,
-    }
+    profile = await db.institution_profiles.find_one({"user_id": current_user.id})
+    if not profile:
+        profile = {
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "institution_name": f"{current_user.first_name} {current_user.last_name}".strip(),
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        await db.institution_profiles.insert_one(profile)
+    profile.pop("_id", None)
+    return profile
 
 
 # Internship Offers Routes
@@ -8376,50 +8395,6 @@ async def get_company_dashboard(current_user: User = Depends(verify_token)):
     }
 
 
-@api_router.get("/institution/dashboard")
-async def get_institution_dashboard(current_user: User = Depends(verify_token)):
-    """Get institution dashboard data"""
-    if current_user.role != "institution":
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    return {
-        "student_count": 5000,
-        "partnership_count": 150,
-        "placement_rate": 92.5,
-        "internship_offers": 245,
-        "active_partnerships": 89,
-        "satisfaction_index": 8.7,
-    }
-
-
-@api_router.get("/institution/analytics")
-async def get_institution_analytics(current_user: User = Depends(verify_token)):
-    """Get institution analytics and business intelligence data"""
-    if current_user.role != "institution":
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    return {
-        "market_analysis": {
-            "job_demand_index": 1.25,
-            "skill_gap_analysis": ["Python", "React", "Data Science"],
-            "salary_trends": [35000, 38000, 42000, 45000],
-            "geographic_distribution": {"Paris": 35, "Lyon": 15, "Marseille": 12, "Autres": 38},
-        },
-        "placement_metrics": {
-            "immediate_placement": 78.5,
-            "placement_6_months": 92.5,
-            "average_salary": 42000,
-            "satisfaction_score": 4.3,
-        },
-        "partnership_data": {
-            "active_companies": 89,
-            "new_partnerships": 15,
-            "renewal_rate": 85.2,
-            "partnership_satisfaction": 4.1,
-        },
-    }
-
-
 @api_router.get("/student/profile")
 async def get_student_profile_alias(current_user: User = Depends(verify_token)):
     """Alias for /profile/student for consistency"""
@@ -9719,9 +9694,14 @@ async def rbac_security_middleware(request, call_next):
         "/api/interview/": ["student"],
     }
 
+    # Endpoints under a protected prefix but open to another role (own role check inside)
+    role_override_endpoints = {
+        "/api/school/join",
+    }
+
     # Check if this is a protected endpoint
     path = str(request.url.path)
-    if path in public_endpoints:
+    if path in public_endpoints or path in role_override_endpoints:
         return await call_next(request)
 
     user_role = None

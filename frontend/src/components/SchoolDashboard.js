@@ -67,6 +67,8 @@ const SchoolDashboard = ({ user }) => {
   const [availableStudents, setAvailableStudents] = useState([]);
   const [studentSearch, setStudentSearch] = useState('');
   const [searchingStudents, setSearchingStudents] = useState(false);
+  const [invitations, setInvitations] = useState([]);
+  const [generatedInvitation, setGeneratedInvitation] = useState(null);
   const [schoolStats, setSchoolStats] = useState({
     total_students: 0,
     active_students: 0,
@@ -476,6 +478,37 @@ const SchoolDashboard = ({ user }) => {
     }
   };
 
+  const handleGenerateInvitation = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const res = await axios.post(`${backendUrl}/api/school/invitations`, {}, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setGeneratedInvitation(res.data);
+      setInvitations([res.data, ...invitations]);
+      toast.success(`Code d'invitation généré : ${res.data.code}`);
+    } catch (error) {
+      console.error('Error generating invitation:', error);
+      toast.error('Impossible de générer le code d\'invitation.');
+    }
+  };
+
+  const handleCancelInvitation = async (invitationId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      await axios.delete(`${backendUrl}/api/school/invitations/${invitationId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setInvitations(invitations.map(i => i.id === invitationId ? { ...i, status: 'cancelled' } : i));
+      toast.success('Invitation annulée.');
+    } catch (error) {
+      console.error('Error cancelling invitation:', error);
+      toast.error('Impossible d\'annuler l\'invitation.');
+    }
+  };
+
   // Rendu des cartes du dashboard avec design ÉMÉRÉS optimisé
   const renderDashboardCards = () => {
     const cards = [
@@ -641,12 +674,13 @@ const SchoolDashboard = ({ user }) => {
         const headers = { 'Authorization': `Bearer ${token}` };
         const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
 
-        const [profileRes, statsRes, studentsRes, partnershipsRes, activityRes] = await Promise.all([
+        const [profileRes, statsRes, studentsRes, partnershipsRes, activityRes, invitationsRes] = await Promise.all([
           axios.get(`${backendUrl}/api/school/profile`, { headers }),
           axios.get(`${backendUrl}/api/school/stats`, { headers }),
           axios.get(`${backendUrl}/api/school/students`, { headers }),
           axios.get(`${backendUrl}/api/school/partnerships`, { headers }),
-          axios.get(`${backendUrl}/api/school/activity`, { headers })
+          axios.get(`${backendUrl}/api/school/activity`, { headers }),
+          axios.get(`${backendUrl}/api/school/invitations`, { headers })
         ]);
 
         setSchoolProfile(profileRes.data);
@@ -655,6 +689,7 @@ const SchoolDashboard = ({ user }) => {
         setStudents(studentsRes.data);
         setPartnerships(partnershipsRes.data);
         setRecentActivity(activityRes.data);
+        setInvitations(invitationsRes.data);
       } catch (error) {
         console.error('Error fetching school data:', error);
         // En cas d'erreur, garder les valeurs par défaut
@@ -1357,6 +1392,57 @@ const SchoolDashboard = ({ user }) => {
                       <p className="text-sm text-gray-500 text-center py-4">
                         Aucun compte indépendant trouvé pour cette recherche.
                       </p>
+                    )}
+                  </EmeresCardContent>
+                </EmeresCard>
+
+                <EmeresCard>
+                  <EmeresCardHeader>
+                    <EmeresCardTitle>Invitations étudiants</EmeresCardTitle>
+                    <EmeresCardDescription>
+                      Générez un code que l'étudiant saisit dans son profil pour rejoindre votre établissement
+                    </EmeresCardDescription>
+                  </EmeresCardHeader>
+                  <EmeresCardContent>
+                    <EmeresButton variant="primary" onClick={handleGenerateInvitation}>
+                      Générer un code d'invitation
+                    </EmeresButton>
+                    {generatedInvitation && (
+                      <div className="mt-4 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                        <p className="text-sm text-gray-600 mb-1">Code à transmettre à l'étudiant (valable 7 jours) :</p>
+                        <p className="text-2xl font-bold tracking-widest text-teal-800">{generatedInvitation.code}</p>
+                      </div>
+                    )}
+                    {invitations.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        {invitations.map((invitation) => (
+                          <div key={invitation.id} className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="min-w-0">
+                              <p className="text-sm font-mono font-medium text-gray-900">{invitation.code}</p>
+                              <p className="text-xs text-gray-500">
+                                {invitation.expires_at ? `Expire le ${new Date(invitation.expires_at).toLocaleDateString('fr-FR')}` : ''}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <EmeresBadge
+                                variant={invitation.status === 'pending' ? 'secondary' : invitation.status === 'accepted' ? 'success' : 'error'}
+                                size="sm"
+                              >
+                                {invitation.status === 'pending' ? 'En attente' : invitation.status === 'accepted' ? 'Utilisée' : 'Annulée'}
+                              </EmeresBadge>
+                              {invitation.status === 'pending' && (
+                                <EmeresButton
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCancelInvitation(invitation.id)}
+                                >
+                                  Annuler
+                                </EmeresButton>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </EmeresCardContent>
                 </EmeresCard>

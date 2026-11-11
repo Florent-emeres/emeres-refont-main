@@ -5,12 +5,12 @@ import EmeresCard, { EmeresCardContent, EmeresCardDescription, EmeresCardHeader,
 import EmeresBadge from './ui/EmeresBadge';
 import EmeresInput from './ui/EmeresInput';
 import EmeresBreadcrumb from './ui/EmeresBreadcrumb';
-import { 
-  Building, 
-  Users, 
-  TrendingUp, 
-  TrendingDown, 
-  BarChart3, 
+import {
+  Building,
+  Users,
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
   PieChart,
   MapPin,
   Target,
@@ -79,8 +79,12 @@ const InstitutionDashboard = () => {
     enRecherche: 0,
     tauxPlacement3m: 0,
     tauxPlacement6m: 0,
-    tauxPlacement12m: 0
+    tauxPlacement12m: 0,
+    totalStudents: 0,
+    totalApplications: 0,
+    partnerCompanies: 0
   });
+  const [institutionStudents, setInstitutionStudents] = useState([]);
 
   // Charger les vraies données depuis le backend
   useEffect(() => {
@@ -93,11 +97,14 @@ const InstitutionDashboard = () => {
       const API = `${BACKEND_URL}/api`;
 
       // Charger les offres pour calculer les stats marché
+      const token = localStorage.getItem('token');
+      const headers = { 'Authorization': `Bearer ${token}` };
+
       const offersResponse = await fetch(`${API}/offers`);
       const offers = offersResponse.ok ? await offersResponse.json() : [];
-      
+
       // Calculer les stats du marché depuis les vraies offres
-      const openOffers = offers.filter(offer => offer.status === 'open' || !offer.status).length;
+      const openOffers = offers.filter(offer => offer.status === 'active').length;
       const newOffers = offers.filter(offer => {
         const createdDate = new Date(offer.created_at || offer.date_posted);
         const oneWeekAgo = new Date();
@@ -134,16 +141,26 @@ const InstitutionDashboard = () => {
         competencesDemandees: topSkills
       });
 
-      // TODO: Charger les vraies données étudiants quand l'endpoint sera disponible
-      // Pour l'instant, utiliser des estimations basées sur le nombre d'offres
+      // Données étudiants réelles de l'institution
+      const [statsRes, studentsRes] = await Promise.all([
+        fetch(`${API}/institution/stats`, { headers }),
+        fetch(`${API}/institution/students`, { headers })
+      ]);
+      const stats = statsRes.ok ? await statsRes.json() : {};
+      const students = studentsRes.ok ? await studentsRes.json() : [];
+
       setStudentData({
-        actifs: offers.length * 57, // Estimation: 57 étudiants par offre
-        diplomes: Math.round(offers.length * 9.2),
-        enRecherche: Math.round(offers.length * 4.7),
-        tauxPlacement3m: offers.length > 0 ? 78.2 : 0,
-        tauxPlacement6m: offers.length > 0 ? 89.6 : 0,
-        tauxPlacement12m: offers.length > 0 ? 94.1 : 0
+        actifs: stats.active_students || 0,
+        diplomes: stats.accepted_applications || 0,
+        enRecherche: Math.max((stats.total_applications || 0) - (stats.accepted_applications || 0), 0),
+        tauxPlacement3m: stats.placement_rate || 0,
+        tauxPlacement6m: stats.placement_rate || 0,
+        tauxPlacement12m: stats.placement_rate || 0,
+        totalStudents: stats.total_students || 0,
+        totalApplications: stats.total_applications || 0,
+        partnerCompanies: stats.partner_companies || 0
       });
+      setInstitutionStudents(students);
 
     } catch (error) {
       console.error('Erreur lors du chargement des données institution:', error);
@@ -152,51 +169,51 @@ const InstitutionDashboard = () => {
   };
 
   const [tensionMetiers] = useState([
-    { 
-      metier: 'Développeur Full-Stack', 
-      tension: 2.4, 
-      offres: 156, 
-      candidats: 65, 
+    {
+      metier: 'Développeur Full-Stack',
+      tension: 2.4,
+      offres: 156,
+      candidats: 65,
       statut: 'haute',
       evolution: 'croissante'
     },
-    { 
-      metier: 'Data Scientist', 
-      tension: 3.1, 
-      offres: 89, 
-      candidats: 29, 
+    {
+      metier: 'Data Scientist',
+      tension: 3.1,
+      offres: 89,
+      candidats: 29,
       statut: 'critique',
       evolution: 'croissante'
     },
-    { 
-      metier: 'Chef de Projet Digital', 
-      tension: 1.8, 
-      offres: 67, 
-      candidats: 37, 
+    {
+      metier: 'Chef de Projet Digital',
+      tension: 1.8,
+      offres: 67,
+      candidats: 37,
       statut: 'moderate',
       evolution: 'stable'
     },
-    { 
-      metier: 'UX/UI Designer', 
-      tension: 0.9, 
-      offres: 45, 
-      candidats: 50, 
+    {
+      metier: 'UX/UI Designer',
+      tension: 0.9,
+      offres: 45,
+      candidats: 50,
       statut: 'equilibre',
       evolution: 'baisse'
     }
   ]);
 
   const [gapCompetences] = useState([
-    { 
-      formation: 'Master Data Science', 
-      competencesEnseignees: ['Python', 'SQL', 'Statistics'], 
+    {
+      formation: 'Master Data Science',
+      competencesEnseignees: ['Python', 'SQL', 'Statistics'],
       competencesDemandees: ['Python', 'SQL', 'Machine Learning', 'Cloud', 'Tableau'],
       gap: ['Machine Learning', 'Cloud', 'Tableau'],
       score: 72.5
     },
-    { 
-      formation: 'Licence Informatique', 
-      competencesEnseignees: ['Java', 'HTML', 'CSS'], 
+    {
+      formation: 'Licence Informatique',
+      competencesEnseignees: ['Java', 'HTML', 'CSS'],
       competencesDemandees: ['JavaScript', 'React', 'Node.js', 'Git'],
       gap: ['JavaScript', 'React', 'Node.js', 'Git'],
       score: 45.8
@@ -239,7 +256,7 @@ const InstitutionDashboard = () => {
   const [expandedCategories, setExpandedCategories] = useState({
     'tools': true,
     'resources': false,
-    'tracking': false, 
+    'tracking': false,
     'discovery': false,
     'profile-settings': false
   });
@@ -258,7 +275,7 @@ const InstitutionDashboard = () => {
       id: 'dashboard',
       label: 'Vue 360°',
       icon: BarChart3,
-      description: 'Pilotage formation-débouchés',  
+      description: 'Pilotage formation-débouchés',
       gradient: 'from-teal-500 to-teal-600',
       isStandalone: true
     },
@@ -269,24 +286,24 @@ const InstitutionDashboard = () => {
       description: 'Business Intelligence et analyses',
       gradient: 'from-blue-500 to-purple-600',
       items: [
-        { 
-          id: 'custom-reports', 
-          label: 'Rapports Personnalisés', 
-          icon: FileText, 
+        {
+          id: 'custom-reports',
+          label: 'Rapports Personnalisés',
+          icon: FileText,
           description: 'Créer vos analyses',
           badge: 'IA'
         },
-        { 
-          id: 'predictive-analytics', 
-          label: 'Analytics Prédictifs', 
-          icon: TrendingUp, 
+        {
+          id: 'predictive-analytics',
+          label: 'Analytics Prédictifs',
+          icon: TrendingUp,
           description: 'Prédictions marché',
           badge: 'IA'
         },
-        { 
-          id: 'data-export', 
-          label: 'Export Données', 
-          icon: Database, 
+        {
+          id: 'data-export',
+          label: 'Export Données',
+          icon: Database,
           description: 'Extraction et export'
         }
       ]
@@ -298,23 +315,23 @@ const InstitutionDashboard = () => {
       description: 'Données externes et documentation',
       gradient: 'from-emerald-500 to-green-600',
       items: [
-        { 
-          id: 'external-data', 
-          label: 'Données Externes', 
-          icon: Database, 
+        {
+          id: 'external-data',
+          label: 'Données Externes',
+          icon: Database,
           description: 'DARES, INSEE, France Travail',
           badge: 'Live'
         },
-        { 
-          id: 'documentation', 
-          label: 'Documentation', 
-          icon: BookOpen, 
+        {
+          id: 'documentation',
+          label: 'Documentation',
+          icon: BookOpen,
           description: 'Guides et méthodologies'
         },
-        { 
-          id: 'api-access', 
-          label: 'Accès API', 
-          icon: Zap, 
+        {
+          id: 'api-access',
+          label: 'Accès API',
+          icon: Zap,
           description: 'Intégrations tierces'
         }
       ]
@@ -326,30 +343,36 @@ const InstitutionDashboard = () => {
       description: 'Métriques et KPIs sectoriels',
       gradient: 'from-orange-500 to-red-500',
       items: [
-        { 
-          id: 'market-demand', 
-          label: 'Demande Marché', 
-          icon: TrendingUp, 
+        {
+          id: 'cohorts',
+          label: 'Cohortes & Étudiants',
+          icon: Users,
+          description: 'Étudiants de votre institution'
+        },
+        {
+          id: 'market-demand',
+          label: 'Demande Marché',
+          icon: TrendingUp,
           description: 'Offres & entreprises',
           badge: 'DARES'
         },
-        { 
-          id: 'talent-supply', 
-          label: 'Offre Talent', 
-          icon: GraduationCap, 
+        {
+          id: 'talent-supply',
+          label: 'Offre Talent',
+          icon: GraduationCap,
           description: 'Étudiants & écoles'
         },
-        { 
-          id: 'adequation', 
-          label: 'Adéquation', 
-          icon: Target, 
+        {
+          id: 'adequation',
+          label: 'Adéquation',
+          icon: Target,
           description: 'Matching & tensions',
           badge: 'IA'
         },
-        { 
-          id: 'quality', 
-          label: 'Qualité & Impact', 
-          icon: Award, 
+        {
+          id: 'quality',
+          label: 'Qualité & Impact',
+          icon: Award,
           description: 'Évaluations & ROI'
         }
       ]
@@ -361,23 +384,23 @@ const InstitutionDashboard = () => {
       description: 'Exploration et tendances',
       gradient: 'from-purple-500 to-pink-600',
       items: [
-        { 
-          id: 'geography', 
-          label: 'Analyse Géographique', 
-          icon: MapPin, 
+        {
+          id: 'geography',
+          label: 'Analyse Géographique',
+          icon: MapPin,
           description: 'Cartes & territoires',
           badge: 'INSEE'
         },
-        { 
-          id: 'emerging-trends', 
-          label: 'Tendances Émergentes', 
-          icon: TrendingUp, 
+        {
+          id: 'emerging-trends',
+          label: 'Tendances Émergentes',
+          icon: TrendingUp,
           description: 'Nouveaux métiers'
         },
-        { 
-          id: 'competitive-intel', 
-          label: 'Veille Concurrentielle', 
-          icon: Eye, 
+        {
+          id: 'competitive-intel',
+          label: 'Veille Concurrentielle',
+          icon: Eye,
           description: 'Analyse comparative'
         }
       ]
@@ -389,22 +412,22 @@ const InstitutionDashboard = () => {
       description: 'Configuration institution',
       gradient: 'from-gray-500 to-slate-600',
       items: [
-        { 
-          id: 'institution-config', 
-          label: 'Configuration', 
-          icon: Building, 
+        {
+          id: 'institution-config',
+          label: 'Configuration',
+          icon: Building,
           description: 'Paramètres institution'
         },
-        { 
-          id: 'data-access', 
-          label: 'Accès Données', 
-          icon: Database, 
+        {
+          id: 'data-access',
+          label: 'Accès Données',
+          icon: Database,
           description: 'Permissions et APIs'
         },
-        { 
-          id: 'alerts', 
-          label: 'Alertes & Prédictions', 
-          icon: AlertTriangle, 
+        {
+          id: 'alerts',
+          label: 'Alertes & Prédictions',
+          icon: AlertTriangle,
           description: 'Système d\'alertes',
           badge: 'Nouveau'
         }
@@ -419,6 +442,11 @@ const InstitutionDashboard = () => {
         title: 'Pilotage Formation ↔ Débouchés',
         breadcrumbs: ['Pilotage Stratégique'],
         description: 'Vision 360° du marché de l\'emploi et de l\'adéquation formation-débouchés'
+      },
+      cohorts: {
+        title: 'Cohortes & Étudiants',
+        breadcrumbs: ['Suivi & Analytics', 'Cohortes'],
+        description: 'Étudiants ayant déclaré votre institution'
       },
       'market-demand': {
         title: 'Analyse de la demande marché',
@@ -456,7 +484,7 @@ const InstitutionDashboard = () => {
         description: 'Sources DARES, INSEE, France Travail, ONISEP/RNCP'
       }
     };
-    
+
     return configs[pageId] || configs.dashboard;
   };
 
@@ -509,44 +537,44 @@ const InstitutionDashboard = () => {
   const renderDashboardKPIs = () => {
     const kpis = [
       {
-        title: 'Tension Moyenne Marché',
-        value: '2.1',
-        subtitle: 'offres/candidat',
-        change: '+0.3 vs mois dernier',
+        title: 'Étudiants suivis',
+        value: String(studentData.totalStudents || 0),
+        subtitle: 'ayant déclaré votre institution',
+        change: `${studentData.actifs || 0} actif(s)`,
         trend: 'up',
-        icon: TrendingUp,
-        gradient: 'from-red-500 to-orange-500',
-        description: 'Indice DARES modifié'
+        icon: Users,
+        gradient: 'from-blue-500 to-indigo-500',
+        description: 'Profils étudiants rattachés'
       },
       {
-        title: 'Taux Placement Global',
-        value: '89.6%',
-        subtitle: 'à 6 mois',
-        change: '+2.4% vs cohorte précédente',
+        title: 'Taux de Placement',
+        value: `${studentData.tauxPlacement6m || 0}%`,
+        subtitle: 'candidatures acceptées',
+        change: `${studentData.diplomes || 0} acceptée(s)`,
         trend: 'up',
         icon: Target,
         gradient: 'from-green-500 to-teal-500',
-        description: 'Tous programmes confondus'
+        description: 'Depuis les candidatures réelles'
       },
       {
-        title: 'Gap Compétences Moyen',
-        value: '27.3%',
-        subtitle: 'écart formation/marché',
-        change: '-3.1% vs trimestre dernier',
-        trend: 'down',
-        icon: AlertTriangle,
+        title: 'Candidatures',
+        value: String(studentData.totalApplications || 0),
+        subtitle: 'de vos étudiants',
+        change: `${studentData.enRecherche || 0} en cours`,
+        trend: studentData.totalApplications > 0 ? 'up' : 'down',
+        icon: Briefcase,
         gradient: 'from-orange-500 to-red-500',
-        description: 'Analyse prédictive IA'
+        description: 'Toutes offres confondues'
       },
       {
-        title: 'Score Qualité Formations',
-        value: '8.2/10',
-        subtitle: 'satisfaction globale',
-        change: '+0.3 vs année dernière',
+        title: 'Entreprises Partenaires',
+        value: String(studentData.partnerCompanies || 0),
+        subtitle: 'ayant reçu vos étudiants',
+        change: 'Candidatures réelles',
         trend: 'up',
         icon: Award,
         gradient: 'from-purple-500 to-pink-500',
-        description: 'Évaluations multi-acteurs'
+        description: 'Réseau d\'accueil'
       }
     ];
 
@@ -573,7 +601,7 @@ const InstitutionDashboard = () => {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               </div>
-              
+
               <div className="p-4">
                 <div className="flex items-end justify-between mb-3">
                   <div>
@@ -585,12 +613,12 @@ const InstitutionDashboard = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className={`text-xs font-medium flex items-center gap-1 ${
-                  kpi.trend === 'up' ? 'text-green-600' : 
+                  kpi.trend === 'up' ? 'text-green-600' :
                   kpi.trend === 'down' ? 'text-red-600' : 'text-gray-600'
                 }`}>
-                  {kpi.trend === 'up' ? <ArrowUp className="h-3 w-3" /> : 
+                  {kpi.trend === 'up' ? <ArrowUp className="h-3 w-3" /> :
                    kpi.trend === 'down' ? <ArrowDown className="h-3 w-3" /> : null}
                   {kpi.change}
                 </div>
@@ -610,17 +638,17 @@ const InstitutionDashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2 sm:space-x-3">
-                <img 
-                  src="/emeres-logo.png" 
-                  alt="ÉMÉRÉS" 
-                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer" 
+                <img
+                  src="/emeres-logo.png"
+                  alt="ÉMÉRÉS"
+                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer"
                   onClick={() => setActivePage('dashboard')}
                   onError={(e) => {
                     e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%2314B8A6"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="40" font-family="Arial, sans-serif">É</text></svg>';
                   }}
                 />
                 <div>
-                  <span 
+                  <span
                     className="text-lg sm:text-xl font-bold text-blue-600 cursor-pointer"
                     onClick={() => setActivePage('dashboard')}
                   >
@@ -629,7 +657,7 @@ const InstitutionDashboard = () => {
                   <div className="text-xs text-gray-500 hidden sm:block">Dashboard Institution</div>
                 </div>
               </div>
-              
+
               <EmeresButton
                 variant="ghost"
                 size="sm"
@@ -649,7 +677,7 @@ const InstitutionDashboard = () => {
               >
                 <span className="hidden lg:inline">Vue 360°</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'adequation' ? 'primary' : 'ghost'}
                 size="sm"
@@ -659,7 +687,7 @@ const InstitutionDashboard = () => {
               >
                 <span className="hidden lg:inline">Adéquation</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'alerts' ? 'primary' : 'ghost'}
                 size="sm"
@@ -673,8 +701,8 @@ const InstitutionDashboard = () => {
 
             <div className="flex items-center space-x-1 sm:space-x-3">
               <div className="flex items-center gap-2">
-                <select 
-                  value={selectedTimeframe} 
+                <select
+                  value={selectedTimeframe}
                   onChange={(e) => setSelectedTimeframe(e.target.value)}
                   className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white"
                 >
@@ -683,7 +711,7 @@ const InstitutionDashboard = () => {
                   <option value="6m">6 mois</option>
                   <option value="1y">1 an</option>
                 </select>
-                
+
                 <EmeresButton
                   variant="ghost"
                   size="sm"
@@ -732,7 +760,7 @@ const InstitutionDashboard = () => {
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400 hidden lg:block" />
                 </button>
-                
+
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-emeres-lg border border-gray-100 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                     <Building className="w-4 h-4" />
@@ -743,7 +771,7 @@ const InstitutionDashboard = () => {
                     Configuration
                   </button>
                   <div className="border-t border-gray-100 mt-2 pt-2">
-                    <button 
+                    <button
                       onClick={() => {
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');
@@ -764,18 +792,18 @@ const InstitutionDashboard = () => {
 
       <div className="flex relative">
         {!sidebarCollapsed && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-20 lg:hidden"
             onClick={() => setSidebarCollapsed(true)}
           />
         )}
 
         <aside className={`
-          ${sidebarCollapsed ? 'w-12' : 'w-56'} 
-          bg-white/95 backdrop-blur-md border-r border-gray-200 
+          ${sidebarCollapsed ? 'w-12' : 'w-56'}
+          bg-white/95 backdrop-blur-md border-r border-gray-200
           fixed left-0 top-16 bottom-0 z-30 transition-all duration-300 overflow-hidden shadow-emeres-sm
-          ${sidebarCollapsed 
-            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0' 
+          ${sidebarCollapsed
+            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0'
             : 'translate-x-0'
           }
         `}>
@@ -786,7 +814,7 @@ const InstitutionDashboard = () => {
                   // Traitement spécial pour l'Accueil
                   const Icon = category.icon;
                   const isActive = activePage === category.id;
-                  
+
                   return (
                     <button
                       key={category.id}
@@ -798,8 +826,8 @@ const InstitutionDashboard = () => {
                       }}
                       className={`
                         w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                        ${isActive 
-                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md transform scale-[1.02]` 
+                        ${isActive
+                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md transform scale-[1.02]`
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }
                       `}
@@ -813,7 +841,7 @@ const InstitutionDashboard = () => {
                           ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}
                         `} />
                       </div>
-                      
+
                       {!sidebarCollapsed && (
                         <div className="flex-1 text-left relative z-10 min-w-0">
                           <div className={`
@@ -830,7 +858,7 @@ const InstitutionDashboard = () => {
                           </div>
                         </div>
                       )}
-                      
+
                       {sidebarCollapsed && (
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                           {category.label}
@@ -839,12 +867,12 @@ const InstitutionDashboard = () => {
                     </button>
                   );
                 }
-                
+
                 // Traitement pour les catégories avec sous-éléments
                 const CategoryIcon = category.icon;
                 const isExpanded = expandedCategories[category.id];
                 const hasActiveChild = category.items.some(item => activePage === item.id);
-                
+
                 return (
                   <div key={category.id} className="space-y-1">
                     {/* En-tête de catégorie */}
@@ -852,8 +880,8 @@ const InstitutionDashboard = () => {
                       onClick={() => toggleCategory(category.id)}
                       className={`
                         w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                        ${hasActiveChild 
-                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md` 
+                        ${hasActiveChild
+                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md`
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }
                       `}
@@ -867,7 +895,7 @@ const InstitutionDashboard = () => {
                           ${hasActiveChild ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}
                         `} />
                       </div>
-                      
+
                       {!sidebarCollapsed && (
                         <>
                           <div className="flex-1 text-left relative z-10 min-w-0">
@@ -884,7 +912,7 @@ const InstitutionDashboard = () => {
                               {category.description}
                             </div>
                           </div>
-                          
+
                           {/* Chevron d'expansion */}
                           <ChevronRight className={`
                             h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-300 relative z-10
@@ -893,21 +921,21 @@ const InstitutionDashboard = () => {
                           `} />
                         </>
                       )}
-                      
+
                       {sidebarCollapsed && (
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                           {category.label}
                         </div>
                       )}
                     </button>
-                    
+
                     {/* Sous-éléments de la catégorie */}
                     {!sidebarCollapsed && isExpanded && (
                       <div className="ml-6 space-y-1">
                         {category.items.map((item) => {
                           const ItemIcon = item.icon;
                           const isActive = activePage === item.id;
-                          
+
                           return (
                             <button
                               key={item.id}
@@ -919,8 +947,8 @@ const InstitutionDashboard = () => {
                               }}
                               className={`
                                 w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg transition-all duration-300 relative overflow-hidden text-left
-                                ${isActive 
-                                  ? 'bg-gray-100 text-teal-700 border-l-2 border-teal-500' 
+                                ${isActive
+                                  ? 'bg-gray-100 text-teal-700 border-l-2 border-teal-500'
                                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                 }
                               `}
@@ -934,7 +962,7 @@ const InstitutionDashboard = () => {
                                   ${isActive ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-600'}
                                 `} />
                               </div>
-                              
+
                               <div className="flex-1 text-left relative z-10 min-w-0">
                                 <div className={`
                                   font-medium text-xs transition-colors duration-300 truncate
@@ -949,7 +977,7 @@ const InstitutionDashboard = () => {
                                   {item.description}
                                 </div>
                               </div>
-                              
+
                               {item.badge && (
                                 <EmeresBadge
                                   variant={isActive ? "default" : "secondary"}
@@ -971,7 +999,7 @@ const InstitutionDashboard = () => {
                 );
               })}
             </div>
-            
+
             {!sidebarCollapsed && (
               <div className="mt-4 sm:mt-8 p-3 sm:p-4 bg-gradient-emeres-subtle rounded-lg sm:rounded-xl border border-teal-200">
                 <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
@@ -1014,7 +1042,7 @@ const InstitutionDashboard = () => {
                       {getPageConfig(activePage).description}
                     </p>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <EmeresButton
                       variant="secondary"
@@ -1049,13 +1077,13 @@ const InstitutionDashboard = () => {
                       Vision 360° croisée données internes et externes (DARES, INSEE, France Travail)
                     </p>
                   </div>
-                  
+
                   {/* KPI principaux */}
                   {renderDashboardKPIs()}
 
                   {/* Contenu principal du dashboard */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    
+
                     {/* Tensions Métiers */}
                     <div className="xl:col-span-2">
                       <EmeresCard variant="default" className="h-full">
@@ -1075,8 +1103,8 @@ const InstitutionDashboard = () => {
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <h4 className="font-medium text-gray-900">{metier.metier}</h4>
-                                  <EmeresBadge 
-                                    variant="outline" 
+                                  <EmeresBadge
+                                    variant="outline"
                                     size="sm"
                                     className={getTensionStatusColor(metier.statut)}
                                   >
@@ -1143,7 +1171,7 @@ const InstitutionDashboard = () => {
 
                   {/* Deuxième ligne */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                    
+
                     {/* Gap Compétences */}
                     <EmeresCard variant="default">
                       <EmeresCardHeader>
@@ -1161,17 +1189,17 @@ const InstitutionDashboard = () => {
                           <div key={index} className="p-4 border border-gray-100 rounded-lg">
                             <div className="flex items-center justify-between mb-3">
                               <h4 className="font-medium text-gray-900">{gap.formation}</h4>
-                              <EmeresBadge 
-                                variant="outline" 
+                              <EmeresBadge
+                                variant="outline"
                                 size="sm"
-                                className={gap.score >= 70 ? 'text-green-700 border-green-300' : 
-                                          gap.score >= 50 ? 'text-amber-700 border-blue-300' : 
+                                className={gap.score >= 70 ? 'text-green-700 border-green-300' :
+                                          gap.score >= 50 ? 'text-amber-700 border-blue-300' :
                                           'text-red-700 border-red-300'}
                               >
                                 {gap.score}% adéquation
                               </EmeresBadge>
                             </div>
-                            
+
                             <div className="space-y-2 text-sm">
                               <div>
                                 <span className="text-gray-600">Manquant: </span>
@@ -1207,8 +1235,8 @@ const InstitutionDashboard = () => {
                               </p>
                             </div>
                             <div className="text-right">
-                              <EmeresBadge 
-                                variant="outline" 
+                              <EmeresBadge
+                                variant="outline"
                                 size="sm"
                                 className={getRegionStatusColor(region.statut)}
                               >
@@ -1226,8 +1254,64 @@ const InstitutionDashboard = () => {
                   </div>
                 </div>
               )}
-              
-              {activePage !== 'dashboard' && (
+
+              {activePage === 'cohorts' && (
+                <EmeresCard>
+                  <EmeresCardHeader>
+                    <EmeresCardTitle>Étudiants de l'institution</EmeresCardTitle>
+                    <EmeresCardDescription>
+                      {institutionStudents.length} étudiant(s) ayant déclaré votre institution dans leur profil
+                    </EmeresCardDescription>
+                  </EmeresCardHeader>
+                  <EmeresCardContent>
+                    {institutionStudents.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center py-8">
+                        Aucun étudiant pour le moment. Les étudiants qui renseignent votre
+                        institution apparaîtront ici automatiquement.
+                      </p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-gray-500 border-b border-gray-200">
+                              <th className="py-2 pr-4 font-medium">Étudiant</th>
+                              <th className="py-2 pr-4 font-medium">Formation</th>
+                              <th className="py-2 pr-4 font-medium">Compétences</th>
+                              <th className="py-2 pr-4 font-medium">Candidatures</th>
+                              <th className="py-2 font-medium">Statut</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {institutionStudents.map((student) => (
+                              <tr key={student.id} className="border-b border-gray-100">
+                                <td className="py-3 pr-4 font-medium text-gray-900">
+                                  {student.first_name} {student.last_name}
+                                </td>
+                                <td className="py-3 pr-4 text-gray-600">
+                                  {student.field_of_study || student.degree_preparing || '—'}
+                                </td>
+                                <td className="py-3 pr-4 text-gray-600">
+                                  {(student.main_skills || []).slice(0, 3).join(', ') || '—'}
+                                </td>
+                                <td className="py-3 pr-4 text-gray-600">
+                                  {student.applications_count} ({student.accepted_count} acceptées)
+                                </td>
+                                <td className="py-3">
+                                  <EmeresBadge variant={student.is_active ? 'primary' : 'secondary'} size="sm">
+                                    {student.is_active ? 'En recherche' : 'Sans candidature'}
+                                  </EmeresBadge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </EmeresCardContent>
+                </EmeresCard>
+              )}
+
+              {activePage !== 'dashboard' && activePage !== 'cohorts' && (
                 <EmeresCard>
                   <EmeresCardContent className="text-center py-12">
                     <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />

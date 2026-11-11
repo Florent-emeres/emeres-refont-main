@@ -6,7 +6,7 @@ Profil, statistiques, étudiants, partenariats, évaluations, analytics et activ
 import os
 import re
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException
@@ -280,6 +280,93 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
             "school",
         )
         return {"success": True, "school_id": current_user["id"]}
+
+    # ==========================================================================
+    # INVITATIONS (code école → étudiant)
+    # ==========================================================================
+
+    @router.get("/school/invitations")
+    async def list_invitations(current_user: dict = Depends(require_school)):
+        invitations = (
+            await db.school_invitations.find({"school_id": current_user["id"]})
+            .sort("created_at", -1)
+            .to_list(None)
+        )
+        return [clean(i) for i in invitations]
+
+    @router.post("/school/invitations")
+    async def create_invitation(current_user: dict = Depends(require_school)):
+        profile = await get_school_profile(current_user)
+        code = uuid.uuid4().hex[:8].upper()
+        invitation = {
+            "id": str(uuid.uuid4()),
+            "school_id": current_user["id"],
+            "school_name": profile.get("school_name", ""),
+            "code": code,
+            "status": "pending",
+            "accepted_by": None,
+            "expires_at": now() + timedelta(days=7),
+            "created_at": now(),
+        }
+        await db.school_invitations.insert_one(invitation)
+        return clean(invitation)
+
+    @router.delete("/school/invitations/{invitation_id}")
+    async def cancel_invitation(invitation_id: str, current_user: dict = Depends(require_school)):
+        result = await db.school_invitations.update_one(
+            {"id": invitation_id, "school_id": current_user["id"], "status": "pending"},
+            {"$set": {"status": "cancelled"}},
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Invitation non trouvée ou déjà traitée")
+        return {"success": True}
+
+    @router.post("/school/join")
+    async def join_school(join_data: dict, current_user: dict = Depends(get_current_user)):
+        if current_user.get("role") != "student":
+            raise HTTPException(
+                status_code=403, detail="Seuls les étudiants peuvent rejoindre une école"
+            )
+        code = (join_data.get("code") or "").strip().upper()
+        if not code:
+            raise HTTPException(status_code=400, detail="Code d'invitation requis")
+        invitation = await db.school_invitations.find_one({"code": code})
+        expires_at = invitation.get("expires_at") if invitation else None
+        if expires_at is not None and getattr(expires_at, "tzinfo", None) is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if not invitation or invitation.get("status") != "pending":
+            raise HTTPException(status_code=404, detail="Code d'invitation invalide ou expiré")
+        if expires_at is not None and expires_at < now():
+            raise HTTPException(status_code=404, detail="Code d'invitation invalide ou expiré")
+        student = await db.student_profiles.find_one({"user_id": current_user["id"]})
+        if not student:
+            raise HTTPException(status_code=404, detail="Profil étudiant non trouvé")
+        if student.get("school_id") and student["school_id"] != invitation["school_id"]:
+            raise HTTPException(
+                status_code=409, detail="Vous êtes déjà rattaché à un autre établissement"
+            )
+        await db.student_profiles.update_one(
+            {"user_id": current_user["id"]},
+            {
+                "$set": {
+                    "school_id": invitation["school_id"],
+                    "school_name": invitation.get("school_name", ""),
+                    "updated_at": now(),
+                }
+            },
+        )
+        await db.school_invitations.update_one(
+            {"id": invitation["id"]},
+            {"$set": {"status": "accepted", "accepted_by": current_user["id"]}},
+        )
+        joiner = get_display_name(current_user) or "Un étudiant"
+        await notify_user(
+            invitation["school_id"],
+            "Nouvel étudiant rattaché",
+            f"{joiner} a rejoint votre établissement avec un code d'invitation.",
+            "school",
+        )
+        return {"success": True, "school_name": invitation.get("school_name", "")}
 
     @router.post("/school/students/{student_user_id}/detach")
     async def detach_student(student_user_id: str, current_user: dict = Depends(require_school)):
