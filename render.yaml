@@ -24,6 +24,14 @@ services:
         value: "true"
       - key: LLM_PROVIDER
         value: stub
+      # Activation IA (optionnel, compatible Mistral) — voir DEPLOY.md étape 6 :
+      # OPENAI_API_KEY, OPENAI_BASE_URL=https://api.mistral.ai/v1, LLM_MODEL=mistral-small-latest
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        sync: false
+      - key: LLM_MODEL
+        sync: false
       - key: CORS_ORIGINS
         sync: false
       - key: FRONTEND_URL

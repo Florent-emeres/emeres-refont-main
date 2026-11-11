@@ -79,6 +79,28 @@ Comptes créés (mot de passe `Pilote!2024`) :
 
 Le seed est idempotent : le relancer ne duplique rien.
 
+## Étape 6 — Activer l'IA conversationnelle (optionnel, ~2 $/mois)
+
+Sans cette étape, la plateforme fonctionne en mode local déterministe (matching,
+CV evaluator et feedback d'entretien calculés localement ; Émé guide sans LLM).
+
+Sur **emeres-backend** → **Environment**, définissez puis laissez redéployer :
+
+| Variable | Valeur | Rôle |
+|---|---|---|
+| `LLM_PROVIDER` | `openai` | active le relais LLM (au lieu de `stub`) |
+| `OPENAI_API_KEY` | votre clé Mistral | authentification (compatible API OpenAI) |
+| `OPENAI_BASE_URL` | `https://api.mistral.ai/v1` | pointe vers Mistral plutôt qu'OpenAI |
+| `LLM_MODEL` | `mistral-small-latest` | modèle économique (~0,10 $/M tokens) |
+
+Vérification : `GET /api/ai/status` (avec un token) → `{"llm_available": true, "mode": "llm"}`.
+Émé et le Coach IA Études basculent automatiquement en mode LLM ; le scoring local
+(matching, CV, entretien) reste gratuit et inchangé.
+
+Coût estimé : ~1,5–3 $/mois pour 50 étudiants actifs, ~30 $/mois pour 1 000
+(rate limiting 10 req/min/utilisateur sur la génération de lettres, historique
+du coach plafonné, compteur `usage.llm_calls` par session).
+
 ## Vérifier
 
 1. Backend : ouvrez `https://emeres-backend-xxxx.onrender.com/health` → `{"status": "ok"}`
