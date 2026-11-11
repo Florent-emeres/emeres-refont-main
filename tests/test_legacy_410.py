@@ -1,9 +1,6 @@
 ﻿import importlib
 import os
-import uuid
 
-import jwt
-import pymongo
 from fastapi.testclient import TestClient
 import pytest
 
@@ -23,28 +20,22 @@ def test_legacy_generate_cover_letter_returns_410(monkeypatch):
     legacy_module = importlib.import_module("backend.server")
     importlib.reload(legacy_module)
 
-    user_id = str(uuid.uuid4())
-    mongo = pymongo.MongoClient(os.environ["MONGO_URL"], serverSelectionTimeoutMS=5000)
-    mongo[os.environ["DB_NAME"]].users.insert_one(
-        {
-            "id": user_id,
-            "email": "legacy410@test.emeres.fr",
-            "role": "student",
-            "first_name": "Legacy",
-            "last_name": "Test",
-        }
+    # Auth simulée (sans base de données) : le garde legacy doit renvoyer 410
+    # avant toute exécution du handler, quel que soit l'utilisateur authentifié.
+    fake_user = legacy_module.User(
+        id="legacy-410-user", email="legacy410@test.emeres.fr", role="student"
     )
-    mongo.close()
-    token = jwt.encode({"sub": user_id}, os.environ["SECRET_KEY"], algorithm="HS256")
-
-    client = TestClient(legacy_module.app)
-    response = client.post(
-        "/api/ai/generate-cover-letter",
-        json={
-            "studentProfile": {},
-            "jobInfo": {},
-            "preferences": {},
-        },
-        headers={"Authorization": f"Bearer {token}"},
-    )
+    legacy_module.app.dependency_overrides[legacy_module.verify_token] = lambda: fake_user
+    try:
+        client = TestClient(legacy_module.app)
+        response = client.post(
+            "/api/ai/generate-cover-letter",
+            json={
+                "studentProfile": {},
+                "jobInfo": {},
+                "preferences": {},
+            },
+        )
+    finally:
+        legacy_module.app.dependency_overrides.pop(legacy_module.verify_token, None)
     assert response.status_code == 410
