@@ -15,15 +15,16 @@ import EvaluationsSystem from './mentor/EvaluationsSystem';
 import OpportunitiesRecommendations from './mentor/OpportunitiesRecommendations';
 import ReportsAnalytics from './mentor/ReportsAnalytics';
 import MentorProfile from './mentor/MentorProfile';
+import MentorValorization from './mentor/MentorValorization';
 import StudentAds from './mentor/StudentAds';
 import ResourcesLibrary from './ResourcesLibrary';
 import CreditsPage from './CreditsPage';
 
-import { 
-  Users, 
-  MessageSquare, 
-  Calendar, 
-  Award, 
+import {
+  Users,
+  MessageSquare,
+  Calendar,
+  Award,
   TrendingUp,
   Bell,
   Menu,
@@ -90,7 +91,7 @@ const MentorDashboard = () => {
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   // States pour les données
   const [mentorProfile, setMentorProfile] = useState(null);
   const [students, setStudents] = useState([]);
@@ -99,7 +100,8 @@ const MentorDashboard = () => {
   const [sessions, setSessions] = useState([]);
   const [evaluations, setEvaluations] = useState([]);
   const [analytics, setAnalytics] = useState(null);
-  
+  const [impact, setImpact] = useState(null);
+
   // États des modals/forms
   const [showObjectiveForm, setShowObjectiveForm] = useState(false);
   const [showSessionForm, setShowSessionForm] = useState(false);
@@ -109,87 +111,94 @@ const MentorDashboard = () => {
 
   // Configuration de la sidebar
   const sidebarItems = [
-    { 
-      id: 'dashboard', 
-      label: 'Vue d\'ensemble', 
-      icon: BarChart3, 
+    {
+      id: 'dashboard',
+      label: 'Vue d\'ensemble',
+      icon: BarChart3,
       description: 'KPIs & synthèse',
       gradient: 'from-teal-500 to-teal-600'
     },
-    { 
-      id: 'student-ads', 
-      label: 'Annonces Étudiants', 
-      icon: MessageSquare, 
+    {
+      id: 'student-ads',
+      label: 'Annonces Étudiants',
+      icon: MessageSquare,
       description: 'Annonces et demandes',
       gradient: 'from-cyan-500 to-cyan-600',
       badge: '14'
     },
-    { 
-      id: 'students', 
-      label: 'Mes Étudiants', 
-      icon: Users, 
+    {
+      id: 'students',
+      label: 'Mes Étudiants',
+      icon: Users,
       description: 'Gestion & fiches',
       gradient: 'from-blue-500 to-blue-600',
       badge: students.length > 0 ? students.length.toString() : null
     },
-    { 
-      id: 'objectives', 
-      label: 'Objectifs SMART', 
-      icon: Target, 
+    {
+      id: 'objectives',
+      label: 'Objectifs SMART',
+      icon: Target,
       description: 'Plans & progression',
       gradient: 'from-green-500 to-green-600'
     },
-    { 
-      id: 'messages', 
-      label: 'Messagerie Interne', 
-      icon: MessageSquare, 
+    {
+      id: 'messages',
+      label: 'Messagerie Interne',
+      icon: MessageSquare,
       description: 'Communications sécurisées',
       gradient: 'from-purple-500 to-purple-600',
       badge: 'Sécurisé'
     },
-    { 
-      id: 'calendar', 
-      label: 'Calendrier', 
-      icon: Calendar, 
+    {
+      id: 'calendar',
+      label: 'Calendrier',
+      icon: Calendar,
       description: 'Planification et synchronisation',
       gradient: 'from-indigo-500 to-indigo-600',
       badge: 'Intégré'
     },
-    { 
-      id: 'evaluations', 
-      label: 'Évaluations', 
-      icon: Award, 
+    {
+      id: 'evaluations',
+      label: 'Évaluations',
+      icon: Award,
       description: 'Feedback & scores',
       gradient: 'from-pink-500 to-pink-600'
     },
-    { 
-      id: 'opportunities', 
-      label: 'Opportunités', 
-      icon: Briefcase, 
+    {
+      id: 'opportunities',
+      label: 'Opportunités',
+      icon: Briefcase,
       description: 'Recommandations',
       gradient: 'from-indigo-500 to-indigo-600'
     },
-    { 
-      id: 'reports', 
-      label: 'Rapports', 
-      icon: FileText, 
+    {
+      id: 'reports',
+      label: 'Rapports',
+      icon: FileText,
       description: 'Analytics & exports',
       gradient: 'from-red-500 to-red-600'
     },
-    { 
-      id: 'resources', 
-      label: 'Ressources', 
-      icon: Library, 
+    {
+      id: 'resources',
+      label: 'Ressources',
+      icon: Library,
       description: 'Guides de mentorat',
       gradient: 'from-emerald-500 to-emerald-600',
       badge: 'Nouveau'
     },
-    { 
-      id: 'credits', 
-      label: 'Mes Crédits', 
-      icon: Coins, 
+    {
+      id: 'credits',
+      label: 'Mes Crédits',
+      icon: Coins,
       description: 'Système de points et crédits',
       gradient: 'from-amber-500 to-orange-500'
+    },
+    {
+      id: 'valorization',
+      label: 'Valorisation',
+      icon: Award,
+      description: 'Impact & badges',
+      gradient: 'from-amber-500 to-orange-600'
     }
   ];
 
@@ -237,6 +246,13 @@ const MentorDashboard = () => {
         setAnalytics(analyticsData);
       }
 
+      // Charger l'impact & les badges
+      const impactRes = await fetch(`${API}/mentor/impact`, { headers });
+      if (impactRes.ok) {
+        const impactData = await impactRes.json();
+        setImpact(impactData);
+      }
+
     } catch (error) {
       console.error('Erreur lors du chargement des données mentor:', error);
     } finally {
@@ -273,31 +289,31 @@ const MentorDashboard = () => {
       case 'dashboard':
         return <DashboardOverview analytics={analytics} students={students} sessions={sessions} />;
       case 'profile':
-        return <MentorProfile 
+        return <MentorProfile
           mentorProfile={mentorProfile}
-          setMentorProfile={setMentorProfile} 
+          setMentorProfile={setMentorProfile}
         />;
       case 'student-ads':
         return <StudentAds />;
       case 'students':
-        return <StudentsManagement 
-          students={students} 
+        return <StudentsManagement
+          students={students}
           selectedStudent={selectedStudent}
           setSelectedStudent={setSelectedStudent}
           onStudentUpdate={loadMentorData}
         />;
       case 'objectives':
-        return <ObjectivesManagement 
+        return <ObjectivesManagement
           selectedStudent={selectedStudent}
           objectives={objectives}
           setObjectives={setObjectives}
         />;
       case 'messages':
-        return <MessagingHub 
+        return <MessagingHub
           userRole="mentor"
         />;
       case 'calendar':
-        return <CalendarIntegration 
+        return <CalendarIntegration
           sessions={sessions}
           setSessions={setSessions}
           students={students}
@@ -305,13 +321,13 @@ const MentorDashboard = () => {
           setActiveSession={setActiveSession}
         />;
       case 'evaluations':
-        return <EvaluationsSystem 
+        return <EvaluationsSystem
           selectedStudent={selectedStudent}
           evaluations={evaluations}
           setEvaluations={setEvaluations}
         />;
       case 'opportunities':
-        return <OpportunitiesRecommendations 
+        return <OpportunitiesRecommendations
           selectedStudent={selectedStudent}
           students={students}
         />;
@@ -321,6 +337,8 @@ const MentorDashboard = () => {
         return <ResourcesLibrary />;
       case 'credits':
         return <CreditsPage />;
+      case 'valorization':
+        return <MentorValorization impact={impact} />;
       default:
         return <DashboardOverview analytics={analytics} students={students} sessions={sessions} />;
     }
@@ -345,17 +363,17 @@ const MentorDashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2 sm:space-x-3">
-                <img 
-                  src="/emeres-logo.png" 
-                  alt="ÉMÉRÉS" 
-                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer" 
+                <img
+                  src="/emeres-logo.png"
+                  alt="ÉMÉRÉS"
+                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer"
                   onClick={() => setActivePage('dashboard')}
                   onError={(e) => {
                     e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%2314B8A6"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="40" font-family="Arial, sans-serif">É</text></svg>';
                   }}
                 />
                 <div>
-                  <span 
+                  <span
                     className="text-lg sm:text-xl font-bold text-blue-600 cursor-pointer"
                     onClick={() => setActivePage('dashboard')}
                   >
@@ -364,7 +382,7 @@ const MentorDashboard = () => {
                   <div className="text-xs text-gray-500 hidden sm:block">Dashboard Mentor</div>
                 </div>
               </div>
-              
+
               <EmeresButton
                 variant="ghost"
                 size="sm"
@@ -384,7 +402,7 @@ const MentorDashboard = () => {
               >
                 <span className="hidden lg:inline">Vue d'ensemble</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'students' ? 'primary' : 'ghost'}
                 size="sm"
@@ -394,7 +412,7 @@ const MentorDashboard = () => {
               >
                 <span className="hidden lg:inline">Étudiants</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'calendar' ? 'primary' : 'ghost'}
                 size="sm"
@@ -455,9 +473,9 @@ const MentorDashboard = () => {
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400 hidden lg:block" />
                 </button>
-                
+
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-emeres-lg border border-gray-100 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <button 
+                  <button
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     onClick={() => navigateToPage('profile')}
                   >
@@ -469,7 +487,7 @@ const MentorDashboard = () => {
                     Préférences
                   </button>
                   <div className="border-t border-gray-100 mt-2 pt-2">
-                    <button 
+                    <button
                       onClick={logout}
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
@@ -486,18 +504,18 @@ const MentorDashboard = () => {
 
       <div className="flex relative">
         {!sidebarCollapsed && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-20 lg:hidden"
             onClick={() => setSidebarCollapsed(true)}
           />
         )}
 
         <aside className={`
-          ${sidebarCollapsed ? 'w-12' : 'w-56'} 
-          bg-white/95 backdrop-blur-md border-r border-gray-200 
+          ${sidebarCollapsed ? 'w-12' : 'w-56'}
+          bg-white/95 backdrop-blur-md border-r border-gray-200
           fixed left-0 top-16 bottom-0 z-30 transition-all duration-300 overflow-hidden shadow-emeres-sm
-          ${sidebarCollapsed 
-            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0' 
+          ${sidebarCollapsed
+            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0'
             : 'translate-x-0'
           }
         `}>
@@ -506,15 +524,15 @@ const MentorDashboard = () => {
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activePage === item.id;
-                
+
                 return (
                   <button
                     key={item.id}
                     onClick={() => navigateToPage(item.id)}
                     className={`
                       w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                      ${isActive 
-                        ? `bg-gradient-to-r ${item.gradient} text-white shadow-emeres-md transform scale-[1.02]` 
+                      ${isActive
+                        ? `bg-gradient-to-r ${item.gradient} text-white shadow-emeres-md transform scale-[1.02]`
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                       }
                     `}
@@ -528,7 +546,7 @@ const MentorDashboard = () => {
                         ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}
                       `} />
                     </div>
-                    
+
                     {!sidebarCollapsed && (
                       <div className="flex-1 text-left relative z-10 min-w-0">
                         <div className={`
@@ -545,7 +563,7 @@ const MentorDashboard = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {item.badge && !sidebarCollapsed && (
                       <EmeresBadge
                         variant={isActive ? "secondary" : "primary"}
@@ -558,7 +576,7 @@ const MentorDashboard = () => {
                         {item.badge}
                       </EmeresBadge>
                     )}
-                    
+
                     {sidebarCollapsed && (
                       <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                         {item.label}
@@ -568,7 +586,7 @@ const MentorDashboard = () => {
                 );
               })}
             </div>
-            
+
             {!sidebarCollapsed && (
               <div className="mt-4 sm:mt-8 p-3 sm:p-4 bg-gradient-emeres-subtle rounded-lg sm:rounded-xl border border-teal-200">
                 <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
@@ -611,7 +629,7 @@ const MentorDashboard = () => {
 // Composant Vue d'ensemble
 const DashboardOverview = ({ analytics, students, sessions }) => {
   const kpis = analytics?.kpis || {};
-  
+
   return (
     <div className="space-y-6">
       <div className="mb-6">
@@ -720,8 +738,8 @@ const DashboardOverview = ({ analytics, students, sessions }) => {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <EmeresBadge 
-                    variant={session.status === 'scheduled' ? 'primary' : 'secondary'} 
+                  <EmeresBadge
+                    variant={session.status === 'scheduled' ? 'primary' : 'secondary'}
                     size="sm"
                   >
                     {session.status}
@@ -757,7 +775,7 @@ const KPICard = ({ title, value, subtitle, trend, icon: Icon, gradient }) => (
       </div>
       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
     </div>
-    
+
     <div className="p-4">
       <div className="flex items-end justify-between mb-3">
         <div>
@@ -769,7 +787,7 @@ const KPICard = ({ title, value, subtitle, trend, icon: Icon, gradient }) => (
           </div>
         </div>
       </div>
-      
+
       {trend && (
         <div className={`text-xs font-medium flex items-center gap-1 ${
           trend.direction === 'up' ? 'text-green-600' : 'text-red-600'

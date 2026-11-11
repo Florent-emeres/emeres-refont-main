@@ -1,8 +1,8 @@
-﻿from functools import wraps
-import inspect
-from fastapi import HTTPException
+﻿import inspect
+from functools import wraps
 
 from app.config.flags import USE_V2_ONLY
+from fastapi import HTTPException
 
 
 def ensure_legacy_enabled():

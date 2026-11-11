@@ -1,26 +1,27 @@
-﻿from typing import Dict, Any
+﻿import datetime
 import os
-import datetime
 import uuid
+from typing import Any
 
 _USE_MEM = not bool(os.environ.get("MONGO_URL"))
 
 if not _USE_MEM:
     from pymongo import MongoClient
-    from bson import ObjectId
 
     _client = MongoClient(os.environ["MONGO_URL"])
     db = _client.get_default_database()
 else:
     db = None
-    _AUDITS: Dict[str, Dict[str, Any]] = {}
+    _AUDITS: dict[str, dict[str, Any]] = {}
 
 
 def _now() -> datetime.datetime:
     return datetime.datetime.utcnow()
 
 
-def add_audit(thread_id: str, user_id: str, action: str, meta: Dict[str, Any] | None = None) -> None:
+def add_audit(
+    thread_id: str, user_id: str, action: str, meta: dict[str, Any] | None = None
+) -> None:
     doc = {
         "thread_id": thread_id,
         "user_id": user_id,

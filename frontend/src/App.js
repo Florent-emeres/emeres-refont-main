@@ -15,7 +15,6 @@ import SchoolDashboard from "./components/SchoolDashboard";
 import MentorDashboard from "./components/MentorDashboard";
 import InstitutionDashboard from "./components/InstitutionDashboard";
 import Navigation from "./components/Navigation";
-import InstitutionRegistrationDemo from "./components/InstitutionRegistrationDemo";
 import Homepage from "./components/Homepage";
 import AboutPage from "./components/AboutPage";
 import EmailConfirmation from "./components/EmailConfirmation";
@@ -78,14 +77,14 @@ const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
-      
+
       if (storedToken && storedUser) {
         // Vérifier si le token est valide avant de l'utiliser
         try {
           // Décoder le JWT pour vérifier l'expiration
           const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
           const currentTime = Math.floor(Date.now() / 1000);
-          
+
           // Si le token est expiré, nettoyer le storage
           if (tokenPayload.exp && tokenPayload.exp < currentTime) {
             console.log('Token expiré, nettoyage du storage');
@@ -94,12 +93,12 @@ const AuthProvider = ({ children }) => {
             setLoading(false);
             return;
           }
-          
+
           // Token valide, continuer l'authentification
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
           axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-          
+
           // Attribution automatique de points pour connexion quotidienne
           creditsService.onLogin();
         } catch (error) {
@@ -138,14 +137,14 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post(`${API}/auth/login`, { email, password });
       const { access_token, user: userData } = response.data;
-      
+
       setToken(access_token);
       setUser(userData);
-      
+
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(userData));
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
+
       toast.success('Connexion réussie !');
       return { success: true };
     } catch (error) {
@@ -159,14 +158,14 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post(`${API}/auth/register`, userData);
       const { access_token, user: newUser } = response.data;
-      
+
       setToken(access_token);
       setUser(newUser);
-      
+
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(newUser));
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
+
       toast.success('Inscription réussie !');
       return { success: true };
     } catch (error) {
@@ -258,7 +257,7 @@ function App() {
     // Stocker le token et les infos utilisateur
     localStorage.setItem('token', result.access_token);
     localStorage.setItem('user', JSON.stringify(result.user));
-    
+
     // Rediriger vers le dashboard
     window.location.href = '/dashboard';
   };
@@ -278,34 +277,34 @@ function App() {
 const AppContent = ({ handleCompanyRegistrationSuccess }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
-  
+
   // Gestion des pages de maintenance
   if (MAINTENANCE_MODE) {
     return <MaintenancePage />;
   }
-  
+
   // Gestion maintenance authentification
   if (AUTH_MAINTENANCE && ['/login', '/register', '/company/register'].includes(location.pathname)) {
     return <AuthMaintenancePage />;
   }
-  
+
   // Pages qui ont leur propre navigation (dashboards)
   const pagesWithOwnNavigation = [
-    '/dashboard', 
-    '/student-dashboard', 
-    '/company-dashboard', 
+    '/dashboard',
+    '/student-dashboard',
+    '/company-dashboard',
     '/school-dashboard',
     '/mentor-dashboard',
     '/institution-dashboard'
   ];
-  
+
   // Pages publiques sans navigation
   const pagesWithoutNavigation = ['/login', '/register', '/company/register'];
-  
+
   // Détection plus robuste des dashboards
-  const isDashboardPage = pagesWithOwnNavigation.includes(location.pathname) || 
+  const isDashboardPage = pagesWithOwnNavigation.includes(location.pathname) ||
                          (user && location.pathname === '/' && ['company', 'student', 'school', 'mentor', 'institution'].includes(user.role)); // Homepage avec utilisateur connecté ayant un dashboard = dashboard
-  
+
   // Pages publiques qui ont besoin de la navigation globale
   const shouldShowNavigation = !pagesWithoutNavigation.includes(location.pathname) && !isDashboardPage;
 
@@ -318,11 +317,10 @@ const AppContent = ({ handleCompanyRegistrationSuccess }) => {
         <Route path="/confirm-email" element={<EmailConfirmation />} />
         <Route path="/calendar/callback" element={<CalendarCallback />} />
         <Route path="/company/register" element={<CompanyRegistration onRegistrationSuccess={handleCompanyRegistrationSuccess} />} />
-        <Route path="/institution-demo" element={<InstitutionRegistrationDemo />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             user ? (
               <ProtectedRoute>
@@ -331,62 +329,62 @@ const AppContent = ({ handleCompanyRegistrationSuccess }) => {
             ) : (
               <Homepage />
             )
-          } 
+          }
         />
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/student-dashboard" 
+        <Route
+          path="/student-dashboard"
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/company-dashboard" 
+        <Route
+          path="/company-dashboard"
           element={
             <ProtectedRoute allowedRoles={['company']}>
               <CompanyDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/school-dashboard" 
+        <Route
+          path="/school-dashboard"
           element={
             <ProtectedRoute allowedRoles={['school']}>
               <SchoolDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/mentor-dashboard" 
+        <Route
+          path="/mentor-dashboard"
           element={
             <ProtectedRoute allowedRoles={['mentor']}>
               <MentorDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/institution-dashboard" 
+        <Route
+          path="/institution-dashboard"
           element={
             <ProtectedRoute allowedRoles={['institution']}>
               <InstitutionDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Routes pour les pages de maintenance */}
         <Route path="/maintenance" element={<MaintenancePage />} />
         <Route path="/auth-maintenance" element={<AuthMaintenancePage />} />
         <Route path="/under-development" element={<UnderDevelopmentPage />} />
-        
+
         {/* Routes pour les pages Solutions */}
         <Route path="/solutions" element={<SolutionsOverview />} />
         <Route path="/solutions/etudiants" element={<SolutionEtudiants />} />
@@ -394,7 +392,7 @@ const AppContent = ({ handleCompanyRegistrationSuccess }) => {
         <Route path="/solutions/etablissements" element={<SolutionEtablissements />} />
         <Route path="/solutions/mentors" element={<SolutionMentors />} />
         <Route path="/solutions/institutions" element={<SolutionInstitutions />} />
-        
+
         {/* Routes pour les pages Ressources */}
         <Route path="/ressources" element={<ResourcesOverview />} />
         <Route path="/ressources/blog" element={<BlogPage />} />
@@ -402,7 +400,7 @@ const AppContent = ({ handleCompanyRegistrationSuccess }) => {
         <Route path="/ressources/guides" element={<GuidesPage />} />
         <Route path="/ressources/webinaires" element={<WebinairesPage />} />
         <Route path="/ressources/telechargements" element={<TelechargementPage />} />
-        
+
         {/* Routes pour les pages À propos */}
         <Route path="/a-propos" element={<AboutOverview />} />
         <Route path="/a-propos/equipe" element={<EquipePage />} />
@@ -410,21 +408,21 @@ const AppContent = ({ handleCompanyRegistrationSuccess }) => {
         <Route path="/a-propos/mission" element={<MissionPage />} />
         <Route path="/a-propos/recompenses" element={<RecompensesPage />} />
         <Route path="/a-propos/carrieres" element={<CarrieresPage />} />
-        
+
         {/* Route pour la page Tarifs */}
         <Route path="/tarifs" element={<TarifsPage />} />
-        
+
         {/* Route pour la page Crédits */}
         <Route path="/credits" element={<ProtectedResource><CreditsPage /></ProtectedResource>} />
-        
+
         {/* Route pour la page Premium */}
         <Route path="/premium" element={<ProtectedResource><PremiumPage /></ProtectedResource>} />
-        
+
         {/* Route pour la page Ressources */}
         <Route path="/resources" element={<ProtectedResource><ResourcesPage /></ProtectedResource>} />
       </Routes>
       <Toaster />
-      
+
       {/* Système de notifications crédits */}
       <CreditsNotificationSystem />
     </div>

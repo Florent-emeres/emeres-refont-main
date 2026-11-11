@@ -29,6 +29,7 @@ def test_forbidden_tool(client):
     response = client.post("/ai/v2/company/student_cover_letter", json=payload)
     assert response.status_code == 403
 
+
 def test_student_interview_start(client):
     response = client.post("/ai/v2/student/student_interview_start", json={"role": "Data Analyst"})
     assert response.status_code == 200

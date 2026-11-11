@@ -15,6 +15,8 @@ import ProfileCompletionSection from './profile-sections/ProfileCompletionSectio
 import ConsentValidationModal from './ConsentValidationModal';
 
 const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
+  const [joinCode, setJoinCode] = useState('');
+  const [joiningSchool, setJoiningSchool] = useState(false);
   const [profileForm, setProfileForm] = useState({
     // 1. Informations personnelles
     last_name: '', // obligatoire
@@ -29,7 +31,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
     phone: '', // obligatoire
     email: '', // obligatoire, unique, servira d'identifiant
     profile_photo: '', // upload facultatif JPG/PNG
-    
+
     // 2. Établissement actuel
     institution_name: '', // recherche ou création
     institution_city: '', // ville de l'établissement
@@ -39,13 +41,13 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
     study_year: '', // 1ère, 2e, 3e
     graduation_year: '', // Année prévue d'obtention
     student_certificate: '', // upload PDF relevé de notes / justificatif étudiant
-    
+
     // 3. Compétences & expérience
     main_skills: [], // compétences principales - tags sélectionnables ou champ libre
     languages: [], // langues parlées + niveau A1 → C2
     past_experiences: [], // stages, jobs étudiants → poste, entreprise, durée, missions
     portfolio_projects: [], // liens externes GitHub, Behance, Notion, PDF, vidéo
-    
+
     // 4. Recherche de stage/emploi
     search_objective: '', // Stage, Alternance, Premier emploi, Projet tutoré
     search_domain: '', // domaine recherché en rapport avec études
@@ -56,12 +58,12 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
     availability_start: '', // disponibilités - immédiates ou à partir de
     uploaded_cv: '', // upload PDF
     cover_letter: '', // lettre de motivation facultative
-    
+
     // 5. Encadrement & suivi
     assigned_mentor: '', // mentor attitré (si déjà relié à un profil mentor)
     pedagogical_tutor: '', // tuteur pédagogique (enseignant référent)
     company_referent: '', // référent entreprise (si connu)
-    
+
     // 6. Paramètres complémentaires
     email_notifications: true, // notifications email
     sms_notifications: false, // notifications SMS
@@ -87,11 +89,11 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
   // Fonction de validation des champs obligatoires
   const validateRequiredFields = () => {
     const newErrors = {};
-    
+
     // Champs obligatoires par section
     const requiredFields = {
       'last_name': 'Le nom est obligatoire',
-      'first_name': 'Le prénom est obligatoire', 
+      'first_name': 'Le prénom est obligatoire',
       'birth_date': 'La date de naissance est obligatoire',
       'phone': 'Le numéro de téléphone est obligatoire',
       'email': 'L\'email est obligatoire',
@@ -102,7 +104,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
 
     Object.entries(requiredFields).forEach(([field, message]) => {
       const value = profileForm[field];
-      
+
       if (typeof value === 'boolean') {
         if (!value) newErrors[field] = message;
       } else {
@@ -125,7 +127,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
     const newErrors = {};
     const personalRequired = {
       'last_name': 'Le nom est obligatoire',
-      'first_name': 'Le prénom est obligatoire', 
+      'first_name': 'Le prénom est obligatoire',
       'birth_date': 'La date de naissance est obligatoire',
       'phone': 'Le numéro de téléphone est obligatoire',
       'email': 'L\'email est obligatoire'
@@ -184,10 +186,10 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
       await updateProfile(profileForm);
       toast.success(`Section ${getSectionDisplayName(sectionName)} sauvegardée avec succès !`);
       return true;
-      
+
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      
+
       // Gestion des erreurs spécifiques email
       if (error.response?.data?.detail?.includes?.('email')) {
         setErrors({ email: 'Cette adresse email est déjà utilisée' });
@@ -204,6 +206,42 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
   // Fonctions de sauvegarde spécifiques par section
   const savePersonalSection = () => saveSectionData('personal', validatePersonalSection);
   const saveAcademicSection = () => saveSectionData('academic');
+
+  const handleJoinSchool = async () => {
+    if (!joinCode.trim()) {
+      toast.error('Veuillez saisir un code d\'invitation');
+      return;
+    }
+    try {
+      setJoiningSchool(true);
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const res = await fetch(`${backendUrl}/api/school/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: joinCode.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.detail || 'Code d\'invitation invalide');
+        return;
+      }
+      setProfileForm(prev => ({ ...prev, school_name: data.school_name, institution_name: data.school_name }));
+      if (updateProfile) {
+        updateProfile({ ...profile, school_name: data.school_name });
+      }
+      setJoinCode('');
+      toast.success(`Vous avez rejoint ${data.school_name}`);
+    } catch (error) {
+      console.error('Error joining school:', error);
+      toast.error('Impossible de rejoindre l\'établissement.');
+    } finally {
+      setJoiningSchool(false);
+    }
+  };
   const saveSkillsSection = () => saveSectionData('skills');
   const saveJobSearchSection = () => saveSectionData('job_search');
   const saveSupervisionSection = () => saveSectionData('supervision');
@@ -229,20 +267,20 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
         ...prev,
         ...profile
       }));
-      
+
       // Modal de consentements uniquement pour les comptes créés par établissement
       // Pour l'instant, on désactive cette fonctionnalité pour les tests
       // Elle sera réactivée une fois la partie école implémentée
-      
+
       // TODO: Réactiver quand la partie école sera prête
-      // const needsConsentValidation = profile.created_by_institution === true && 
+      // const needsConsentValidation = profile.created_by_institution === true &&
       //   (!profile.gdpr_consent || !profile.terms_accepted || !profile.profile_sharing_consent);
-      // 
+      //
       // if (needsConsentValidation) {
       //   setShowConsentModal(true);
       // }
     }
-    
+
     // S'assurer que l'email utilisateur est bien affiché
     if (user && user.email && !profileForm.email) {
       setProfileForm(prev => ({
@@ -260,20 +298,20 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
     try {
       // Validation des champs obligatoires
       const validationErrors = validateRequiredFields();
-      
+
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
         toast.error('Veuillez corriger les erreurs avant de sauvegarder');
-        
+
         // Aller à la première section avec erreur
-        if (validationErrors.last_name || validationErrors.first_name || validationErrors.birth_date || 
+        if (validationErrors.last_name || validationErrors.first_name || validationErrors.birth_date ||
             validationErrors.phone || validationErrors.email) {
           setActiveTab('personal');
-        } else if (validationErrors.gdpr_consent || validationErrors.terms_accepted || 
+        } else if (validationErrors.gdpr_consent || validationErrors.terms_accepted ||
                    validationErrors.profile_sharing_consent) {
           setActiveTab('settings');
         }
-        
+
         setLoading(false);
         return;
       }
@@ -281,17 +319,17 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
       // Appel de la fonction de mise à jour parent
       await updateProfile(profileForm);
       toast.success('Profil sauvegardé avec succès !');
-      
+
       // Si l'email a été modifié, informer l'utilisateur
       if (profile.email && profileForm.email !== profile.email) {
         toast.info('Nouvel identifiant de connexion : ' + profileForm.email, {
           duration: 5000
         });
       }
-      
+
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      
+
       // Gestion des erreurs spécifiques email
       if (error.response?.data?.detail?.includes?.('email')) {
         setErrors({ email: 'Cette adresse email est déjà utilisée' });
@@ -324,7 +362,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
         ...profileForm,
         ...consents
       };
-      
+
       await updateProfile(updatedProfile);
       setProfileForm(updatedProfile);
       setShowConsentModal(false);
@@ -379,7 +417,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
   const updateAcademicProject = (id, field, value) => {
     setProfileForm(prev => ({
       ...prev,
-      academic_projects: prev.academic_projects.map(project => 
+      academic_projects: prev.academic_projects.map(project =>
         project.id === id ? { ...project, [field]: value } : project
       )
     }));
@@ -430,7 +468,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
   const updateExperience = (id, field, value) => {
     setProfileForm(prev => ({
       ...prev,
-      work_experiences: prev.work_experiences.map(exp => 
+      work_experiences: prev.work_experiences.map(exp =>
         exp.id === id ? { ...exp, [field]: value } : exp
       )
     }));
@@ -445,11 +483,11 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
 
   const calculateCompletionPercentage = () => {
     const requiredFields = [
-      'first_name', 'last_name', 'phone', 'education_level', 'field_of_study', 
-      'school_name', 'current_year', 'search_type', 'availability_start', 
+      'first_name', 'last_name', 'phone', 'education_level', 'field_of_study',
+      'school_name', 'current_year', 'search_type', 'availability_start',
       'current_city', 'bio', 'career_objectives', 'professional_objective'
     ];
-    
+
     const arrayFields = [
       'hard_skills', 'soft_skills', 'preferred_sectors', 'preferred_mission_types',
       'languages', 'software_tools'
@@ -508,7 +546,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
 
         {/* Section 1: Informations personnelles */}
         <TabsContent value="personal" className="space-y-6">
-          <PersonalInfoSection 
+          <PersonalInfoSection
             profileForm={profileForm}
             setProfileForm={setProfileForm}
             errors={errors}
@@ -519,18 +557,46 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
 
         {/* Section 2: Établissement actuel */}
         <TabsContent value="academic" className="space-y-6">
-          <AcademicInstitutionSection 
+          <AcademicInstitutionSection
             profileForm={profileForm}
             setProfileForm={setProfileForm}
             errors={errors}
             onSave={saveAcademicSection}
             loading={sectionLoading.academic}
           />
+
+          <div className="border border-teal-200 bg-teal-50 rounded-xl p-4">
+            <h4 className="text-sm font-semibold text-gray-900 mb-1">
+              Rejoindre un établissement avec un code
+            </h4>
+            <p className="text-xs text-gray-600 mb-3">
+              Votre école vous a transmis un code d'invitation ? Saisissez-le ici pour être
+              rattaché officiellement à votre établissement.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                placeholder="Code d'invitation"
+                className="input-emeres flex-1"
+                maxLength={12}
+              />
+              <Button onClick={handleJoinSchool} disabled={joiningSchool}>
+                {joiningSchool ? 'Connexion...' : 'Rejoindre'}
+              </Button>
+            </div>
+            {profileForm.school_name && (
+              <p className="text-xs text-teal-700 mt-2">
+                Établissement actuel : {profileForm.school_name}
+              </p>
+            )}
+          </div>
         </TabsContent>
 
         {/* Section 3: Compétences & expérience */}
         <TabsContent value="skills" className="space-y-6">
-          <SkillsExperienceSection 
+          <SkillsExperienceSection
             profileForm={profileForm}
             setProfileForm={setProfileForm}
             errors={errors}
@@ -541,7 +607,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
 
         {/* Section 4: Recherche de stage/emploi */}
         <TabsContent value="search" className="space-y-6">
-          <JobSearchSection 
+          <JobSearchSection
             profileForm={profileForm}
             setProfileForm={setProfileForm}
             errors={errors}
@@ -552,7 +618,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
 
         {/* Section 5: Encadrement & suivi */}
         <TabsContent value="supervision" className="space-y-6">
-          <SupervisionSection 
+          <SupervisionSection
             profileForm={profileForm}
             setProfileForm={setProfileForm}
             errors={errors}
@@ -563,7 +629,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
 
         {/* Section 6: Paramètres complémentaires */}
         <TabsContent value="settings" className="space-y-6">
-          <SettingsSection 
+          <SettingsSection
             profileForm={profileForm}
             setProfileForm={setProfileForm}
             errors={errors}
@@ -581,7 +647,7 @@ const EnhancedStudentProfile = ({ profile, updateProfile, user }) => {
             <span className="text-sm font-medium text-blue-800">Sauvegarde par section</span>
           </div>
           <p className="text-sm text-blue-700">
-            Chaque section peut maintenant être sauvegardée indépendamment. 
+            Chaque section peut maintenant être sauvegardée indépendamment.
             Utilisez le bouton "Sauvegarder la section" en bas de chaque onglet.
           </p>
           <p className="text-xs text-blue-600 mt-1">

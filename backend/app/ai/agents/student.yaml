@@ -7,3 +7,4 @@ tools:
     - student_diagnostic
     - student_interview_start
     - student_interview_answer
+    - student_assistant

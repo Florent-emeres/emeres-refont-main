@@ -14,15 +14,16 @@ import EmeresCard, { EmeresCardContent, EmeresCardDescription, EmeresCardHeader,
 import EmeresBadge from './ui/EmeresBadge';
 import EmeresInput from './ui/EmeresInput';
 import EmeresBreadcrumb from './ui/EmeresBreadcrumb';
-import { 
-  Search, 
-  MapPin, 
-  Clock, 
-  Building, 
-  Star, 
-  Send, 
-  User, 
-  BookOpen, 
+import OnboardingChecklist from './ui/OnboardingChecklist';
+import {
+  Search,
+  MapPin,
+  Clock,
+  Building,
+  Star,
+  Send,
+  User,
+  BookOpen,
   Award,
   Target,
   Briefcase,
@@ -57,6 +58,7 @@ import {
 import AIMatchingResults from './AIMatchingResults';
 import CVGenerator from './CVGenerator';
 import EvolutionPortfolio from './portfolio-evolution/EvolutionPortfolio';
+import StudentAssistant from './student/StudentAssistant';
 import ProgressBadges from './ProgressBadges';
 import CoverLetterGenerator from './CoverLetterGenerator';
 import InterviewSimulator from './InterviewSimulator';
@@ -120,7 +122,7 @@ const StudentDashboard = () => {
   const [newLocation, setNewLocation] = useState('');
 
   const sectors = [
-    'Technologie', 'Finance', 'Santé', 'Éducation', 'Marketing', 
+    'Technologie', 'Finance', 'Santé', 'Éducation', 'Marketing',
     'Design', 'Ingénierie', 'Juridique', 'Commerce', 'RH'
   ];
 
@@ -183,10 +185,10 @@ const StudentDashboard = () => {
 
   // État pour gérer l'expansion des catégories
   const [expandedCategories, setExpandedCategories] = useState({
-    'tools': true,
+    'mentors': false,
+    'tools': false,
+    'tracking': false,
     'resources': false,
-    'tracking': false, 
-    'discovery': false,
     'profile-settings': false
   });
 
@@ -204,58 +206,139 @@ const StudentDashboard = () => {
       id: 'dashboard',
       label: 'Accueil',
       icon: User,
-      description: 'Vue d\'ensemble',
+      description: "Vue d'ensemble",
       gradient: 'from-teal-500 to-teal-600',
       isStandalone: true
     },
     {
+      id: 'offers',
+      label: 'Offres',
+      icon: Search,
+      description: 'Trouver un stage ou une alternance',
+      gradient: 'from-purple-500 to-pink-600',
+      isStandalone: true
+    },
+    {
+      id: 'applications',
+      label: 'Candidatures',
+      icon: Send,
+      description: 'Suivi de mes candidatures',
+      gradient: 'from-orange-500 to-red-500',
+      badge: applications.length > 0 ? applications.length.toString() : null,
+      isStandalone: true
+    },
+    {
+      id: 'messaging',
+      label: 'Messagerie',
+      icon: MessageSquare,
+      description: 'Mes conversations',
+      gradient: 'from-emerald-500 to-green-600',
+      badge: notificationCount > 0 ? notificationCount.toString() : null,
+      isStandalone: true
+    },
+    {
+      id: 'mentors',
+      label: 'Mentors',
+      icon: UserCheck,
+      description: 'Trouver et gérer mon mentorat',
+      gradient: 'from-amber-500 to-orange-600',
+      items: [
+        {
+          id: 'discover-mentors',
+          label: 'Découvrir Mentors',
+          icon: UserCheck,
+          description: 'Trouver un mentor'
+        },
+        {
+          id: 'mentorship-ads',
+          label: 'Mes Annonces',
+          icon: MessageSquare,
+          description: 'Annonces de mentorat'
+        }
+      ]
+    },
+    {
       id: 'tools',
-      label: 'Outils',
+      label: 'Outils IA',
       icon: Zap,
-      description: 'Outils IA et création',
+      description: 'Assistant et création',
       gradient: 'from-blue-500 to-purple-600',
       items: [
-        { 
-          id: 'recommendations', 
-          label: 'IA Matching', 
-          icon: Brain, 
+        {
+          id: 'recommendations',
+          label: 'IA Matching',
+          icon: Brain,
           description: 'Recommandations IA',
           badge: 'IA'
         },
-        { 
-          id: 'cv', 
-          label: 'CV Generator', 
-          icon: BookOpen, 
+        {
+          id: 'cv',
+          label: 'CV Generator',
+          icon: BookOpen,
           description: 'Création de CV',
           badge: 'IA'
         },
-        { 
-          id: 'cover-letter', 
-          label: 'Lettre IA', 
-          icon: Sparkles, 
+        {
+          id: 'cover-letter',
+          label: 'Lettre IA',
+          icon: Sparkles,
           description: 'Génération lettres',
           badge: 'IA'
         },
-        { 
-          id: 'interview', 
-          label: 'Entretien IA', 
-          icon: Target, 
+        {
+          id: 'interview',
+          label: 'Entretien IA',
+          icon: Target,
           description: 'Simulation entretiens',
           badge: 'IA'
         },
-        { 
-          id: 'coach-ia', 
-          label: 'Coach IA Études', 
-          icon: Brain, 
+        {
+          id: 'coach-ia',
+          label: 'Coach IA Études',
+          icon: Brain,
           description: 'Assistant IA personnel',
           badge: 'IA'
         },
-        { 
-          id: 'focus-room', 
-          label: 'Focus Room', 
-          icon: Users, 
+        {
+          id: 'focus-room',
+          label: 'Focus Room',
+          icon: Users,
           description: 'Salles de concentration',
           badge: 'Premium'
+        }
+      ]
+    },
+    {
+      id: 'tracking',
+      label: 'Mon Parcours',
+      icon: TrendingUp,
+      description: 'Progression et suivi',
+      gradient: 'from-orange-500 to-red-500',
+      items: [
+        {
+          id: 'progress',
+          label: 'Progression',
+          icon: TrendingUp,
+          description: 'Badges & stats'
+        },
+        {
+          id: 'strategy',
+          label: 'Stratégie Carrière',
+          icon: BarChart3,
+          description: 'Conseil & Planification',
+          badge: 'IA'
+        },
+        {
+          id: 'journal',
+          label: 'Journal',
+          icon: FileText,
+          description: 'Suivi de stage'
+        },
+        {
+          id: 'credits',
+          label: 'Mes Crédits',
+          icon: Coins,
+          description: 'Points et crédits'
         }
       ]
     },
@@ -266,126 +349,51 @@ const StudentDashboard = () => {
       description: 'Contenus et apprentissage',
       gradient: 'from-emerald-500 to-green-600',
       items: [
-        { 
-          id: 'resources', 
-          label: 'Bibliothèque', 
-          icon: Library, 
+        {
+          id: 'resources',
+          label: 'Bibliothèque',
+          icon: Library,
           description: 'Ressources éducatives'
         },
-        { 
-          id: 'cartes-memoires', 
-          label: 'Cartes Mémoires', 
-          icon: BookOpen, 
+        {
+          id: 'cartes-memoires',
+          label: 'Cartes Mémoires',
+          icon: BookOpen,
           description: 'Système de révision',
           badge: 'Premium'
         },
-        { 
-          id: 'portfolio', 
-          label: 'Portfolio', 
-          icon: Award, 
+        {
+          id: 'portfolio',
+          label: 'Portfolio',
+          icon: Award,
           description: 'Projets & réalisations'
         },
-        { 
-          id: 'messaging', 
-          label: 'Messagerie', 
-          icon: MessageSquare, 
-          description: 'Communications sécurisées',
-          badge: notificationCount > 0 ? notificationCount.toString() : null
-        },
-        { 
-          id: 'notifications', 
-          label: 'Notifications', 
-          icon: Bell, 
+        {
+          id: 'notifications',
+          label: 'Notifications',
+          icon: Bell,
           description: 'Centre de notifications',
           badge: notificationCount > 0 ? notificationCount.toString() : null
         }
       ]
     },
     {
-      id: 'tracking',
-      label: 'Suivi & Analytics',
-      icon: TrendingUp,
-      description: 'Progression et analyses',
-      gradient: 'from-orange-500 to-red-500',
-      items: [
-        { 
-          id: 'applications', 
-          label: 'Candidatures', 
-          icon: Send, 
-          description: 'Suivi candidatures',
-          badge: applications.length > 0 ? applications.length.toString() : null
-        },
-        { 
-          id: 'progress', 
-          label: 'Progression', 
-          icon: TrendingUp, 
-          description: 'Badges & stats'
-        },
-        { 
-          id: 'strategy', 
-          label: 'Stratégie Carrière', 
-          icon: BarChart3, 
-          description: 'Conseil & Planification',
-          badge: 'IA'
-        },
-        { 
-          id: 'credits', 
-          label: 'Mes Crédits', 
-          icon: Coins, 
-          description: 'Points et crédits'
-        },
-        { 
-          id: 'journal', 
-          label: 'Journal', 
-          icon: FileText, 
-          description: 'Suivi de stage'
-        }
-      ]
-    },
-    {
-      id: 'discovery',
-      label: 'Découverte',
-      icon: Search,
-      description: 'Opportunités et réseau',
-      gradient: 'from-purple-500 to-pink-600',
-      items: [
-        { 
-          id: 'offers', 
-          label: 'Offres', 
-          icon: Search, 
-          description: 'Recherche de stages'
-        },
-        { 
-          id: 'discover-mentors', 
-          label: 'Découvrir Mentors', 
-          icon: UserCheck, 
-          description: 'Trouver un mentor'
-        },
-        { 
-          id: 'mentorship-ads', 
-          label: 'Mes Annonces', 
-          icon: MessageSquare, 
-          description: 'Annonces de mentorat'
-        }
-      ]
-    },
-    {
       id: 'profile-settings',
-      label: 'Profil & Paramètres',
-      icon: Settings,
-      description: 'Compte et configuration',
+      label: 'Compte',
+      icon: User,
+      description: 'Profil et paramètres',
       gradient: 'from-gray-500 to-slate-600',
       items: [
-        { 
-          id: 'profile', 
-          label: 'Mon Profil', 
-          icon: User, 
+        {
+          id: 'profile',
+          label: 'Mon Profil',
+          icon: User,
           description: 'Informations personnelles'
         },
-        { 
-          id: 'settings', 
-          label: 'Paramètres', 
-          icon: Settings, 
+        {
+          id: 'settings',
+          label: 'Paramètres',
+          icon: Settings,
           description: 'Configuration compte'
         }
       ]
@@ -556,12 +564,12 @@ const StudentDashboard = () => {
       setProfileForm(profileData);
       setOffers(offersRes.data);
       setApplications(applicationsRes.data);
-      
+
       // Set real data from backend
       if (statsRes) setDashboardStats(statsRes);
       setMentorshipAds(adsRes);
       setAvailableMentors(mentorsRes);
-      
+
       // Load notification count
       loadNotificationCount();
     } catch (error) {
@@ -592,19 +600,19 @@ const StudentDashboard = () => {
         setProfileForm(prev => ({ ...prev, ...updatedData }));
       }
       toast.success('Profil mis à jour avec succès !');
-      
+
       // Attribution automatique de points pour mise à jour profil
       await creditsService.onCvUpdated();
-      
+
       // Vérifier si le profil est complet pour attribution bonus
       const completionFields = ['first_name', 'last_name', 'email', 'school', 'field', 'level'];
       const completedFields = completionFields.filter(field => response.data[field]);
       const completionPercentage = (completedFields.length / completionFields.length) * 100;
-      
+
       if (completionPercentage >= 90) {
         await creditsService.onProfileCompleted(completionPercentage);
       }
-      
+
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Erreur lors de la mise à jour du profil');
@@ -617,10 +625,10 @@ const StudentDashboard = () => {
     try {
       await axios.post(`${API}/applications`, { offer_id: offerId });
       toast.success('Candidature envoyée avec succès !');
-      
+
       // Attribution automatique de points pour candidature envoyée
       await creditsService.onApplicationSent(offerId, 'Entreprise inconnue');
-      
+
       fetchData();
     } catch (error) {
       console.error('Error applying:', error);
@@ -659,15 +667,23 @@ const StudentDashboard = () => {
   // Rendu des cartes du dashboard avec design ÉMÉRÉS optimisé
   const renderDashboardCards = () => {
     // Calculer les vraies données dynamiquement
-    const profileCompletion = profile ? 
-      Math.round(Object.values(profile).filter(val => val && val !== '').length / 10 * 100) : 15;
-    
+    const profileFields = [
+      'first_name', 'last_name', 'phone', 'birth_date', 'school_name', 'field_of_study',
+      'degree_preparing', 'main_skills', 'bio', 'search_objective', 'cover_letter'
+    ];
+    const filledProfileFields = profileFields.filter((f) => {
+      const v = profile?.[f];
+      return Array.isArray(v) ? v.length > 0 : v && v !== '';
+    }).length;
+    const profileCompletion = profile ?
+      Math.min(100, Math.round(filledProfileFields / profileFields.length * 100)) : 15;
+
     const mentorshipAdsCount = mentorshipAds?.length || 0;
     const availableMentorsCount = availableMentors?.length || 0;
-    
+
     // Calculer les stats depuis le portfolio réel
     const portfolioProjects = profile?.portfolio_projects?.length || 0;
-    
+
     const cards = [
       {
         id: 'profile',
@@ -800,7 +816,7 @@ const StudentDashboard = () => {
         gradient: 'from-blue-500 to-emerald-600',
         stats: 'Progression générale',
         value: `${profileCompletion}%`,
-        change: profileCompletion > 50 ? `+${Math.round(profileCompletion/10)}% ce mois` : 'Complétez votre profil',
+        change: `${filledProfileFields}/${profileFields.length} champs de profil complétés`,
         action: () => navigateToPage('progress')
       },
       {
@@ -834,7 +850,7 @@ const StudentDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {cards.map((card) => {
           const Icon = card.icon;
-          
+
           // Images de fond spécifiques par catégorie de carte
           const getCardBackgroundImage = (cardId) => {
             const imageMap = {
@@ -847,9 +863,9 @@ const StudentDashboard = () => {
             };
             return imageMap[cardId] || null;
           };
-          
+
           const backgroundImage = getCardBackgroundImage(card.id);
-          
+
           return (
             <EmeresCard
               key={card.id}
@@ -865,12 +881,12 @@ const StudentDashboard = () => {
               <div className={`bg-gradient-to-r ${card.gradient} p-3 sm:p-4 text-white relative overflow-hidden`}>
                 {/* Background image subtile pour certaines cartes */}
                 {backgroundImage && (
-                  <div 
+                  <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
                     style={{ backgroundImage: `url('${backgroundImage}')` }}
                   />
                 )}
-                
+
                 <div className="flex items-start justify-between relative z-10">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 sm:gap-2 mb-1">
@@ -888,15 +904,15 @@ const StudentDashboard = () => {
                     </div>
                     <p className="text-xs text-white/80 truncate">{card.description}</p>
                   </div>
-                  
+
                   {card.urgent && (
                     <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse flex-shrink-0"></div>
                   )}
                 </div>
-                
+
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               </div>
-              
+
               <div className="p-3 sm:p-4">
                 <div className="flex items-end justify-between mb-2 sm:mb-3">
                   <div className="min-w-0 flex-1">
@@ -907,18 +923,18 @@ const StudentDashboard = () => {
                       {card.stats}
                     </div>
                   </div>
-                  
+
                   <div className="text-right flex-shrink-0 ml-2">
                     <div className={`
                       text-xs font-medium truncate
-                      ${card.change.includes('+') ? 'text-green-600' : 
+                      ${card.change.includes('+') ? 'text-green-600' :
                         card.change.includes('nouvelles') ? 'text-blue-600' : 'text-gray-600'}
                     `}>
                       {card.change}
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-100">
                   <EmeresButton
                     variant="ghost"
@@ -932,7 +948,7 @@ const StudentDashboard = () => {
                   >
                     <span className="hidden sm:inline">Voir</span>
                   </EmeresButton>
-                  
+
                   <EmeresButton
                     variant="ghost"
                     size="sm"
@@ -970,17 +986,17 @@ const StudentDashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2 sm:space-x-3">
-                <img 
-                  src="/emeres-logo.png" 
-                  alt="ÉMÉRÉS" 
-                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer" 
+                <img
+                  src="/emeres-logo.png"
+                  alt="ÉMÉRÉS"
+                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer"
                   onClick={() => setActivePage('dashboard')}
                   onError={(e) => {
                     e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%2314B8A6"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="40" font-family="Arial, sans-serif">É</text></svg>';
                   }}
                 />
                 <div>
-                  <span 
+                  <span
                     className="text-lg sm:text-xl font-bold text-blue-600 cursor-pointer"
                     onClick={() => setActivePage('dashboard')}
                   >
@@ -989,7 +1005,7 @@ const StudentDashboard = () => {
                   <div className="text-xs text-gray-500 hidden sm:block">Dashboard Étudiant</div>
                 </div>
               </div>
-              
+
               <EmeresButton
                 variant="ghost"
                 size="sm"
@@ -1009,7 +1025,7 @@ const StudentDashboard = () => {
               >
                 <span className="hidden lg:inline">Accueil</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'recommendations' ? 'primary' : 'ghost'}
                 size="sm"
@@ -1019,7 +1035,7 @@ const StudentDashboard = () => {
               >
                 <span className="hidden lg:inline">IA Matching</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'offers' ? 'primary' : 'ghost'}
                 size="sm"
@@ -1075,21 +1091,24 @@ const StudentDashboard = () => {
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400 hidden lg:block" />
                 </button>
-                
+
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-emeres-lg border border-gray-100 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <button 
+                  <button
                     onClick={() => navigateToPage('profile')}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <User className="w-4 h-4" />
                     Mon Profil
                   </button>
-                  <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <button
+                    onClick={() => navigateToPage('settings')}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
                     <Settings className="w-4 h-4" />
                     Paramètres
                   </button>
                   <div className="border-t border-gray-100 mt-2 pt-2">
-                    <button 
+                    <button
                       onClick={() => {
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');
@@ -1110,18 +1129,18 @@ const StudentDashboard = () => {
 
       <div className="flex relative">
         {!sidebarCollapsed && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-20 lg:hidden"
             onClick={() => setSidebarCollapsed(true)}
           />
         )}
 
         <aside className={`
-          ${sidebarCollapsed ? 'w-12' : 'w-56'} 
-          bg-white/95 backdrop-blur-md border-r border-gray-200 
+          ${sidebarCollapsed ? 'w-12' : 'w-56'}
+          bg-white/95 backdrop-blur-md border-r border-gray-200
           fixed left-0 top-16 bottom-0 z-30 transition-all duration-300 overflow-hidden shadow-emeres-sm
-          ${sidebarCollapsed 
-            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0' 
+          ${sidebarCollapsed
+            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0'
             : 'translate-x-0'
           }
         `}>
@@ -1132,7 +1151,7 @@ const StudentDashboard = () => {
                   // Traitement spécial pour l'Accueil
                   const Icon = category.icon;
                   const isActive = activePage === category.id;
-                  
+
                   return (
                     <button
                       key={category.id}
@@ -1144,8 +1163,8 @@ const StudentDashboard = () => {
                       }}
                       className={`
                         w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                        ${isActive 
-                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md transform scale-[1.02]` 
+                        ${isActive
+                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md transform scale-[1.02]`
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }
                       `}
@@ -1159,7 +1178,7 @@ const StudentDashboard = () => {
                           ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}
                         `} />
                       </div>
-                      
+
                       {!sidebarCollapsed && (
                         <div className="flex-1 text-left relative z-10 min-w-0">
                           <div className={`
@@ -1176,7 +1195,16 @@ const StudentDashboard = () => {
                           </div>
                         </div>
                       )}
-                      
+                      {!sidebarCollapsed && category.badge && (
+                        <EmeresBadge
+                          variant="error"
+                          size="xs"
+                          className="relative z-10 flex-shrink-0"
+                        >
+                          {category.badge}
+                        </EmeresBadge>
+                      )}
+
                       {sidebarCollapsed && (
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                           {category.label}
@@ -1185,12 +1213,12 @@ const StudentDashboard = () => {
                     </button>
                   );
                 }
-                
+
                 // Traitement pour les catégories avec sous-éléments
                 const CategoryIcon = category.icon;
                 const isExpanded = expandedCategories[category.id];
                 const hasActiveChild = category.items.some(item => activePage === item.id);
-                
+
                 return (
                   <div key={category.id} className="space-y-1">
                     {/* En-tête de catégorie */}
@@ -1198,8 +1226,8 @@ const StudentDashboard = () => {
                       onClick={() => toggleCategory(category.id)}
                       className={`
                         w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                        ${hasActiveChild 
-                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md` 
+                        ${hasActiveChild
+                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md`
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }
                       `}
@@ -1213,7 +1241,7 @@ const StudentDashboard = () => {
                           ${hasActiveChild ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}
                         `} />
                       </div>
-                      
+
                       {!sidebarCollapsed && (
                         <>
                           <div className="flex-1 text-left relative z-10 min-w-0">
@@ -1230,7 +1258,7 @@ const StudentDashboard = () => {
                               {category.description}
                             </div>
                           </div>
-                          
+
                           {/* Chevron d'expansion */}
                           <ChevronRight className={`
                             h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-300 relative z-10
@@ -1239,21 +1267,21 @@ const StudentDashboard = () => {
                           `} />
                         </>
                       )}
-                      
+
                       {sidebarCollapsed && (
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                           {category.label}
                         </div>
                       )}
                     </button>
-                    
+
                     {/* Sous-éléments de la catégorie */}
                     {!sidebarCollapsed && isExpanded && (
                       <div className="ml-6 space-y-1">
                         {category.items.map((item) => {
                           const ItemIcon = item.icon;
                           const isActive = activePage === item.id;
-                          
+
                           return (
                             <button
                               key={item.id}
@@ -1265,8 +1293,8 @@ const StudentDashboard = () => {
                               }}
                               className={`
                                 w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg transition-all duration-300 relative overflow-hidden text-left
-                                ${isActive 
-                                  ? 'bg-gray-100 text-teal-700 border-l-2 border-teal-500' 
+                                ${isActive
+                                  ? 'bg-gray-100 text-teal-700 border-l-2 border-teal-500'
                                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                 }
                               `}
@@ -1280,7 +1308,7 @@ const StudentDashboard = () => {
                                   ${isActive ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-600'}
                                 `} />
                               </div>
-                              
+
                               <div className="flex-1 text-left relative z-10 min-w-0">
                                 <div className={`
                                   font-medium text-xs transition-colors duration-300 truncate
@@ -1295,7 +1323,7 @@ const StudentDashboard = () => {
                                   {item.description}
                                 </div>
                               </div>
-                              
+
                               {item.badge && (
                                 <EmeresBadge
                                   variant={isActive ? "default" : "secondary"}
@@ -1317,7 +1345,7 @@ const StudentDashboard = () => {
                 );
               })}
             </div>
-            
+
             {!sidebarCollapsed && (
               <div className="mt-4 p-2 bg-gradient-emeres-subtle rounded-lg border border-teal-200">
                 <div className="flex items-center gap-2 mb-2">
@@ -1347,14 +1375,14 @@ const StudentDashboard = () => {
         `}>
           {/* Background image subtile pour le dashboard principal */}
           {activePage === 'dashboard' && (
-            <div 
+            <div
               className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5"
               style={{
                 backgroundImage: `url('https://images.unsplash.com/photo-1541178735493-479c1a27ed24?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
               }}
             />
           )}
-          
+
           <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-none relative z-10">
             {activePage !== 'dashboard' && (
               <div className="mb-6 sm:mb-8">
@@ -1383,46 +1411,78 @@ const StudentDashboard = () => {
                       Bienvenue {user?.first_name} ! {getPageConfig('dashboard').description}
                     </p>
                   </div>
-                  
+
+                  {/* Checklist premiers pas */}
+                  <OnboardingChecklist
+                    className="mb-6"
+                    title="Premiers pas"
+                    steps={[
+                      {
+                        label: 'Compléter mon profil',
+                        description: 'Téléphone, compétences et objectifs de recherche',
+                        done: !!(
+                          profile &&
+                          profile.phone &&
+                          ((profile.main_skills && profile.main_skills.length > 0) ||
+                            (profile.skills && profile.skills.length > 0))
+                        ),
+                        page: 'profile'
+                      },
+                      {
+                        label: 'Postuler à ma première offre',
+                        description: 'Parcourez les offres et candidatez en un clic',
+                        done: applications.length > 0,
+                        page: 'offers'
+                      },
+                      {
+                        label: 'Trouver un mentor',
+                        description: 'Découvrez les mentors disponibles dans votre domaine',
+                        done: mentorshipAds.length > 0,
+                        page: 'discover-mentors'
+                      }
+                    ]}
+                    onNavigate={navigateToPage}
+                  />
+
                   {/* Widget crédits intégré */}
                   <div className="mb-6">
                     <CreditsWidget size="normal" showActions={true} />
                   </div>
-                  
+
                   {renderDashboardCards()}
                 </div>
               )}
-              
+
               {activePage === 'recommendations' && (
                 <div className="max-w-7xl">
                   <AIMatchingResults onApply={applyToOffer} />
                 </div>
               )}
-              
+
               {activePage === 'discover-mentors' && (
                 <div className="max-w-7xl">
                   <MentorDiscovery />
                 </div>
               )}
-              
+
               {activePage === 'mentorship-ads' && (
                 <div className="max-w-7xl">
                   <PostMentorshipAd />
                 </div>
               )}
-              
+
               {activePage === 'messaging' && (
                 <div className="max-w-7xl">
                   <MessagingHub userRole={user?.role || "student"} />
                 </div>
               )}
-              
+
               {activePage === 'notifications' && (
                 <div className="max-w-7xl">
                   <NotificationCenter />
                 </div>
               )}
-              
+
               {activePage === 'offers' && (
                 <div className="max-w-7xl space-y-6">
                   <Card>
@@ -1486,7 +1546,7 @@ const StudentDashboard = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <p className="text-gray-700 line-clamp-3">{offer.description}</p>
-                          
+
                           {offer.skills_required && offer.skills_required.length > 0 && (
                             <div>
                               <h4 className="font-medium text-sm text-gray-800 mb-2">Compétences requises :</h4>
@@ -1507,21 +1567,21 @@ const StudentDashboard = () => {
 
                           <div className="flex justify-between items-center pt-4">
                             <div className="flex items-center space-x-2">
-                              <Badge variant={offer.level === 'beginner' ? 'secondary' : 
+                              <Badge variant={offer.level === 'beginner' ? 'secondary' :
                                             offer.level === 'intermediate' ? 'default' : 'destructive'}>
-                                {offer.level === 'beginner' ? 'Débutant' : 
+                                {offer.level === 'beginner' ? 'Débutant' :
                                  offer.level === 'intermediate' ? 'Intermédiaire' : 'Avancé'}
                               </Badge>
                               {offer.is_remote && (
                                 <Badge variant="outline">Télétravail</Badge>
                               )}
                             </div>
-                            
+
                             <Button
                               onClick={() => applyToOffer(offer.id)}
                               disabled={hasApplied(offer.id)}
-                              className={hasApplied(offer.id) 
-                                ? "bg-gray-400 cursor-not-allowed" 
+                              className={hasApplied(offer.id)
+                                ? "bg-gray-400 cursor-not-allowed"
                                 : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                               }
                             >
@@ -1548,7 +1608,7 @@ const StudentDashboard = () => {
                   )}
                 </div>
               )}
-              
+
               {activePage === 'applications' && (
                 <div className="max-w-7xl">
                   <Card>
@@ -1592,23 +1652,23 @@ const StudentDashboard = () => {
                   </Card>
                 </div>
               )}
-              
+
               {activePage === 'cover-letter' && (
                 <div className="max-w-7xl">
                   <CoverLetterGenerator profile={profile} user={user} />
                 </div>
               )}
-              
+
               {activePage === 'interview' && (
                 <div className="max-w-7xl">
                   <InterviewSimulator profile={profile} user={user} />
                 </div>
               )}
-              
+
               {activePage === 'portfolio' && (
                 <div className="max-w-7xl">
-                  <EvolutionPortfolio 
-                    profile={profile} 
+                  <EvolutionPortfolio
+                    profile={profile}
                     updateProfile={async (updatedProfile) => {
                       await updateProfile();
                       setProfile(updatedProfile);
@@ -1617,57 +1677,57 @@ const StudentDashboard = () => {
                   />
                 </div>
               )}
-              
+
               {activePage === 'cv' && (
                 <div className="max-w-7xl">
                   <CVGenerator profile={profile} user={user} />
                 </div>
               )}
-              
+
               {activePage === 'progress' && (
                 <div className="max-w-7xl">
-                  <ProgressBadges 
-                    profile={profile} 
-                    applications={applications} 
-                    projects={profile?.portfolio_projects || []} 
+                  <ProgressBadges
+                    profile={profile}
+                    applications={applications}
+                    projects={profile?.portfolio_projects || []}
                   />
                 </div>
               )}
-              
+
               {activePage === 'profile' && (
                 <div className="max-w-7xl">
                   <EnhancedStudentProfile profile={profile} updateProfile={updateProfile} user={user} />
                 </div>
               )}
-              
+
               {activePage === 'resources' && (
                 <div className="max-w-7xl">
                   <ResourcesLibrary />
                 </div>
               )}
-              
+
               {activePage === 'credits' && (
                 <div className="max-w-7xl">
                   <CreditsPage />
                 </div>
               )}
-              
+
               {activePage === 'journal' && (
                 <div className="max-w-7xl">
                   <InternshipJournal />
                 </div>
               )}
-              
+
               {activePage === 'strategy' && (
                 <div className="max-w-7xl">
-                  <StrategyModule 
+                  <StrategyModule
                     user={user}
                     userProfile={profile}
                     userRole="student"
                   />
                 </div>
               )}
-              
+
               {activePage === 'focus-room' && (
                 <div className="max-w-7xl">
                   <div className="text-center py-12">
@@ -1687,37 +1747,37 @@ const StudentDashboard = () => {
                   </div>
                 </div>
               )}
-              
+
               {activePage === 'coach-ia' && (
                 <div className="max-w-7xl">
                   <CoachIAEtudes user={user} />
                 </div>
               )}
-              
+
               {activePage === 'focus-room' && (
                 <div className="max-w-7xl">
                   <FocusRoomsPro user={user} />
                 </div>
               )}
-              
+
               {activePage === 'cartes-memoires' && (
                 <div className="max-w-7xl">
                   <CartesMemoires user={user} />
                 </div>
               )}
-              
+
               {activePage === 'cv-evaluator' && (
                 <div className="max-w-7xl">
                   <CVEvaluator user={user} />
                 </div>
               )}
-              
+
               {activePage === 'coaching-tools' && (
                 <div className="max-w-7xl">
                   <CoachIAEtudes user={user} />
                 </div>
               )}
-              
+
               {activePage === 'settings' && (
                 <div className="max-w-7xl">
                   <div className="space-y-6">
@@ -1739,7 +1799,7 @@ const StudentDashboard = () => {
                             </label>
                           </div>
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Confidentialité
@@ -1764,6 +1824,7 @@ const StudentDashboard = () => {
           </div>
         </main>
       </div>
+      <StudentAssistant onNavigate={navigateToPage} />
     </div>
   );
 };

@@ -1,5 +1,5 @@
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Iterable, Mapping
 
 
 @dataclass(frozen=True)
@@ -26,7 +26,9 @@ class ForbiddenToolsGuard:
 
     def is_forbidden(self, call: ToolCall) -> bool:
         candidates = [call.name, call.display_name]
-        return any(self._normalize(candidate) in self.forbidden for candidate in candidates if candidate)
+        return any(
+            self._normalize(candidate) in self.forbidden for candidate in candidates if candidate
+        )
 
     def violates_nested_policy(self, ancestry: list[str]) -> bool:
         return any(self._normalize(ancestor) in self.forbidden for ancestor in ancestry)
@@ -36,7 +38,7 @@ class ForbiddenToolsGuard:
 
     def violates_multiline_prompt_policy(self, call: ToolCall) -> bool:
         prompt = call.prompt or ""
-        if '\n' not in prompt and '\r' not in prompt:
+        if "\n" not in prompt and "\r" not in prompt:
             return False
         lowered = prompt.lower()
         return any(forbidden in lowered for forbidden in self.forbidden)

@@ -5,3 +5,5 @@ black
 mypy
 pyyaml
 pydantic
+types-requests
+types-PyYAML

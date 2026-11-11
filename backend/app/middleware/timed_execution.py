@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import json
 import logging
 import time
-import json
-from typing import Any, Callable, List
+from collections.abc import Callable
+from typing import Any
 
 from backend.app.middleware.tool_execution import execute_tool
 from backend.app.observability.metrics import REGISTRY
@@ -15,7 +16,7 @@ def timed_execute_tool(
     tool_fn: Callable[..., Any],
     *,
     call,
-    ancestry: List[str] | None = None,
+    ancestry: list[str] | None = None,
     request_id: str = "unknown",
     user_id: str | None = None,
     **tool_kwargs: Any,

@@ -1,5 +1,6 @@
 ﻿from app.models.schemas import InterviewGuideRequest, InterviewGuideResponse
 
+
 def company_interview_guide(req: InterviewGuideRequest) -> InterviewGuideResponse:
     questions = [
         f"Parlez-moi de votre expérience liée au rôle {req.role}.",

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, List
+from collections.abc import Callable
+from typing import Any
 
 from backend.app.observability.structured_logging import build_forbidden_tool_log
 from backend.app.policy.forbidden_tools_guard import ToolCall
@@ -31,7 +32,7 @@ def execute_tool(
     tool_fn: Callable[..., Any],
     *,
     call: ToolCall,
-    ancestry: List[str] | None = None,
+    ancestry: list[str] | None = None,
     request_id: str = "unknown",
     user_id: str | None = None,
     **tool_kwargs: Any,
@@ -48,7 +49,9 @@ def execute_tool(
     if policy.rules.forbid_async and guard.violates_async_policy(call):
         _block_and_log(request_id, user_id, reason="async_context", call=call)
 
-    if policy.rules.forbid_multiline_with_forbidden and guard.violates_multiline_prompt_policy(call):
+    if policy.rules.forbid_multiline_with_forbidden and guard.violates_multiline_prompt_policy(
+        call
+    ):
         _block_and_log(request_id, user_id, reason="multiline_prompt", call=call)
 
     return tool_fn(**tool_kwargs)

@@ -1,0 +1,52 @@
+# Blueprint Render — https://render.com/docs/blueprint-spec
+# Déploiement : Render Dashboard → New → Blueprint → sélectionner ce repo.
+# Valeurs à renseigner à la création :
+#   - MONGO_URL : chaîne SRV MongoDB Atlas (voir DEPLOY.md)
+#   - REACT_APP_BACKEND_URL : URL complète du backend après son premier déploiement
+#     (ex : https://emeres-backend-xxxx.onrender.com) — le frontend se redéploie
+#     automatiquement quand la variable est définie/modifiée.
+services:
+  - type: web
+    name: emeres-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: emeres
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEV_MODE
+        value: "true"
+      - key: LLM_PROVIDER
+        value: stub
+      # Activation IA (optionnel, compatible Mistral) — voir DEPLOY.md étape 6 :
+      # OPENAI_API_KEY, OPENAI_BASE_URL=https://api.mistral.ai/v1, LLM_MODEL=mistral-small-latest
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  - type: web
+    name: emeres-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci --no-audit --no-fund && npm run build
+    staticPublishPath: ./frontend/build
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: REACT_APP_BACKEND_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

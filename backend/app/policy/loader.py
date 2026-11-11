@@ -2,18 +2,16 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 from pydantic import ValidationError
 
 try:  # pragma: no cover - optional dependency
     import yaml
 except Exception:  # pragma: no cover
-    yaml = None
+    yaml = None  # type: ignore[assignment]
 
-from backend.app.policy.schema import Policy
 from backend.app.observability.metrics import inc_policy_reload
-
+from backend.app.policy.schema import Policy
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +21,15 @@ _DEFAULT_POLICY = Policy()
 def _read_yaml(path: str) -> dict:
     if yaml is None:  # pragma: no cover
         return {}
-    with open(path, "r", encoding="utf-8") as handle:
+    with open(path, encoding="utf-8") as handle:
         return yaml.safe_load(handle) or {}
 
 
 class PolicyLoader:
-    def __init__(self, path: Optional[str] = None) -> None:
-        self.path = path or os.getenv("POLICY_FILE", "backend/policy.yaml")
+    def __init__(self, path: str | None = None) -> None:
+        self.path: str = (
+            path if path is not None else os.getenv("POLICY_FILE", "backend/policy.yaml")
+        )
         self._mtime: float = -1.0
         self._policy: Policy = _DEFAULT_POLICY
 

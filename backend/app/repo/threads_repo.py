@@ -1,26 +1,25 @@
-﻿from typing import List, Dict, Any
+﻿import datetime
 import os
-import datetime
 import uuid
+from typing import Any
 
 _USE_MEM = not bool(os.environ.get("MONGO_URL"))
 
 if not _USE_MEM:
     from pymongo import MongoClient
-    from bson import ObjectId
 
     _client = MongoClient(os.environ["MONGO_URL"])
     db = _client.get_default_database()
 else:
     db = None
-    _THREADS: Dict[str, Dict[str, Any]] = {}
+    _THREADS: dict[str, dict[str, Any]] = {}
 
 
 def _now() -> datetime.datetime:
     return datetime.datetime.utcnow()
 
 
-def create_thread(participants: List[Dict[str, str]], context: Dict[str, str]) -> str:
+def create_thread(participants: list[dict[str, str]], context: dict[str, str]) -> str:
     doc = {
         "participants": participants,
         "context": context,
@@ -44,8 +43,6 @@ def is_participant(thread_id: str, user_id: str) -> bool:
     from bson import ObjectId
 
     return (
-        db.threads.count_documents(
-            {"_id": ObjectId(thread_id), "participants.user_id": user_id}
-        )
+        db.threads.count_documents({"_id": ObjectId(thread_id), "participants.user_id": user_id})
         > 0
     )

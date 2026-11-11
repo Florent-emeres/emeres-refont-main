@@ -4,11 +4,11 @@ import EmeresButton from '../ui/EmeresButton';
 import EmeresCard, { EmeresCardContent, EmeresCardDescription, EmeresCardHeader, EmeresCardTitle } from '../ui/EmeresCard';
 import EmeresBadge from '../ui/EmeresBadge';
 import EmeresInput from '../ui/EmeresInput';
-import { 
-  Brain, 
-  Mic, 
-  MicOff, 
-  Play, 
+import {
+  Brain,
+  Mic,
+  MicOff,
+  Play,
   Pause,
   Clock,
   CheckCircle,
@@ -37,7 +37,7 @@ const EntretienIA = ({ user }) => {
   const [interviewPhase, setInterviewPhase] = useState('setup'); // 'setup', 'interview', 'feedback'
   const [feedback, setFeedback] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Configuration de l'entretien
   const [interviewConfig, setInterviewConfig] = useState({
     jobTitle: '',
@@ -106,7 +106,7 @@ const EntretienIA = ({ user }) => {
         duration: interviewConfig.duration
       };
 
-      const response = await axios.post(`${backendUrl}/api/tools/coach-ia/session`, 
+      const response = await axios.post(`${backendUrl}/api/tools/coach-ia/session`,
         { context: contextData },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -121,7 +121,7 @@ const EntretienIA = ({ user }) => {
 
         // Générer la première question
         await generateNextQuestion(response.data.session_id, 0);
-        
+
         setInterviewPhase('interview');
         setIsTimerRunning(true);
         setTimeLeft(120); // 2 minutes par question
@@ -147,22 +147,22 @@ const EntretienIA = ({ user }) => {
   const generateNextQuestion = async (sessionId, questionNum) => {
     try {
       const token = localStorage.getItem('token');
-      
-      const prompt = `Tu es un recruteur expert pour le poste de "${interviewConfig.jobTitle}" 
-      ${interviewConfig.company ? `chez ${interviewConfig.company}` : ''} 
+
+      const prompt = `Tu es un recruteur expert pour le poste de "${interviewConfig.jobTitle}"
+      ${interviewConfig.company ? `chez ${interviewConfig.company}` : ''}
       dans le secteur ${interviewConfig.sector} (niveau ${interviewConfig.level}).
 
       Génère la question ${questionNum + 1} sur ${interviewConfig.questionCount} pour cet entretien.
-      
+
       INSTRUCTIONS:
       - Pose UNE SEULE question précise et professionnelle
       - Adapte la difficulté au niveau ${interviewConfig.level}
       - Question pertinente pour le secteur ${interviewConfig.sector}
       - Varie le type de question (technique, comportementale, situationnelle)
-      
+
       ${questionNum === 0 ? 'Commence par une question d\'introduction/présentation.' : ''}
       ${questionNum === interviewConfig.questionCount - 1 ? 'Termine par une question de clôture sur les motivations.' : ''}
-      
+
       Réponds UNIQUEMENT avec la question, sans commentaire.`;
 
       const response = await axios.post(
@@ -177,9 +177,17 @@ const EntretienIA = ({ user }) => {
           text: response.data.response,
           timeLimit: 120
         });
+      } else {
+        setIsTimerRunning(false);
+        toast({
+          title: "IA indisponible",
+          description: response.data.message || "La génération de questions IA n'est pas disponible pour le moment.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Erreur génération question:', error);
+      setIsTimerRunning(false);
       toast({
         title: "Erreur",
         description: "Impossible de générer la question",
@@ -230,8 +238,8 @@ const EntretienIA = ({ user }) => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      
-      const allAnswers = currentSession.answers.map((a, i) => 
+
+      const allAnswers = currentSession.answers.map((a, i) =>
         `Question ${i + 1}: ${a.question}\nRéponse: ${a.answer}\nTemps utilisé: ${a.timeUsed}s`
       ).join('\n\n');
 
@@ -268,6 +276,12 @@ Sois constructif et précis dans tes retours.`;
           completedAt: new Date().toISOString()
         });
         setInterviewPhase('feedback');
+      } else {
+        toast({
+          title: "IA indisponible",
+          description: response.data.message || "Le feedback IA n'est pas disponible pour le moment.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Erreur génération feedback:', error);
@@ -288,7 +302,7 @@ Sois constructif et précis dans tes retours.`;
       description: "Passons à la question suivante",
       variant: "default",
     });
-    
+
     if (currentAnswer.trim()) {
       submitAnswer();
     } else {
@@ -325,7 +339,7 @@ Sois constructif et précis dans tes retours.`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 relative overflow-hidden">
       {/* Background Image pour Entretien IA */}
-      <div 
+      <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-8"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1659035260002-11d486d6e9f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
@@ -333,9 +347,9 @@ Sois constructif et précis dans tes retours.`;
       />
       {/* Overlay pour maintenir le contraste */}
       <div className="fixed inset-0 bg-gradient-to-br from-indigo-50/85 via-purple-50/85 to-indigo-50/85" />
-      
+
       <div className="container mx-auto px-4 py-6 max-w-6xl relative z-10">
-        
+
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-4">
@@ -364,7 +378,7 @@ Sois constructif et précis dans tes retours.`;
                 </EmeresCardDescription>
               </EmeresCardHeader>
               <EmeresCardContent className="space-y-6">
-                
+
                 {/* Informations du poste */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -377,7 +391,7 @@ Sois constructif et précis dans tes retours.`;
                       onChange={(e) => setInterviewConfig(prev => ({...prev, jobTitle: e.target.value}))}
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Entreprise (optionnel)
@@ -453,7 +467,7 @@ Sois constructif et précis dans tes retours.`;
                       <option value={10}>10 questions (intensif)</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Temps par question
@@ -480,7 +494,7 @@ Sois constructif et précis dans tes retours.`;
                   >
                     {isLoading ? 'Préparation...' : 'Démarrer l\'entretien'}
                   </EmeresButton>
-                  
+
                   <p className="text-sm text-gray-500 mt-3">
                     L'IA va générer des questions adaptées à votre profil et au poste visé
                   </p>
@@ -493,7 +507,7 @@ Sois constructif et précis dans tes retours.`;
         {interviewPhase === 'interview' && currentQuestion && (
           // Interface d'entretien
           <div className="max-w-4xl mx-auto space-y-6">
-            
+
             {/* Status bar */}
             <div className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm">
               <div className="flex items-center gap-4">
@@ -505,14 +519,14 @@ Sois constructif et précis dans tes retours.`;
                   Question {questionIndex + 1} sur {interviewConfig.questionCount}
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-4">
                 <div className={`flex items-center gap-2 ${timeLeft < 30 ? 'text-red-600' : 'text-gray-600'}`}>
                   <Clock className="w-4 h-4" />
                   <span className="font-medium">{formatTime(timeLeft)}</span>
                 </div>
                 <div className="w-20 bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className={`h-2 rounded-full transition-all duration-1000 ${
                       timeLeft < 30 ? 'bg-red-500' : 'bg-blue-500'
                     }`}
@@ -529,11 +543,11 @@ Sois constructif et précis dans tes retours.`;
                   <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <MessageSquare className="h-8 w-8 text-white" />
                   </div>
-                  
+
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">
                     Question {questionIndex + 1}
                   </h2>
-                  
+
                   <div className="bg-blue-50 rounded-xl p-6 mb-6">
                     <p className="text-lg text-gray-800 leading-relaxed">
                       {currentQuestion.text}
@@ -552,12 +566,12 @@ Sois constructif et précis dans tes retours.`;
                     className="w-full h-32 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     disabled={!isTimerRunning}
                   />
-                  
+
                   <div className="flex justify-between items-center">
                     <div className="text-sm text-gray-500">
                       {currentAnswer.length} caractères
                     </div>
-                    
+
                     <div className="flex gap-3">
                       <EmeresButton
                         variant="outline"
@@ -566,7 +580,7 @@ Sois constructif et précis dans tes retours.`;
                       >
                         {isTimerRunning ? 'Pause' : 'Reprendre'}
                       </EmeresButton>
-                      
+
                       <EmeresButton
                         onClick={submitAnswer}
                         disabled={!currentAnswer.trim()}
@@ -595,7 +609,7 @@ Sois constructif et précis dans tes retours.`;
         {interviewPhase === 'feedback' && feedback && (
           // Résultats et feedback
           <div className="max-w-4xl mx-auto space-y-6">
-            
+
             {/* Header résultats */}
             <div className="text-center">
               <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -619,7 +633,7 @@ Sois constructif et précis dans tes retours.`;
                   <div className="text-sm text-gray-600">Questions répondues</div>
                 </EmeresCardContent>
               </EmeresCard>
-              
+
               <EmeresCard>
                 <EmeresCardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-green-600 mb-1">
@@ -628,7 +642,7 @@ Sois constructif et précis dans tes retours.`;
                   <div className="text-sm text-gray-600">Taux de réponse</div>
                 </EmeresCardContent>
               </EmeresCard>
-              
+
               <EmeresCard>
                 <EmeresCardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-purple-600 mb-1">
@@ -639,11 +653,11 @@ Sois constructif et précis dans tes retours.`;
                   <div className="text-sm text-gray-600">Temps total</div>
                 </EmeresCardContent>
               </EmeresCard>
-              
+
               <EmeresCard>
                 <EmeresCardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-orange-600 mb-1">
-                    {interviewConfig.level === 'junior' ? 'Junior' : 
+                    {interviewConfig.level === 'junior' ? 'Junior' :
                      interviewConfig.level === 'intermediate' ? 'Inter.' : 'Senior'}
                   </div>
                   <div className="text-sm text-gray-600">Niveau testé</div>
@@ -680,7 +694,7 @@ Sois constructif et précis dans tes retours.`;
               >
                 Nouvel entretien
               </EmeresButton>
-              
+
               <EmeresButton
                 icon={<Target />}
                 onClick={() => {

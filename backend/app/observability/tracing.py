@@ -1,5 +1,6 @@
 import os
 
+
 def init_tracing(app):
     """Initialise OpenTelemetry tracing if OTLP endpoint configured."""
     endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
