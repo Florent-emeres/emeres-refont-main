@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Tuple
-
 from backend.app.policy.forbidden_tools_guard import ForbiddenToolsGuard
 from backend.app.policy.loader import PolicyLoader
 from backend.app.policy.schema import Policy
@@ -10,7 +8,7 @@ from backend.app.policy.schema import Policy
 class PolicyManager:
     def __init__(self) -> None:
         self._loader = PolicyLoader()
-        self._cache: Tuple[Policy, ForbiddenToolsGuard] | None = None
+        self._cache: tuple[Policy, ForbiddenToolsGuard] | None = None
 
     def _ensure_policy(self) -> Policy:
         return self._loader.load_if_changed()

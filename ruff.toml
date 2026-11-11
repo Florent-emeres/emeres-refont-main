@@ -1,6 +1,30 @@
 line-length = 100
 target-version = "py311"
 
+extend-exclude = [
+    "backend/server.py",
+    "backend/api_tools.py",
+    "backend/calendar_services.py",
+    "backend/credits_system.py",
+    "backend/init_messaging_data.py",
+    "backend/internship_journal.py",
+    "backend/llm_client.py",
+    "backend/messaging_system.py",
+    "backend/premium_modules.py",
+    "backend/remove_yellow.py",
+    "backend/resources_library.py",
+    "backend/tools_system.py",
+    "*_test.py",
+    "*_retest.py",
+    "test_*.py",
+    "emeres_*",
+    "remove_yellow.py",
+    "check_db.py",
+    "debug_threads.py",
+    "focused_retest.py",
+    "scripts",
+]
+
 [lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E203"]

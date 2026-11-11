@@ -2,7 +2,6 @@ from fastapi import APIRouter
 
 from backend.app.observability.metrics import REGISTRY
 
-
 router = APIRouter()
 
 

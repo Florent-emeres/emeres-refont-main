@@ -1,18 +1,13 @@
-﻿from pydantic import BaseModel
-from typing import List, Optional, Dict, Any, Set
+﻿from typing import Any
+
+from pydantic import BaseModel
 
 
 class JobseekerData(BaseModel):
-    programs: Set[str] = set()
+    programs: set[str] = set()
     is_jobseeker: bool = True
-    
-    model_config = {
-        "extra": "allow"  # Permet des champs supplémentaires
-    }
 
-
-class ProfileUpdate(BaseModel):
-    jobseeker: Optional[JobseekerData] = None
+    model_config = {"extra": "allow"}  # Permet des champs supplémentaires
 
 
 class CoverLetterRequest(BaseModel):
@@ -22,7 +17,7 @@ class CoverLetterRequest(BaseModel):
 
 class CoverLetterResponse(BaseModel):
     letter: str
-    key_points: List[str]
+    key_points: list[str]
 
 
 class JobRecoRequest(BaseModel):
@@ -30,7 +25,7 @@ class JobRecoRequest(BaseModel):
 
 
 class JobRecoResponse(BaseModel):
-    offers: List[str]
+    offers: list[str]
 
 
 class CoachRequest(BaseModel):
@@ -46,30 +41,30 @@ class CVEvalRequest(BaseModel):
 
 
 class CVEvalResponse(BaseModel):
-    strengths: List[str]
-    weaknesses: List[str]
+    strengths: list[str]
+    weaknesses: list[str]
 
 
 class CVOptimizeRequest(BaseModel):
     cv_text: str
-    target_role: Optional[str] = None
+    target_role: str | None = None
 
 
 class CVOptimizeResponse(BaseModel):
     improved_cv: str
-    suggestions: List[str] = []
-    ats_score_hint: Optional[str] = None
+    suggestions: list[str] = []
+    ats_score_hint: str | None = None
 
 
 class CareerExploreRequest(BaseModel):
-    interests: List[str] = []
-    experience_level: Optional[str] = None
+    interests: list[str] = []
+    experience_level: str | None = None
 
 
 class CareerExploreResponse(BaseModel):
-    roles: List[str]
-    skills_to_learn: List[str]
-    resources: List[str]
+    roles: list[str]
+    skills_to_learn: list[str]
+    resources: list[str]
 
 
 class InterviewStartRequest(BaseModel):
@@ -88,7 +83,7 @@ class InterviewAnswerRequest(BaseModel):
 
 class InterviewAnswerResponse(BaseModel):
     feedback: str
-    next_question: Optional[str] = None
+    next_question: str | None = None
 
 
 # Company persona
@@ -98,7 +93,7 @@ class ShortlistRequest(BaseModel):
 
 
 class ShortlistResponse(BaseModel):
-    candidates: List[Dict[str, Any]]
+    candidates: list[dict[str, Any]]
 
 
 class MatchingRequest(BaseModel):
@@ -107,12 +102,12 @@ class MatchingRequest(BaseModel):
 
 
 class MatchingResult(BaseModel):
-    offers: List[Dict[str, Any]]
+    offers: list[dict[str, Any]]
 
 
 class JobPostingRequest(BaseModel):
     role: str
-    requirements: List[str] = []
+    requirements: list[str] = []
 
 
 class JobPostingResponse(BaseModel):
@@ -125,8 +120,8 @@ class InterviewGuideRequest(BaseModel):
 
 
 class InterviewGuideResponse(BaseModel):
-    questions: List[str]
-    scoring_rubric: Dict[str, Any]
+    questions: list[str]
+    scoring_rubric: dict[str, Any]
 
 
 class OnboardingPackRequest(BaseModel):
@@ -134,8 +129,8 @@ class OnboardingPackRequest(BaseModel):
 
 
 class OnboardingPackResponse(BaseModel):
-    checklist: List[str]
-    messages: List[str]
+    checklist: list[str]
+    messages: list[str]
 
 
 # School persona
@@ -144,8 +139,8 @@ class CohortTrackRequest(BaseModel):
 
 
 class CohortTrackResponse(BaseModel):
-    risks: List[str]
-    alerts: List[str]
+    risks: list[str]
+    alerts: list[str]
 
 
 class ReportsRequest(BaseModel):
@@ -153,7 +148,7 @@ class ReportsRequest(BaseModel):
 
 
 class ReportsResponse(BaseModel):
-    indicators: Dict[str, Any]
+    indicators: dict[str, Any]
 
 
 class DocumentsRequest(BaseModel):
@@ -161,7 +156,7 @@ class DocumentsRequest(BaseModel):
 
 
 class DocumentsResponse(BaseModel):
-    generated: List[str]
+    generated: list[str]
 
 
 class ComplianceRequest(BaseModel):
@@ -169,7 +164,7 @@ class ComplianceRequest(BaseModel):
 
 
 class ComplianceResponse(BaseModel):
-    checklist: List[str]
+    checklist: list[str]
 
 
 class PartnershipsRequest(BaseModel):
@@ -177,7 +172,7 @@ class PartnershipsRequest(BaseModel):
 
 
 class PartnershipsResponse(BaseModel):
-    prospects: List[str]
+    prospects: list[str]
 
 
 # Mentor persona
@@ -186,17 +181,17 @@ class MentorPlanRequest(BaseModel):
 
 
 class MentorPlanResponse(BaseModel):
-    goals: List[str]
-    milestones: List[str]
+    goals: list[str]
+    milestones: list[str]
 
 
 class MentorFeedbackRequest(BaseModel):
     student_id: str
-    notes: Optional[str] = None
+    notes: str | None = None
 
 
 class MentorFeedbackResponse(BaseModel):
-    feedback: List[str]
+    feedback: list[str]
 
 
 class RiskDetectRequest(BaseModel):
@@ -204,7 +199,7 @@ class RiskDetectRequest(BaseModel):
 
 
 class RiskDetectResponse(BaseModel):
-    risks: List[str]
+    risks: list[str]
 
 
 class MentorAdviceRequest(BaseModel):
@@ -212,7 +207,7 @@ class MentorAdviceRequest(BaseModel):
 
 
 class MentorAdviceResponse(BaseModel):
-    tips: List[str]
+    tips: list[str]
 
 
 class FinalEvalRequest(BaseModel):
@@ -238,7 +233,7 @@ class ObservabilityRequest(BaseModel):
 
 
 class ObservabilityResponse(BaseModel):
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
 
 
 class CatalogsRequest(BaseModel):
@@ -246,7 +241,7 @@ class CatalogsRequest(BaseModel):
 
 
 class CatalogsResponse(BaseModel):
-    items: List[str]
+    items: list[str]
 
 
 class RgpdRequest(BaseModel):
@@ -254,7 +249,7 @@ class RgpdRequest(BaseModel):
 
 
 class RgpdResponse(BaseModel):
-    export_url: Optional[str] = None
+    export_url: str | None = None
     deleted: bool = False
 
 
@@ -268,10 +263,8 @@ class ABTestResponse(BaseModel):
 
 class JobseekerStatus(BaseModel):
     is_jobseeker: bool
-    programs: List[str] = []
+    programs: list[str] = []
 
 
 class ProfileUpdate(BaseModel):
-    jobseeker: Optional[JobseekerStatus] = None
-
-
+    jobseeker: JobseekerStatus | None = None

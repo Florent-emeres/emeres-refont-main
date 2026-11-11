@@ -1,11 +1,12 @@
 import json
-from typing import Any, Dict, List
+from typing import Any
+
 from _pytest.logging import LogCaptureFixture
 
 
-def parse_forbidden_tool_logs(caplog: LogCaptureFixture) -> List[Dict[str, Any]]:
+def parse_forbidden_tool_logs(caplog: LogCaptureFixture) -> list[dict[str, Any]]:
     """Return parsed JSON logs for forbidden tool blocks from caplog."""
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
     for record in caplog.records:
         message = record.message
         if "forbidden_tool_blocked" not in message:
@@ -22,7 +23,9 @@ def parse_forbidden_tool_logs(caplog: LogCaptureFixture) -> List[Dict[str, Any]]
     return results
 
 
-def assert_forbidden(caplog: LogCaptureFixture, *, reason: str | None = None) -> List[Dict[str, Any]]:
+def assert_forbidden(
+    caplog: LogCaptureFixture, *, reason: str | None = None
+) -> list[dict[str, Any]]:
     """Assert that at least one forbidden tool log was captured (optionally by reason)."""
     logs = parse_forbidden_tool_logs(caplog)
     assert logs, "Aucun log de blocage captur"

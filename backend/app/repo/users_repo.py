@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Dict, Any
+from typing import Any
 
 _USE_MEM = not bool(os.environ.get("MONGO_URL"))
 
@@ -10,10 +10,10 @@ if not _USE_MEM:
     db = _client.get_default_database()
 else:
     db = None
-    _USERS: Dict[str, Dict[str, Any]] = {}
+    _USERS: dict[str, dict[str, Any]] = {}
 
 
-def set_jobseeker_status(user_id: str, payload: Dict[str, Any]) -> None:
+def set_jobseeker_status(user_id: str, payload: dict[str, Any]) -> None:
     if _USE_MEM:
         doc = _USERS.get(user_id, {})
         doc["jobseeker"] = payload
@@ -22,7 +22,7 @@ def set_jobseeker_status(user_id: str, payload: Dict[str, Any]) -> None:
     db.users.update_one({"_id": user_id}, {"$set": {"jobseeker": payload}}, upsert=True)
 
 
-def get_jobseeker_status(user_id: str) -> Optional[Dict[str, Any]]:
+def get_jobseeker_status(user_id: str) -> dict[str, Any] | None:
     if _USE_MEM:
         doc = _USERS.get(user_id)
         if not doc:

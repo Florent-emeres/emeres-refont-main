@@ -1,5 +1,6 @@
 from app.models.schemas import CoverLetterRequest, CoverLetterResponse
 
+
 def jobseeker_cover_letter(req: CoverLetterRequest) -> CoverLetterResponse:
     letter = (
         f"Madame, Monsieur,\n"

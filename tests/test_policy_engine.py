@@ -60,7 +60,9 @@ def test_policy_blocks_with_custom_pattern_via_alias(tmp_path, monkeypatch):
     monkeypatch.setenv("POLICY_FILE", str(policy_path))
     te = reload_middlewares()
 
-    call = ToolCall(name="ok", display_name="OK", context="sync", prompt="utilise danger.run\nensuite continue")
+    call = ToolCall(
+        name="ok", display_name="OK", context="sync", prompt="utilise danger.run\nensuite continue"
+    )
     with pytest.raises(PermissionError):
         te.execute_tool(lambda **k: "ok", call=call, ancestry=[], request_id="r4", user_id="u4")
 
@@ -72,13 +74,17 @@ def test_policy_nested_toggle(tmp_path, monkeypatch):
 
     call = ToolCall(name="file_search", display_name="FS", context="sync", prompt="ok")
     with pytest.raises(PermissionError):
-        te.execute_tool(lambda **k: "ok", call=call, ancestry=["web.run"], request_id="r5", user_id="u5")
+        te.execute_tool(
+            lambda **k: "ok", call=call, ancestry=["web.run"], request_id="r5", user_id="u5"
+        )
 
     time.sleep(0.01)
     write_policy(policy_path, forbidden=["web.run"], forbid_nested=False)
     te = reload_middlewares()
 
-    out = te.execute_tool(lambda **k: "ok", call=call, ancestry=["web.run"], request_id="r6", user_id="u6")
+    out = te.execute_tool(
+        lambda **k: "ok", call=call, ancestry=["web.run"], request_id="r6", user_id="u6"
+    )
     assert out == "ok"
 
 
@@ -93,6 +99,7 @@ def test_policy_reload_counters(tmp_path, monkeypatch):
 
     import importlib
     import backend.app.policy.loader as loader
+
     loader = importlib.reload(loader)
     loader.PolicyLoader().load_if_changed()
 

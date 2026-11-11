@@ -1,5 +1,6 @@
 ﻿from app.models.schemas import OnboardingPackRequest, OnboardingPackResponse
 
+
 def company_onboarding_pack(req: OnboardingPackRequest) -> OnboardingPackResponse:
     checklist = ["Contrat signé", "Matériel livré", "Parrain attribué"]
     messages = [

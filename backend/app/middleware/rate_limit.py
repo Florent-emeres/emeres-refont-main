@@ -1,12 +1,13 @@
 import os
 import time
-from fastapi import Request, HTTPException
+
+from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 WINDOW = int(os.getenv("RL_WINDOW_SEC", "60"))
 MAX_REQ = int(os.getenv("RL_MAX_REQ", "120"))
 
-_BUCKET = {}
+_BUCKET: dict[str, int] = {}
 
 
 class SimpleRateLimitMiddleware(BaseHTTPMiddleware):

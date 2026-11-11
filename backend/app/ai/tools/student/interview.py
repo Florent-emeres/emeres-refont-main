@@ -1,9 +1,10 @@
 ﻿from app.models.schemas import (
-    InterviewStartRequest,
-    InterviewStartResponse,
     InterviewAnswerRequest,
     InterviewAnswerResponse,
+    InterviewStartRequest,
+    InterviewStartResponse,
 )
+
 
 def student_interview_start(req: InterviewStartRequest) -> InterviewStartResponse:
     return InterviewStartResponse(

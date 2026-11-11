@@ -1,5 +1,6 @@
 from app.models.schemas import CareerExploreRequest, CareerExploreResponse
 
+
 def jobseeker_career_explorer(req: CareerExploreRequest) -> CareerExploreResponse:
     roles = [
         "Agent d’accueil",

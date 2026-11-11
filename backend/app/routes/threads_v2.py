@@ -1,16 +1,14 @@
-﻿from fastapi import APIRouter, HTTPException
+﻿from app.repo import audit_repo, messages_repo, threads_repo
+from app.services.crypto_service import decrypt, encrypt
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict
-
-from app.services.crypto_service import encrypt, decrypt
-from app.repo import threads_repo, messages_repo, audit_repo
 
 router = APIRouter(prefix="/threads", tags=["threads"])
 
 
 class ThreadCreate(BaseModel):
-    participants: List[Dict[str, str]]
-    context: Dict[str, str]
+    participants: list[dict[str, str]]
+    context: dict[str, str]
 
 
 class MessageCreate(BaseModel):

@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from threading import RLock
-from typing import Dict, List
 
 
-def _quantile(sorted_values: List[float], q: float) -> float:
+def _quantile(sorted_values: list[float], q: float) -> float:
     if not sorted_values:
         return 0.0
     if len(sorted_values) == 1:
@@ -19,15 +18,15 @@ def _quantile(sorted_values: List[float], q: float) -> float:
 
 @dataclass
 class LatencyStats:
-    values: List[float]
+    values: list[float]
 
 
 class MetricsRegistry:
     """Very small in-memory registry for counters and latency stats."""
 
     def __init__(self) -> None:
-        self._counters: Dict[str, int] = {}
-        self._latency: Dict[str, LatencyStats] = {}
+        self._counters: dict[str, int] = {}
+        self._latency: dict[str, LatencyStats] = {}
         self._lock = RLock()
 
     def increment(self, key: str, amount: int = 1) -> None:
@@ -38,6 +37,7 @@ class MetricsRegistry:
 
         key = metric if not label else f"{metric}{{{label}}}"
         self.increment(key)
+
     def observe_latency(self, key: str, value_ms: float) -> None:
         with self._lock:
             stats = self._latency.get(key)
@@ -46,10 +46,10 @@ class MetricsRegistry:
                 self._latency[key] = stats
             stats.values.append(value_ms)
 
-    def export(self) -> Dict[str, Dict[str, object]]:
+    def export(self) -> dict[str, object]:
         with self._lock:
             counters = dict(self._counters)
-            latency_payload: Dict[str, Dict[str, float]] = {}
+            latency_payload: dict[str, dict[str, float]] = {}
             for key, stats in self._latency.items():
                 if not stats.values:
                     continue
@@ -65,7 +65,6 @@ class MetricsRegistry:
 
 
 REGISTRY = MetricsRegistry()
-
 
 
 def inc_policy_reload(ok: bool = True) -> None:

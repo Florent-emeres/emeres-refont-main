@@ -33,7 +33,9 @@ def test_timed_success(caplog):
 
     timed_execute_tool = get_timed_execute_tool()
     call = ToolCall(name="file_search", display_name="File Search", context="sync", prompt="ok")
-    out = timed_execute_tool(ok_tool, call=call, ancestry=[], request_id="r-success", user_id="u1", value="hello")
+    out = timed_execute_tool(
+        ok_tool, call=call, ancestry=[], request_id="r-success", user_id="u1", value="hello"
+    )
     assert out == "hello"
 
     expo = REGISTRY.export()
@@ -67,7 +69,9 @@ def test_timed_blocked(policy_env, caplog):
     _reset_metrics()
     caplog.set_level(logging.WARNING)
 
-    policy_env.write_text(make_policy(forbidden=["web.run"], aliases={"internet": "web.run"}), encoding="utf-8")
+    policy_env.write_text(
+        make_policy(forbidden=["web.run"], aliases={"internet": "web.run"}), encoding="utf-8"
+    )
     modules = reload_policy_modules()
     timed_execute_tool = modules.timed_execution.timed_execute_tool
 
@@ -77,7 +81,9 @@ def test_timed_blocked(policy_env, caplog):
     call = ToolCall(name="internet", display_name="Web", context="sync", prompt="go")
 
     with pytest.raises(PermissionError):
-        timed_execute_tool(ok_tool, call=call, ancestry=["file_search"], request_id="r-block", user_id="u3")
+        timed_execute_tool(
+            ok_tool, call=call, ancestry=["file_search"], request_id="r-block", user_id="u3"
+        )
 
     expo = REGISTRY.export()
     assert expo["counters"].get("tool_blocked{internet}") == 1

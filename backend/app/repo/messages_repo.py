@@ -1,19 +1,18 @@
-﻿from typing import List, Dict, Any
+﻿import datetime
 import os
-import datetime
 import uuid
+from typing import Any
 
 _USE_MEM = not bool(os.environ.get("MONGO_URL"))
 
 if not _USE_MEM:
     from pymongo import MongoClient
-    from bson import ObjectId
 
     _client = MongoClient(os.environ["MONGO_URL"])
     db = _client.get_default_database()
 else:
     db = None
-    _MESSAGES: Dict[str, Dict[str, Any]] = {}
+    _MESSAGES: dict[str, dict[str, Any]] = {}
 
 
 def _now() -> datetime.datetime:
@@ -39,7 +38,7 @@ def add_message(thread_id: str, sender_id: str, content_enc: str) -> str:
     return str(result.inserted_id)
 
 
-def list_messages(thread_id: str) -> List[Dict[str, Any]]:
+def list_messages(thread_id: str) -> list[dict[str, Any]]:
     if _USE_MEM:
         messages = [m for m in _MESSAGES.values() if m["thread_id"] == thread_id]
         messages.sort(key=lambda item: item["created_at"])

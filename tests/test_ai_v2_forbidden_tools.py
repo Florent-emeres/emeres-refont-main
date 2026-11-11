@@ -86,10 +86,17 @@ def test_aliases_blocked(policy_env, caplog):
     call = ToolCall(name="internet", display_name="Web", context="sync", prompt="cherche...")
 
     with pytest.raises(PermissionError):
-        te.execute_tool(lambda **kw: "ok", call=call, ancestry=["file_search"], request_id="t-alias", user_id="u1")
+        te.execute_tool(
+            lambda **kw: "ok",
+            call=call,
+            ancestry=["file_search"],
+            request_id="t-alias",
+            user_id="u1",
+        )
 
     assert any(
-        '"event": "forbidden_tool_blocked"' in rec.message and '"reason": "alias_or_direct_forbidden"' in rec.message
+        '"event": "forbidden_tool_blocked"' in rec.message
+        and '"reason": "alias_or_direct_forbidden"' in rec.message
         for rec in caplog.records
     )
 
@@ -100,7 +107,9 @@ def test_nested_calls_blocked(policy_env, caplog):
     call = ToolCall(name="file_search", display_name="File Search", context="sync", prompt="...")
 
     with pytest.raises(PermissionError):
-        te.execute_tool(lambda **kw: "ok", call=call, ancestry=["web.run"], request_id="t-nested", user_id="u1")
+        te.execute_tool(
+            lambda **kw: "ok", call=call, ancestry=["web.run"], request_id="t-nested", user_id="u1"
+        )
 
     assert any(
         '"event": "forbidden_tool_blocked"' in rec.message and '"reason": "nested"' in rec.message
@@ -114,7 +123,9 @@ def test_async_context_blocked(policy_env, caplog):
     call = ToolCall(name="student_job_reco", display_name="Reco", context="async", prompt="safe")
 
     with pytest.raises(PermissionError):
-        te.execute_tool(lambda **kw: "ok", call=call, ancestry=[], request_id="t-async", user_id="u3")
+        te.execute_tool(
+            lambda **kw: "ok", call=call, ancestry=[], request_id="t-async", user_id="u3"
+        )
 
     assert any('"reason": "async_context"' in rec.message for rec in caplog.records)
 
@@ -130,10 +141,13 @@ def test_multiline_prompt_blocked(policy_env, caplog):
     )
 
     with pytest.raises(PermissionError):
-        te.execute_tool(lambda **kw: "ok", call=call, ancestry=[], request_id="t-multi", user_id="u1")
+        te.execute_tool(
+            lambda **kw: "ok", call=call, ancestry=[], request_id="t-multi", user_id="u1"
+        )
 
     assert any(
-        '"event": "forbidden_tool_blocked"' in rec.message and '"reason": "multiline_prompt"' in rec.message
+        '"event": "forbidden_tool_blocked"' in rec.message
+        and '"reason": "multiline_prompt"' in rec.message
         for rec in caplog.records
     )
 
@@ -157,14 +171,18 @@ def test_policy_invalid_yaml_fallback(policy_env):
     call = ToolCall(name="web.run", context="sync", prompt="ok")
 
     with pytest.raises(PermissionError):
-        te.execute_tool(lambda **k: "ok", call=call, ancestry=[], request_id="fallback", user_id="u1")
+        te.execute_tool(
+            lambda **k: "ok", call=call, ancestry=[], request_id="fallback", user_id="u1"
+        )
 
 
 def test_multiline_without_forbidden_ok(policy_env):
     te = configure_policy(policy_env, forbidden=["web.run"], aliases={})
     call = ToolCall(name="file_search", context="sync", prompt="ligne1\nligne2")
 
-    result = te.execute_tool(lambda **k: "ok", call=call, ancestry=[], request_id="multi-ok", user_id="u1")
+    result = te.execute_tool(
+        lambda **k: "ok", call=call, ancestry=[], request_id="multi-ok", user_id="u1"
+    )
     assert result == "ok"
 
 
@@ -180,7 +198,9 @@ def test_prompt_none_safe(policy_env):
     te = configure_policy(policy_env, forbidden=["web.run"], aliases={})
     call = ToolCall(name="file_search", context="sync", prompt=None)
 
-    result = te.execute_tool(lambda **k: "ok", call=call, ancestry=None, request_id="prompt-none", user_id="u1")
+    result = te.execute_tool(
+        lambda **k: "ok", call=call, ancestry=None, request_id="prompt-none", user_id="u1"
+    )
     assert result == "ok"
 
 

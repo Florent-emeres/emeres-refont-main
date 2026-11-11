@@ -1,12 +1,13 @@
-﻿from fastapi import APIRouter, HTTPException, Request
-from app.models import schemas
+﻿import importlib
 import os
-import importlib
-import yaml
-from app.repo import users_repo
-from app.middleware.timed_execution import timed_execute_tool
-from app.policy.forbidden_tools_guard import ToolCall
 from pathlib import Path
+
+import yaml
+from app.middleware.timed_execution import timed_execute_tool
+from app.models import schemas
+from app.policy.forbidden_tools_guard import ToolCall
+from app.repo import users_repo
+from fastapi import APIRouter, HTTPException, Request
 
 router = APIRouter(prefix="/ai/v2")
 
@@ -126,161 +127,163 @@ def run_tool(agent: str, tool: str, payload: dict, request: Request):
     return ResModel(**result_payload)
 
 
-SCHEMA_MAP.update({
-    "company_shortlisting": (
-        schemas.ShortlistRequest,
-        schemas.ShortlistResponse,
-        "app.ai.tools.company.shortlisting",
-        "company_shortlisting",
-    ),
-    "company_matching": (
-        schemas.MatchingRequest,
-        schemas.MatchingResult,
-        "app.ai.tools.company.matching_score",
-        "company_matching",
-    ),
-    "company_job_posting": (
-        schemas.JobPostingRequest,
-        schemas.JobPostingResponse,
-        "app.ai.tools.company.job_posting",
-        "company_job_posting",
-    ),
-    "company_interview_guide": (
-        schemas.InterviewGuideRequest,
-        schemas.InterviewGuideResponse,
-        "app.ai.tools.company.interview_guide",
-        "company_interview_guide",
-    ),
-    "company_onboarding_pack": (
-        schemas.OnboardingPackRequest,
-        schemas.OnboardingPackResponse,
-        "app.ai.tools.company.onboarding_pack",
-        "company_onboarding_pack",
-    ),
-    "school_cohort_tracking": (
-        schemas.CohortTrackRequest,
-        schemas.CohortTrackResponse,
-        "app.ai.tools.school.cohort_tracking",
-        "school_cohort_tracking",
-    ),
-    "school_reports": (
-        schemas.ReportsRequest,
-        schemas.ReportsResponse,
-        "app.ai.tools.school.reports",
-        "school_reports",
-    ),
-    "school_documents": (
-        schemas.DocumentsRequest,
-        schemas.DocumentsResponse,
-        "app.ai.tools.school.documents",
-        "school_documents",
-    ),
-    "school_compliance": (
-        schemas.ComplianceRequest,
-        schemas.ComplianceResponse,
-        "app.ai.tools.school.compliance",
-        "school_compliance",
-    ),
-    "school_partnerships": (
-        schemas.PartnershipsRequest,
-        schemas.PartnershipsResponse,
-        "app.ai.tools.school.partnerships",
-        "school_partnerships",
-    ),
-    "mentor_mentor_plan": (
-        schemas.MentorPlanRequest,
-        schemas.MentorPlanResponse,
-        "app.ai.tools.mentor.mentor_plan",
-        "mentor_mentor_plan",
-    ),
-    "mentor_mentor_feedback": (
-        schemas.MentorFeedbackRequest,
-        schemas.MentorFeedbackResponse,
-        "app.ai.tools.mentor.mentor_feedback",
-        "mentor_mentor_feedback",
-    ),
-    "mentor_risk_detection": (
-        schemas.RiskDetectRequest,
-        schemas.RiskDetectResponse,
-        "app.ai.tools.mentor.risk_detection",
-        "mentor_risk_detection",
-    ),
-    "mentor_mentor_advice": (
-        schemas.MentorAdviceRequest,
-        schemas.MentorAdviceResponse,
-        "app.ai.tools.mentor.mentor_advice",
-        "mentor_mentor_advice",
-    ),
-    "mentor_final_evaluation": (
-        schemas.FinalEvalRequest,
-        schemas.FinalEvalResponse,
-        "app.ai.tools.mentor.final_evaluation",
-        "mentor_final_evaluation",
-    ),
-    "admin_moderation": (
-        schemas.ModerationRequest,
-        schemas.ModerationResponse,
-        "app.ai.tools.admin.moderation",
-        "admin_moderation",
-    ),
-    "admin_observability": (
-        schemas.ObservabilityRequest,
-        schemas.ObservabilityResponse,
-        "app.ai.tools.admin.observability",
-        "admin_observability",
-    ),
-    "admin_catalogs": (
-        schemas.CatalogsRequest,
-        schemas.CatalogsResponse,
-        "app.ai.tools.admin.catalogs",
-        "admin_catalogs",
-    ),
-    "admin_rgpd": (
-        schemas.RgpdRequest,
-        schemas.RgpdResponse,
-        "app.ai.tools.admin.rgpd",
-        "admin_rgpd",
-    ),
-    "admin_ab_testing": (
-        schemas.ABTestRequest,
-        schemas.ABTestResponse,
-        "app.ai.tools.admin.ab_testing",
-        "admin_ab_testing",
-    ),
-    "jobseeker_cover_letter": (
-        schemas.CoverLetterRequest,
-        schemas.CoverLetterResponse,
-        "app.ai.tools.jobseeker.cover_letter",
-        "jobseeker_cover_letter",
-    ),
-    "jobseeker_cv_optimizer": (
-        schemas.CVOptimizeRequest,
-        schemas.CVOptimizeResponse,
-        "app.ai.tools.jobseeker.cv_optimizer",
-        "jobseeker_cv_optimizer",
-    ),
-    "jobseeker_career_explorer": (
-        schemas.CareerExploreRequest,
-        schemas.CareerExploreResponse,
-        "app.ai.tools.jobseeker.career_explorer",
-        "jobseeker_career_explorer",
-    ),
-    "jobseeker_coach": (
-        schemas.CoachRequest,
-        schemas.CoachResponse,
-        "app.ai.tools.jobseeker.coach",
-        "jobseeker_coach",
-    ),
-    "jobseeker_interview_start": (
-        schemas.InterviewStartRequest,
-        schemas.InterviewStartResponse,
-        "app.ai.tools.jobseeker.interview",
-        "jobseeker_interview_start",
-    ),
-    "jobseeker_interview_answer": (
-        schemas.InterviewAnswerRequest,
-        schemas.InterviewAnswerResponse,
-        "app.ai.tools.jobseeker.interview",
-        "jobseeker_interview_answer",
-    ),
-})
+SCHEMA_MAP.update(
+    {
+        "company_shortlisting": (
+            schemas.ShortlistRequest,
+            schemas.ShortlistResponse,
+            "app.ai.tools.company.shortlisting",
+            "company_shortlisting",
+        ),
+        "company_matching": (
+            schemas.MatchingRequest,
+            schemas.MatchingResult,
+            "app.ai.tools.company.matching_score",
+            "company_matching",
+        ),
+        "company_job_posting": (
+            schemas.JobPostingRequest,
+            schemas.JobPostingResponse,
+            "app.ai.tools.company.job_posting",
+            "company_job_posting",
+        ),
+        "company_interview_guide": (
+            schemas.InterviewGuideRequest,
+            schemas.InterviewGuideResponse,
+            "app.ai.tools.company.interview_guide",
+            "company_interview_guide",
+        ),
+        "company_onboarding_pack": (
+            schemas.OnboardingPackRequest,
+            schemas.OnboardingPackResponse,
+            "app.ai.tools.company.onboarding_pack",
+            "company_onboarding_pack",
+        ),
+        "school_cohort_tracking": (
+            schemas.CohortTrackRequest,
+            schemas.CohortTrackResponse,
+            "app.ai.tools.school.cohort_tracking",
+            "school_cohort_tracking",
+        ),
+        "school_reports": (
+            schemas.ReportsRequest,
+            schemas.ReportsResponse,
+            "app.ai.tools.school.reports",
+            "school_reports",
+        ),
+        "school_documents": (
+            schemas.DocumentsRequest,
+            schemas.DocumentsResponse,
+            "app.ai.tools.school.documents",
+            "school_documents",
+        ),
+        "school_compliance": (
+            schemas.ComplianceRequest,
+            schemas.ComplianceResponse,
+            "app.ai.tools.school.compliance",
+            "school_compliance",
+        ),
+        "school_partnerships": (
+            schemas.PartnershipsRequest,
+            schemas.PartnershipsResponse,
+            "app.ai.tools.school.partnerships",
+            "school_partnerships",
+        ),
+        "mentor_mentor_plan": (
+            schemas.MentorPlanRequest,
+            schemas.MentorPlanResponse,
+            "app.ai.tools.mentor.mentor_plan",
+            "mentor_mentor_plan",
+        ),
+        "mentor_mentor_feedback": (
+            schemas.MentorFeedbackRequest,
+            schemas.MentorFeedbackResponse,
+            "app.ai.tools.mentor.mentor_feedback",
+            "mentor_mentor_feedback",
+        ),
+        "mentor_risk_detection": (
+            schemas.RiskDetectRequest,
+            schemas.RiskDetectResponse,
+            "app.ai.tools.mentor.risk_detection",
+            "mentor_risk_detection",
+        ),
+        "mentor_mentor_advice": (
+            schemas.MentorAdviceRequest,
+            schemas.MentorAdviceResponse,
+            "app.ai.tools.mentor.mentor_advice",
+            "mentor_mentor_advice",
+        ),
+        "mentor_final_evaluation": (
+            schemas.FinalEvalRequest,
+            schemas.FinalEvalResponse,
+            "app.ai.tools.mentor.final_evaluation",
+            "mentor_final_evaluation",
+        ),
+        "admin_moderation": (
+            schemas.ModerationRequest,
+            schemas.ModerationResponse,
+            "app.ai.tools.admin.moderation",
+            "admin_moderation",
+        ),
+        "admin_observability": (
+            schemas.ObservabilityRequest,
+            schemas.ObservabilityResponse,
+            "app.ai.tools.admin.observability",
+            "admin_observability",
+        ),
+        "admin_catalogs": (
+            schemas.CatalogsRequest,
+            schemas.CatalogsResponse,
+            "app.ai.tools.admin.catalogs",
+            "admin_catalogs",
+        ),
+        "admin_rgpd": (
+            schemas.RgpdRequest,
+            schemas.RgpdResponse,
+            "app.ai.tools.admin.rgpd",
+            "admin_rgpd",
+        ),
+        "admin_ab_testing": (
+            schemas.ABTestRequest,
+            schemas.ABTestResponse,
+            "app.ai.tools.admin.ab_testing",
+            "admin_ab_testing",
+        ),
+        "jobseeker_cover_letter": (
+            schemas.CoverLetterRequest,
+            schemas.CoverLetterResponse,
+            "app.ai.tools.jobseeker.cover_letter",
+            "jobseeker_cover_letter",
+        ),
+        "jobseeker_cv_optimizer": (
+            schemas.CVOptimizeRequest,
+            schemas.CVOptimizeResponse,
+            "app.ai.tools.jobseeker.cv_optimizer",
+            "jobseeker_cv_optimizer",
+        ),
+        "jobseeker_career_explorer": (
+            schemas.CareerExploreRequest,
+            schemas.CareerExploreResponse,
+            "app.ai.tools.jobseeker.career_explorer",
+            "jobseeker_career_explorer",
+        ),
+        "jobseeker_coach": (
+            schemas.CoachRequest,
+            schemas.CoachResponse,
+            "app.ai.tools.jobseeker.coach",
+            "jobseeker_coach",
+        ),
+        "jobseeker_interview_start": (
+            schemas.InterviewStartRequest,
+            schemas.InterviewStartResponse,
+            "app.ai.tools.jobseeker.interview",
+            "jobseeker_interview_start",
+        ),
+        "jobseeker_interview_answer": (
+            schemas.InterviewAnswerRequest,
+            schemas.InterviewAnswerResponse,
+            "app.ai.tools.jobseeker.interview",
+            "jobseeker_interview_answer",
+        ),
+    }
+)

@@ -1,15 +1,17 @@
 from app.models.schemas import (
-    InterviewStartRequest,
-    InterviewStartResponse,
     InterviewAnswerRequest,
     InterviewAnswerResponse,
+    InterviewStartRequest,
+    InterviewStartResponse,
 )
+
 
 def jobseeker_interview_start(req: InterviewStartRequest) -> InterviewStartResponse:
     return InterviewStartResponse(
         session_id="js_sess_1",
         first_question=f"Présentez-vous brièvement pour {req.role}.",
     )
+
 
 def jobseeker_interview_answer(req: InterviewAnswerRequest) -> InterviewAnswerResponse:
     return InterviewAnswerResponse(
