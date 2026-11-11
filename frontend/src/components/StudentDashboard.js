@@ -666,8 +666,16 @@ const StudentDashboard = () => {
   // Rendu des cartes du dashboard avec design ÉMÉRÉS optimisé
   const renderDashboardCards = () => {
     // Calculer les vraies données dynamiquement
+    const profileFields = [
+      'first_name', 'last_name', 'phone', 'birth_date', 'school_name', 'field_of_study',
+      'degree_preparing', 'main_skills', 'bio', 'search_objective', 'cover_letter'
+    ];
+    const filledProfileFields = profileFields.filter((f) => {
+      const v = profile?.[f];
+      return Array.isArray(v) ? v.length > 0 : v && v !== '';
+    }).length;
     const profileCompletion = profile ?
-      Math.round(Object.values(profile).filter(val => val && val !== '').length / 10 * 100) : 15;
+      Math.min(100, Math.round(filledProfileFields / profileFields.length * 100)) : 15;
 
     const mentorshipAdsCount = mentorshipAds?.length || 0;
     const availableMentorsCount = availableMentors?.length || 0;
@@ -807,7 +815,7 @@ const StudentDashboard = () => {
         gradient: 'from-blue-500 to-emerald-600',
         stats: 'Progression générale',
         value: `${profileCompletion}%`,
-        change: profileCompletion > 50 ? `+${Math.round(profileCompletion/10)}% ce mois` : 'Complétez votre profil',
+        change: `${filledProfileFields}/${profileFields.length} champs de profil complétés`,
         action: () => navigateToPage('progress')
       },
       {
