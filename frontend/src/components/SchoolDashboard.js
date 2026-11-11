@@ -47,6 +47,16 @@ import {
   Handshake
 } from 'lucide-react';
 import { useToast } from './hooks/use-toast';
+import {
+  StudentProgressPage,
+  PlacementStatsPage,
+  AnalyticsPage,
+  SatisfactionPage,
+  OpportunitiesPage,
+  DocumentsPage,
+  CommunicationPage,
+  LibraryPage
+} from './school/SchoolExtraPages';
 
 const SchoolDashboard = ({ user }) => {
   const { toast } = useToast();
@@ -1607,8 +1617,21 @@ const SchoolDashboard = ({ user }) => {
                 </EmeresCard>
               )}
 
+              {/* Pages réelles secondaires */}
+              {activePage === 'student-progress' && <StudentProgressPage students={students} />}
+              {activePage === 'placement-stats' && <PlacementStatsPage schoolStats={schoolStats} />}
+              {activePage === 'analytics' && <AnalyticsPage />}
+              {activePage === 'satisfaction' && <SatisfactionPage />}
+              {activePage === 'opportunities' && <OpportunitiesPage />}
+              {activePage === 'documents' && <DocumentsPage />}
+              {activePage === 'communication' && <CommunicationPage />}
+              {activePage === 'library' && <LibraryPage />}
+
               {/* Pages avec contenu placeholder */}
-              {!['dashboard', 'students-management', 'partnerships', 'school-profile'].includes(activePage) && (
+              {!['dashboard', 'students-management', 'partnerships', 'school-profile',
+                'student-progress', 'placement-stats', 'analytics', 'satisfaction',
+                'opportunities', 'documents', 'communication', 'library'
+              ].includes(activePage) && (
                 <EmeresCard>
                   <EmeresCardContent className="text-center py-12">
                     <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />

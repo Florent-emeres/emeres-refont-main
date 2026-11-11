@@ -593,4 +593,96 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
         activity.sort(key=lambda item: item.get("date") or now(), reverse=True)
         return [clean(item) for item in activity[:15]]
 
+    # ==========================================================================
+    # DOCUMENTS ADMINISTRATIFS
+    # ==========================================================================
+
+    DOCUMENT_TYPES = ("convention", "attestation", "rapport", "autre")
+
+    @router.get("/school/documents")
+    async def list_documents(current_user: dict = Depends(require_school)):
+        documents = (
+            await db.school_documents.find({"school_id": current_user["id"]})
+            .sort("created_at", -1)
+            .to_list(None)
+        )
+        return [clean(d) for d in documents]
+
+    @router.post("/school/documents")
+    async def create_document(document_data: dict, current_user: dict = Depends(require_school)):
+        title = (document_data.get("title") or "").strip()
+        if not title:
+            raise HTTPException(status_code=400, detail="Le titre est obligatoire")
+        document_type = document_data.get("document_type", "autre")
+        if document_type not in DOCUMENT_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Type invalide, valeurs autorisées: {', '.join(DOCUMENT_TYPES)}",
+            )
+        document = {
+            "id": str(uuid.uuid4()),
+            "school_id": current_user["id"],
+            "title": title,
+            "document_type": document_type,
+            "description": document_data.get("description"),
+            "file_url": document_data.get("file_url"),
+            "created_at": now(),
+            "updated_at": now(),
+        }
+        await db.school_documents.insert_one(document)
+        return clean(document)
+
+    @router.delete("/school/documents/{document_id}")
+    async def delete_document(document_id: str, current_user: dict = Depends(require_school)):
+        result = await db.school_documents.delete_one(
+            {"id": document_id, "school_id": current_user["id"]}
+        )
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Document non trouvé")
+        return {"success": True}
+
+    # ==========================================================================
+    # COMMUNICATION (annonces aux étudiants rattachés)
+    # ==========================================================================
+
+    @router.get("/school/announcements")
+    async def list_announcements(current_user: dict = Depends(require_school)):
+        announcements = (
+            await db.school_announcements.find({"school_id": current_user["id"]})
+            .sort("created_at", -1)
+            .to_list(None)
+        )
+        return [clean(a) for a in announcements]
+
+    @router.post("/school/announcements")
+    async def create_announcement(
+        announcement_data: dict, current_user: dict = Depends(require_school)
+    ):
+        title = (announcement_data.get("title") or "").strip()
+        body = (announcement_data.get("body") or "").strip()
+        if not title or not body:
+            raise HTTPException(status_code=400, detail="Le titre et le message sont obligatoires")
+        announcement = {
+            "id": str(uuid.uuid4()),
+            "school_id": current_user["id"],
+            "title": title,
+            "body": body,
+            "audience": announcement_data.get("audience", "attached_students"),
+            "created_at": now(),
+        }
+        await db.school_announcements.insert_one(announcement)
+
+        students = await get_attached_students(current_user["id"])
+        for student in students:
+            student_user_id = student.get("user_id")
+            if student_user_id:
+                await notify_user(
+                    student_user_id,
+                    f"Annonce de votre établissement : {title}",
+                    body,
+                    "school",
+                )
+
+        return clean({**announcement, "notified_students": len(students)})
+
     return router

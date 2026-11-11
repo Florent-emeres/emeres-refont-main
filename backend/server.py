@@ -7799,7 +7799,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str = None):
             user_id = payload.get("sub")
             if user_id:
                 user = await db.users.find_one({"id": user_id})
-        except jwt.JWTError:
+        except jwt.PyJWTError:
             await websocket.close(code=1008, reason="Invalid token")
             return
 
