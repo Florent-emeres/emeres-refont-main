@@ -381,6 +381,12 @@ app = FastAPI(title="ÉMÉRÉS API", version="1.0.0")
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "emeres-backend"}
+
+
 # Initialize services
 credits_service = None
 premium_service = None

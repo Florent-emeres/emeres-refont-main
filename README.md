@@ -80,6 +80,10 @@ python3 seed_pilot.py --base-url http://127.0.0.1:8001
 
 Le script est idempotent (aucun effet si le pilote existe déjà) et passe par l'API publique. Comptes sur le domaine `pilot.emeres.fr`, mot de passe commun `Pilote!2024` — à changer avant toute mise en production.
 
+## Mise en ligne
+
+Pour déployer la plateforme en ligne (Render + MongoDB Atlas, gratuit pour tester), suivre le guide **[DEPLOY.md](DEPLOY.md)** : Blueprint `render.yaml` inclus, déploiement en ~30 minutes.
+
 ## Tests et qualité
 
 ```bash
