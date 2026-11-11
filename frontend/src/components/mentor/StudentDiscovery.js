@@ -3,7 +3,7 @@ import EmeresButton from '../ui/EmeresButton';
 import EmeresCard, { EmeresCardContent, EmeresCardDescription, EmeresCardHeader, EmeresCardTitle } from '../ui/EmeresCard';
 import EmeresBadge from '../ui/EmeresBadge';
 import EmeresInput from '../ui/EmeresInput';
-import { 
+import {
   Search,
   Filter,
   Star,
@@ -98,7 +98,7 @@ const StudentDiscovery = () => {
     // Filter by search term
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(student => 
+      filtered = filtered.filter(student =>
         `${student.first_name} ${student.last_name}`.toLowerCase().includes(term) ||
         student.field_of_study.toLowerCase().includes(term) ||
         student.search_domain.toLowerCase().includes(term) ||
@@ -108,7 +108,7 @@ const StudentDiscovery = () => {
 
     // Filter by domain
     if (selectedFilters.domain !== 'all') {
-      filtered = filtered.filter(student => 
+      filtered = filtered.filter(student =>
         student.field_of_study.toLowerCase().includes(selectedFilters.domain.toLowerCase()) ||
         student.search_domain.toLowerCase().includes(selectedFilters.domain.toLowerCase())
       );
@@ -116,13 +116,13 @@ const StudentDiscovery = () => {
 
     // Filter by objective
     if (selectedFilters.objective !== 'all') {
-      filtered = filtered.filter(student => 
+      filtered = filtered.filter(student =>
         student.search_objective.toLowerCase() === selectedFilters.objective.toLowerCase()
       );
     }
 
     // Filter by matching score
-    filtered = filtered.filter(student => 
+    filtered = filtered.filter(student =>
       student.matching_score >= selectedFilters.matchingScore
     );
 
@@ -165,7 +165,7 @@ Cordialement`);
         setShowRequestModal(false);
         setSelectedStudent(null);
         setRequestMessage('');
-        
+
         // Reload students and requests
         loadAvailableStudents();
         loadMyRequests();
@@ -198,6 +198,31 @@ Cordialement`);
   const getRequestStatus = (studentId) => {
     const request = myRequests.find(req => req.student?.user_id === studentId);
     return request?.status || null;
+  };
+
+  const handleRespondToRequest = async (requestId, action) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/mentor/mentorship-requests/${requestId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action })
+      });
+
+      if (response.ok) {
+        loadMyRequests();
+        loadAvailableStudents();
+      } else {
+        const error = await response.json();
+        alert(`Erreur: ${error.detail}`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la réponse:', error);
+      alert('Erreur de connexion. Veuillez réessayer.');
+    }
   };
 
   const getStatusDisplay = (status) => {
@@ -245,7 +270,7 @@ Cordialement`);
             Trouvez des étudiants qui recherchent un mentor dans vos domaines d'expertise
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Users className="h-4 w-4" />
           <span>{filteredStudents.length} étudiant{filteredStudents.length > 1 ? 's' : ''} disponible{filteredStudents.length > 1 ? 's' : ''}</span>
@@ -334,11 +359,66 @@ Cordialement`);
         </EmeresCardContent>
       </EmeresCard>
 
+      {/* Incoming Requests */}
+      {myRequests.filter(req => req.status === 'pending').length > 0 && (
+        <EmeresCard>
+          <EmeresCardHeader>
+            <EmeresCardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-teal-600" />
+              Demandes reçues ({myRequests.filter(req => req.status === 'pending').length})
+            </EmeresCardTitle>
+            <EmeresCardDescription>
+              Des étudiants souhaitent bénéficier de votre mentorat
+            </EmeresCardDescription>
+          </EmeresCardHeader>
+          <EmeresCardContent className="space-y-3">
+            {myRequests.filter(req => req.status === 'pending').map((req) => (
+              <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border border-gray-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center text-white font-semibold">
+                    {req.student?.first_name?.[0]}{req.student?.last_name?.[0]}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900 text-sm">
+                      {req.student?.first_name} {req.student?.last_name}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {req.student?.field_of_study} • {req.student?.institution_name}
+                    </div>
+                    {req.message && (
+                      <div className="text-xs text-gray-500 mt-1 italic">« {req.message} »</div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <EmeresButton
+                    variant="success"
+                    size="sm"
+                    onClick={() => handleRespondToRequest(req.id, 'accept')}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Accepter
+                  </EmeresButton>
+                  <EmeresButton
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRespondToRequest(req.id, 'reject')}
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Refuser
+                  </EmeresButton>
+                </div>
+              </div>
+            ))}
+          </EmeresCardContent>
+        </EmeresCard>
+      )}
+
       {/* Students Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredStudents.map((student) => {
           const requestStatus = getRequestStatus(student.user_id);
-          
+
           return (
             <EmeresCard key={student.id} className="hover:shadow-lg transition-shadow duration-200">
               <EmeresCardHeader>
@@ -356,14 +436,14 @@ Cordialement`);
                       </EmeresCardDescription>
                     </div>
                   </div>
-                  
+
                   <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getMatchingScoreColor(student.matching_score)}`}>
                     {getMatchingScoreIcon(student.matching_score)}
                     {student.matching_score}%
                   </div>
                 </div>
               </EmeresCardHeader>
-              
+
               <EmeresCardContent className="space-y-4">
                 {/* Institution & Field */}
                 <div className="space-y-2">
@@ -432,8 +512,8 @@ Cordialement`);
                       )}
                     </div>
                   ) : (
-                    <EmeresButton 
-                      variant="primary" 
+                    <EmeresButton
+                      variant="primary"
                       size="sm"
                       icon={<Send />}
                       onClick={() => handleRequestMentorship(student)}
@@ -466,7 +546,7 @@ Cordialement`);
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Demande de mentorat pour {selectedStudent.first_name} {selectedStudent.last_name}
             </h3>
-            
+
             <div className="space-y-4 mb-6">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
@@ -479,7 +559,7 @@ Cordialement`);
                   {selectedStudent.field_of_study} • {selectedStudent.search_objective} • {selectedStudent.search_domain}
                 </p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Message personnalisé
@@ -493,7 +573,7 @@ Cordialement`);
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <EmeresButton
                 variant="outline"

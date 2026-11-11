@@ -12,7 +12,7 @@ import { useToast } from './hooks/use-toast';
 
 const CompanyRegistration = ({ onRegistrationSuccess }) => {
   const { toast } = useToast();
-  
+
   // États du formulaire
   const [formData, setFormData] = useState({
     // Informations utilisateur
@@ -23,30 +23,30 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
     email_confirmation: '',
     password: '',
     password_confirmation: '',
-    
+
     // Informations entreprise
     company_name: '',
     sector: '',
     siret_siren: '',
     vat_number: '',
-    
+
     // Consentements RGPD
     accepts_terms: false,
     authorized_to_create: false,
     accepts_partner_communications: false
   });
-  
+
   // États de validation en temps réel
   const [verifications, setVerifications] = useState({
     siret: { status: 'idle', data: null }, // idle, checking, valid, invalid
     vat: { status: 'idle', data: null },
     email: { status: 'idle', data: null }
   });
-  
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Infos personnelles, 2: Entreprise, 3: Consentements
-  
+
   // Secteurs d'activité
   const sectors = [
     'Informatique & Digital',
@@ -64,14 +64,14 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
     'Agriculture & Agroalimentaire',
     'Autre'
   ];
-  
+
   // Gestion des changements de formulaire
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-    
+
     // Nettoyer les erreurs du champ modifié
     if (errors[field]) {
       setErrors(prev => {
@@ -81,25 +81,25 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
       });
     }
   };
-  
+
   // Vérification SIRET/SIREN en temps réel
   const verifySiret = async (siret_siren) => {
     if (!siret_siren || siret_siren.length < 9) {
       setVerifications(prev => ({ ...prev, siret: { status: 'idle', data: null } }));
       return;
     }
-    
+
     setVerifications(prev => ({ ...prev, siret: { status: 'checking', data: null } }));
-    
+
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/company/verify-siret`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/company/verify-siret`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ siret_siren })
       });
-      
+
       const result = await response.json();
-      
+
       setVerifications(prev => ({
         ...prev,
         siret: {
@@ -107,12 +107,12 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
           data: result
         }
       }));
-      
+
       // Auto-remplir le nom d'entreprise si trouvé
       if (result.valid && result.company_name && !formData.company_name) {
         handleInputChange('company_name', result.company_name);
       }
-      
+
     } catch (error) {
       setVerifications(prev => ({
         ...prev,
@@ -120,25 +120,25 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
       }));
     }
   };
-  
+
   // Vérification TVA
   const verifyVat = async (vat_number) => {
     if (!vat_number) {
       setVerifications(prev => ({ ...prev, vat: { status: 'idle', data: null } }));
       return;
     }
-    
+
     setVerifications(prev => ({ ...prev, vat: { status: 'checking', data: null } }));
-    
+
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/company/verify-vat`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/company/verify-vat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vat_number })
       });
-      
+
       const result = await response.json();
-      
+
       setVerifications(prev => ({
         ...prev,
         vat: {
@@ -146,7 +146,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
           data: result
         }
       }));
-      
+
     } catch (error) {
       setVerifications(prev => ({
         ...prev,
@@ -154,25 +154,25 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
       }));
     }
   };
-  
+
   // Vérification email professionnel
   const verifyEmail = async (email, company_name) => {
     if (!email || !email.includes('@')) {
       setVerifications(prev => ({ ...prev, email: { status: 'idle', data: null } }));
       return;
     }
-    
+
     setVerifications(prev => ({ ...prev, email: { status: 'checking', data: null } }));
-    
+
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/company/verify-email`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/company/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, company_name })
       });
-      
+
       const result = await response.json();
-      
+
       setVerifications(prev => ({
         ...prev,
         email: {
@@ -180,7 +180,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
           data: result
         }
       }));
-      
+
     } catch (error) {
       setVerifications(prev => ({
         ...prev,
@@ -188,7 +188,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
       }));
     }
   };
-  
+
   // Effets pour vérifications en temps réel (debounced)
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -198,7 +198,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
     }, 1000);
     return () => clearTimeout(timer);
   }, [formData.siret_siren]);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (formData.vat_number) {
@@ -207,7 +207,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
     }, 1000);
     return () => clearTimeout(timer);
   }, [formData.vat_number]);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (formData.email && formData.company_name) {
@@ -216,11 +216,11 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
     }, 1000);
     return () => clearTimeout(timer);
   }, [formData.email, formData.company_name]);
-  
+
   // Validation du formulaire
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Étape 1 : Informations personnelles
     if (!formData.first_name.trim()) newErrors.first_name = 'Prénom requis';
     if (!formData.last_name.trim()) newErrors.last_name = 'Nom requis';
@@ -231,63 +231,63 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
     if (formData.password.length < 8) newErrors.password = 'Mot de passe trop court (8 caractères minimum)';
     if (!formData.password_confirmation) newErrors.password_confirmation = 'Confirmation mot de passe requise';
     if (formData.password !== formData.password_confirmation) newErrors.password_confirmation = 'Les mots de passe ne correspondent pas';
-    
+
     // Étape 2 : Informations entreprise
     if (!formData.company_name.trim()) newErrors.company_name = 'Nom d\'entreprise requis';
     if (!formData.sector) newErrors.sector = 'Secteur d\'activité requis';
     if (!formData.siret_siren.trim()) newErrors.siret_siren = 'SIRET/SIREN requis';
-    
+
     // Étape 3 : Consentements obligatoires
     if (!formData.accepts_terms) newErrors.accepts_terms = 'Acceptation des CGU requise';
     if (!formData.authorized_to_create) newErrors.authorized_to_create = 'Autorisation requise';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   // Soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Veuillez corriger les erreurs dans le formulaire');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/company/register`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/company/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Erreur lors de l\'inscription');
       }
-      
+
       const result = await response.json();
-      
+
       toast.success('Inscription réussie ! Bienvenue sur ÉMÉRÉS 🎉');
-      
+
       // Callback avec résultat d'inscription
       if (onRegistrationSuccess) {
         onRegistrationSuccess(result);
       }
-      
+
     } catch (error) {
       toast.error(error.message || 'Erreur lors de l\'inscription');
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Composant badge de vérification
   const VerificationBadge = ({ status, data, type }) => {
     if (status === 'idle') return null;
-    
+
     if (status === 'checking') {
       return (
         <div className="flex items-center space-x-1 text-blue-600 text-xs">
@@ -296,7 +296,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
         </div>
       );
     }
-    
+
     if (status === 'valid') {
       return (
         <div className="flex items-center space-x-1 text-green-600 text-xs">
@@ -310,7 +310,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
         </div>
       );
     }
-    
+
     if (status === 'invalid') {
       return (
         <div className="flex items-center space-x-1 text-red-600 text-xs">
@@ -320,7 +320,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
       );
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-emerald-50 to-gray-50 relative overflow-hidden">
       {/* Background décoratif avec palette ÉMÉRÉS */}
@@ -329,7 +329,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-200 rounded-full opacity-15 animate-pulse" style={{animationDelay: '1s'}}></div>
         <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-amber-200 rounded-full opacity-25 animate-pulse" style={{animationDelay: '2s'}}></div>
       </div>
-      
+
       <div className="relative z-10 max-w-2xl mx-auto p-6">
         <Card className="bg-white/90 backdrop-blur-sm border-blue-200 shadow-2xl overflow-hidden">
           <CardHeader className="text-center bg-gradient-to-r from-blue-600 via-emerald-600 to-blue-700 text-white -m-6 mb-6 p-8">
@@ -342,14 +342,14 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
             <CardDescription className="text-blue-100 text-lg">
               Rejoignez ÉMÉRÉS et accédez aux meilleurs talents étudiants
             </CardDescription>
-            
+
             {/* Indicateur d'étapes stylisé */}
             <div className="flex justify-center space-x-4 mt-8">
               {[1, 2, 3].map(stepNum => (
                 <div key={stepNum} className="flex items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                    step >= stepNum 
-                      ? 'bg-white text-blue-600 shadow-lg transform scale-110' 
+                    step >= stepNum
+                      ? 'bg-white text-blue-600 shadow-lg transform scale-110'
                       : 'bg-white/30 text-white/70 backdrop-blur-sm'
                   }`}>
                     {stepNum}
@@ -362,17 +362,17 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                 </div>
               ))}
             </div>
-            
+
             <div className="text-white/90 mt-4 font-medium">
               {step === 1 && '📋 Informations personnelles'}
               {step === 2 && '🏢 Informations entreprise'}
               {step === 3 && '✅ Consentements et validation'}
             </div>
           </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6 p-2">
-            
+
             {/* ÉTAPE 1: Informations personnelles */}
             {step === 1 && (
               <>
@@ -381,7 +381,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                     <User className="h-5 w-5 text-blue-600" />
                     <h3 className="text-lg font-medium">Vos informations</h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="first_name" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -397,7 +397,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       />
                       {errors.first_name && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.first_name}</p>}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="last_name" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <User className="h-4 w-4 text-blue-600" />
@@ -413,7 +413,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       {errors.last_name && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.last_name}</p>}
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="job_title">Fonction (optionnel)</Label>
                     <Input
@@ -423,14 +423,14 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       onChange={(e) => handleInputChange('job_title', e.target.value)}
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center space-x-2 mb-4">
                     <Mail className="h-5 w-5 text-blue-600" />
                     <h3 className="text-lg font-medium">Email professionnel</h3>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email professionnel *</Label>
@@ -443,13 +443,13 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                         className={errors.email ? 'border-red-500' : ''}
                       />
                       {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
-                      <VerificationBadge 
-                        status={verifications.email.status} 
-                        data={verifications.email.data} 
-                        type="email" 
+                      <VerificationBadge
+                        status={verifications.email.status}
+                        data={verifications.email.data}
+                        type="email"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="email_confirmation">Confirmation email *</Label>
                       <Input
@@ -462,14 +462,14 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       {errors.email_confirmation && <p className="text-red-500 text-xs">{errors.email_confirmation}</p>}
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center space-x-2 mb-4">
                     <Lock className="h-5 w-5 text-blue-600" />
                     <h3 className="text-lg font-medium">Mot de passe</h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="password">Mot de passe *</Label>
@@ -483,7 +483,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       />
                       {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="password_confirmation">Confirmation *</Label>
                       <Input
@@ -497,10 +497,10 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end">
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={() => setStep(2)}
                     disabled={!formData.first_name || !formData.last_name || !formData.email || !formData.email_confirmation || !formData.password || !formData.password_confirmation}
                   >
@@ -509,7 +509,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                 </div>
               </>
             )}
-            
+
             {/* ÉTAPE 2: Informations entreprise */}
             {step === 2 && (
               <>
@@ -518,7 +518,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                     <Building className="h-5 w-5 text-blue-600" />
                     <h3 className="text-lg font-medium">Votre entreprise</h3>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="company_name">Nom de l'entreprise (raison sociale) *</Label>
@@ -530,7 +530,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       />
                       {errors.company_name && <p className="text-red-500 text-xs">{errors.company_name}</p>}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="sector">Secteur d'activité *</Label>
                       <Select value={formData.sector} onValueChange={(value) => handleInputChange('sector', value)}>
@@ -547,7 +547,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       </Select>
                       {errors.sector && <p className="text-red-500 text-xs">{errors.sector}</p>}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="siret_siren">Numéro SIRET/SIREN *</Label>
                       <Input
@@ -558,10 +558,10 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                         className={errors.siret_siren ? 'border-red-500' : ''}
                       />
                       {errors.siret_siren && <p className="text-red-500 text-xs">{errors.siret_siren}</p>}
-                      <VerificationBadge 
-                        status={verifications.siret.status} 
-                        data={verifications.siret.data} 
-                        type="siret" 
+                      <VerificationBadge
+                        status={verifications.siret.status}
+                        data={verifications.siret.data}
+                        type="siret"
                       />
                       {verifications.siret.status === 'valid' && verifications.siret.data?.company_name && (
                         <div className="bg-green-50 border border-green-200 rounded p-3 text-sm">
@@ -573,7 +573,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="vat_number">Numéro TVA intracommunautaire (optionnel)</Label>
                       <Input
@@ -585,21 +585,21 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       <p className="text-xs text-gray-500">
                         Uniquement pour les entreprises de l'Union Européenne
                       </p>
-                      <VerificationBadge 
-                        status={verifications.vat.status} 
-                        data={verifications.vat.data} 
-                        type="vat" 
+                      <VerificationBadge
+                        status={verifications.vat.status}
+                        data={verifications.vat.data}
+                        type="vat"
                       />
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <Button type="button" variant="outline" onClick={() => setStep(1)}>
                     Précédent
                   </Button>
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={() => setStep(3)}
                     disabled={!formData.company_name || !formData.sector || !formData.siret_siren}
                   >
@@ -608,7 +608,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                 </div>
               </>
             )}
-            
+
             {/* ÉTAPE 3: Consentements RGPD */}
             {step === 3 && (
               <>
@@ -617,7 +617,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                     <Shield className="h-5 w-5 text-blue-600" />
                     <h3 className="text-lg font-medium">Consentements RGPD</h3>
                   </div>
-                  
+
                   {/* Consentements obligatoires */}
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -637,7 +637,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                         {errors.accepts_terms && <p className="text-red-500 text-xs mt-1">{errors.accepts_terms}</p>}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start space-x-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <Checkbox
                         id="authorized_to_create"
@@ -656,9 +656,9 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   {/* Consentement optionnel */}
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
@@ -677,7 +677,7 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Informations RGPD */}
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <div className="flex items-center space-x-2 mb-2">
@@ -692,19 +692,19 @@ const CompanyRegistration = ({ onRegistrationSuccess }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between pt-6 border-t border-gray-200">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => setStep(2)}
                     className="px-6 py-3 border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 flex items-center gap-2"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Précédent
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={loading || !formData.accepts_terms || !formData.authorized_to_create}
                     className="px-8 py-3 bg-gradient-to-r from-blue-600 via-emerald-600 to-blue-700 hover:from-blue-700 hover:via-emerald-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
                   >

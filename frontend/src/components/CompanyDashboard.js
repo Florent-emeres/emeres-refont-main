@@ -8,12 +8,12 @@ import EmeresBreadcrumb from './ui/EmeresBreadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { 
-  Building2, 
-  Users, 
-  FileText, 
-  Settings, 
-  CheckCircle, 
+import {
+  Building2,
+  Users,
+  FileText,
+  Settings,
+  CheckCircle,
   Star,
   PlusCircle,
   Search,
@@ -85,7 +85,7 @@ const CompanyDashboard = ({ user }) => {
 
     // Écouter les changements de taille d'écran
     window.addEventListener('resize', handleResize);
-    
+
     // Appliquer la logique au chargement
     handleResize();
 
@@ -118,7 +118,7 @@ const CompanyDashboard = ({ user }) => {
   const [expandedCategories, setExpandedCategories] = useState({
     'tools': true,
     'resources': false,
-    'tracking': false, 
+    'tracking': false,
     'discovery': false,
     'profile-settings': false
   });
@@ -148,23 +148,23 @@ const CompanyDashboard = ({ user }) => {
       description: 'Outils de recrutement et RH',
       gradient: 'from-blue-500 to-purple-600',
       items: [
-        { 
-          id: 'offers', 
-          label: 'Gestion Offres', 
-          icon: Briefcase, 
+        {
+          id: 'offers',
+          label: 'Gestion Offres',
+          icon: Briefcase,
           description: 'Créer et gérer vos postes'
         },
-        { 
-          id: 'strategy', 
-          label: 'Stratégie RH', 
-          icon: Target, 
+        {
+          id: 'strategy',
+          label: 'Stratégie RH',
+          icon: Target,
           description: 'Conseil & Planification',
           badge: 'IA'
         },
-        { 
-          id: 'integrations', 
-          label: 'Intégrations', 
-          icon: Zap, 
+        {
+          id: 'integrations',
+          label: 'Intégrations',
+          icon: Zap,
           description: 'API & Outils connectés'
         }
       ]
@@ -176,22 +176,22 @@ const CompanyDashboard = ({ user }) => {
       description: 'Documents et communication',
       gradient: 'from-emerald-500 to-green-600',
       items: [
-        { 
-          id: 'documents', 
-          label: 'Documents', 
-          icon: FileText, 
+        {
+          id: 'documents',
+          label: 'Documents',
+          icon: FileText,
           description: 'Conventions et contrats'
         },
-        { 
-          id: 'communication', 
-          label: 'Communication', 
-          icon: MessageSquare, 
+        {
+          id: 'communication',
+          label: 'Communication',
+          icon: MessageSquare,
           description: 'Messages & Chat'
         },
-        { 
-          id: 'team', 
-          label: 'Équipe RH', 
-          icon: Users, 
+        {
+          id: 'team',
+          label: 'Équipe RH',
+          icon: Users,
           description: 'Collaboration équipe'
         }
       ]
@@ -203,23 +203,23 @@ const CompanyDashboard = ({ user }) => {
       description: 'Métriques et performance',
       gradient: 'from-orange-500 to-red-500',
       items: [
-        { 
-          id: 'candidates', 
-          label: 'Candidatures', 
-          icon: Users, 
+        {
+          id: 'candidates',
+          label: 'Candidatures',
+          icon: Users,
           description: 'Suivi candidats',
           badge: companyStats.new_applications_today > 0 ? `${companyStats.new_applications_today} nouvelles` : null
         },
-        { 
-          id: 'analytics', 
-          label: 'Analytics RH', 
-          icon: BarChart3, 
+        {
+          id: 'analytics',
+          label: 'Analytics RH',
+          icon: BarChart3,
           description: 'Métriques et KPIs'
         },
-        { 
-          id: 'satisfaction', 
-          label: 'Satisfaction', 
-          icon: Award, 
+        {
+          id: 'satisfaction',
+          label: 'Satisfaction',
+          icon: Award,
           description: 'Feedback stagiaires'
         }
       ]
@@ -231,16 +231,16 @@ const CompanyDashboard = ({ user }) => {
       description: 'Candidats et stagiaires',
       gradient: 'from-purple-500 to-pink-600',
       items: [
-        { 
-          id: 'interns', 
-          label: 'Stagiaires', 
-          icon: UserCheck, 
+        {
+          id: 'interns',
+          label: 'Stagiaires',
+          icon: UserCheck,
           description: 'Gestion des stages'
         },
-        { 
-          id: 'talent-search', 
-          label: 'Recherche Talents', 
-          icon: Search, 
+        {
+          id: 'talent-search',
+          label: 'Recherche Talents',
+          icon: Search,
           description: 'Découvrir candidats'
         }
       ]
@@ -252,16 +252,16 @@ const CompanyDashboard = ({ user }) => {
       description: 'Configuration entreprise',
       gradient: 'from-gray-500 to-slate-600',
       items: [
-        { 
-          id: 'profile', 
-          label: 'Profil Entreprise', 
-          icon: Building2, 
+        {
+          id: 'profile',
+          label: 'Profil Entreprise',
+          icon: Building2,
           description: 'Informations publiques'
         },
-        { 
-          id: 'settings', 
-          label: 'Paramètres', 
-          icon: Settings, 
+        {
+          id: 'settings',
+          label: 'Paramètres',
+          icon: Settings,
           description: 'Configuration compte'
         }
       ]
@@ -342,7 +342,7 @@ const CompanyDashboard = ({ user }) => {
         description: 'Configuration générale du compte'
       }
     };
-    
+
     return configs[pageId] || configs.dashboard;
   };
 
@@ -498,7 +498,7 @@ const CompanyDashboard = ({ user }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {cards.map((card) => {
           const Icon = card.icon;
-          
+
           return (
             <EmeresCard
               key={card.id}
@@ -530,16 +530,16 @@ const CompanyDashboard = ({ user }) => {
                     </div>
                     <p className="text-xs text-white/80 truncate">{card.description}</p>
                   </div>
-                  
+
                   {card.urgent && (
                     <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse flex-shrink-0"></div>
                   )}
                 </div>
-                
+
                 {/* Effet de brillance au hover */}
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               </div>
-              
+
               {/* Contenu de la carte - responsive */}
               <div className="p-3 sm:p-4">
                 <div className="flex items-end justify-between mb-2 sm:mb-3">
@@ -551,18 +551,18 @@ const CompanyDashboard = ({ user }) => {
                       {card.stats}
                     </div>
                   </div>
-                  
+
                   <div className="text-right flex-shrink-0 ml-2">
                     <div className={`
                       text-xs font-medium truncate
-                      ${card.change.includes('+') ? 'text-green-600' : 
+                      ${card.change.includes('+') ? 'text-green-600' :
                         card.change.includes('↗') ? 'text-green-600' : 'text-gray-600'}
                     `}>
                       {card.change}
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Actions rapides - responsive */}
                 <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-100">
                   <EmeresButton
@@ -577,7 +577,7 @@ const CompanyDashboard = ({ user }) => {
                   >
                     <span className="hidden sm:inline">Voir</span>
                   </EmeresButton>
-                  
+
                   <EmeresButton
                     variant="ghost"
                     size="sm"
@@ -607,21 +607,21 @@ const CompanyDashboard = ({ user }) => {
         const headers = { 'Authorization': `Bearer ${token}` };
 
         // Charger le profil company
-        const profileRes = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/company/profile`);
+        const profileRes = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/company/profile`);
         setCompanyProfile(profileRes.data);
 
-        // Charger les offres de l'entreprise  
-        const offersRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/offers/my`, { headers });
+        // Charger les offres de l'entreprise
+        const offersRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/offers/my`, { headers });
         const offersData = offersRes.ok ? await offersRes.json() : [];
         setCompanyOffers(offersData);
 
         // Charger les candidatures reçues
-        const applicationsRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/company/applications`, { headers });
+        const applicationsRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/applications/company`, { headers });
         const applicationsData = applicationsRes.ok ? await applicationsRes.json() : [];
         setApplications(applicationsData);
 
         // Calculer les stats dynamiquement
-        const activeOffers = offersData.filter(offer => offer.status === 'open' || !offer.status).length;
+        const activeOffers = offersData.filter(offer => offer.status === 'active').length;
         const todayApplications = applicationsData.filter(app => {
           const appDate = new Date(app.created_at || app.application_date);
           const today = new Date();
@@ -694,13 +694,13 @@ const CompanyDashboard = ({ user }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 relative overflow-hidden">
       {/* Background Image globale pour dashboard entreprise */}
-      <div 
+      <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-5"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
         }}
       />
-      
+
       {/* Header ÉMÉRÉS unique et complet - remplace la navigation globale */}
       <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-40">
         <div className="px-4 sm:px-6 py-3 sm:py-4">
@@ -708,17 +708,17 @@ const CompanyDashboard = ({ user }) => {
             {/* Logo ÉMÉRÉS avec navigation contextuelle */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2 sm:space-x-3">
-                <img 
-                  src="/emeres-logo.png" 
-                  alt="ÉMÉRÉS" 
-                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer" 
+                <img
+                  src="/emeres-logo.png"
+                  alt="ÉMÉRÉS"
+                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer"
                   onClick={() => setActivePage('dashboard')}
                   onError={(e) => {
                     e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%2314B8A6"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="40" font-family="Arial, sans-serif">É</text></svg>';
                   }}
                 />
                 <div>
-                  <span 
+                  <span
                     className="text-lg sm:text-xl font-bold text-blue-600 cursor-pointer"
                     onClick={() => setActivePage('dashboard')}
                   >
@@ -727,7 +727,7 @@ const CompanyDashboard = ({ user }) => {
                   <div className="text-xs text-gray-500 hidden sm:block">Dashboard Entreprise</div>
                 </div>
               </div>
-              
+
               {/* Menu burger - uniquement mobile/tablette */}
               <EmeresButton
                 variant="ghost"
@@ -749,7 +749,7 @@ const CompanyDashboard = ({ user }) => {
               >
                 <span className="hidden lg:inline">Accueil</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'candidates' ? 'primary' : 'ghost'}
                 size="sm"
@@ -759,7 +759,7 @@ const CompanyDashboard = ({ user }) => {
               >
                 <span className="hidden lg:inline">Candidats</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'profile' ? 'primary' : 'ghost'}
                 size="sm"
@@ -816,10 +816,10 @@ const CompanyDashboard = ({ user }) => {
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400 hidden lg:block" />
                 </button>
-                
+
                 {/* Dropdown menu */}
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-emeres-lg border border-gray-100 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <button 
+                  <button
                     onClick={() => navigateToPage('profile')}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
@@ -831,7 +831,7 @@ const CompanyDashboard = ({ user }) => {
                     Paramètres
                   </button>
                   <div className="border-t border-gray-100 mt-2 pt-2">
-                    <button 
+                    <button
                       onClick={() => {
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');
@@ -854,7 +854,7 @@ const CompanyDashboard = ({ user }) => {
       <div className="flex relative">
         {/* Overlay mobile pour fermer la sidebar */}
         {!sidebarCollapsed && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-20 lg:hidden"
             onClick={() => setSidebarCollapsed(true)}
           />
@@ -862,11 +862,11 @@ const CompanyDashboard = ({ user }) => {
 
         {/* Sidebar responsive avec breakpoints */}
         <aside className={`
-          ${sidebarCollapsed ? 'w-12' : 'w-56'} 
-          bg-white/95 backdrop-blur-md border-r border-gray-200 
+          ${sidebarCollapsed ? 'w-12' : 'w-56'}
+          bg-white/95 backdrop-blur-md border-r border-gray-200
           fixed left-0 top-16 bottom-0 z-30 transition-all duration-300 overflow-hidden shadow-emeres-sm
-          ${sidebarCollapsed 
-            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0' 
+          ${sidebarCollapsed
+            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0'
             : 'translate-x-0'
           }
         `}>
@@ -877,7 +877,7 @@ const CompanyDashboard = ({ user }) => {
                   // Traitement spécial pour l'Accueil
                   const Icon = category.icon;
                   const isActive = activePage === category.id;
-                  
+
                   return (
                     <button
                       key={category.id}
@@ -889,8 +889,8 @@ const CompanyDashboard = ({ user }) => {
                       }}
                       className={`
                         w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                        ${isActive 
-                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md transform scale-[1.02]` 
+                        ${isActive
+                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md transform scale-[1.02]`
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }
                       `}
@@ -904,7 +904,7 @@ const CompanyDashboard = ({ user }) => {
                           ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}
                         `} />
                       </div>
-                      
+
                       {!sidebarCollapsed && (
                         <div className="flex-1 text-left relative z-10 min-w-0">
                           <div className={`
@@ -921,7 +921,7 @@ const CompanyDashboard = ({ user }) => {
                           </div>
                         </div>
                       )}
-                      
+
                       {sidebarCollapsed && (
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                           {category.label}
@@ -930,12 +930,12 @@ const CompanyDashboard = ({ user }) => {
                     </button>
                   );
                 }
-                
+
                 // Traitement pour les catégories avec sous-éléments
                 const CategoryIcon = category.icon;
                 const isExpanded = expandedCategories[category.id];
                 const hasActiveChild = category.items.some(item => activePage === item.id);
-                
+
                 return (
                   <div key={category.id} className="space-y-1">
                     {/* En-tête de catégorie */}
@@ -943,8 +943,8 @@ const CompanyDashboard = ({ user }) => {
                       onClick={() => toggleCategory(category.id)}
                       className={`
                         w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                        ${hasActiveChild 
-                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md` 
+                        ${hasActiveChild
+                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md`
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }
                       `}
@@ -958,7 +958,7 @@ const CompanyDashboard = ({ user }) => {
                           ${hasActiveChild ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}
                         `} />
                       </div>
-                      
+
                       {!sidebarCollapsed && (
                         <>
                           <div className="flex-1 text-left relative z-10 min-w-0">
@@ -975,7 +975,7 @@ const CompanyDashboard = ({ user }) => {
                               {category.description}
                             </div>
                           </div>
-                          
+
                           {/* Chevron d'expansion */}
                           <ChevronRight className={`
                             h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-300 relative z-10
@@ -984,21 +984,21 @@ const CompanyDashboard = ({ user }) => {
                           `} />
                         </>
                       )}
-                      
+
                       {sidebarCollapsed && (
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                           {category.label}
                         </div>
                       )}
                     </button>
-                    
+
                     {/* Sous-éléments de la catégorie */}
                     {!sidebarCollapsed && isExpanded && (
                       <div className="ml-6 space-y-1">
                         {category.items.map((item) => {
                           const ItemIcon = item.icon;
                           const isActive = activePage === item.id;
-                          
+
                           return (
                             <button
                               key={item.id}
@@ -1010,8 +1010,8 @@ const CompanyDashboard = ({ user }) => {
                               }}
                               className={`
                                 w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg transition-all duration-300 relative overflow-hidden text-left
-                                ${isActive 
-                                  ? 'bg-gray-100 text-teal-700 border-l-2 border-teal-500' 
+                                ${isActive
+                                  ? 'bg-gray-100 text-teal-700 border-l-2 border-teal-500'
                                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                 }
                               `}
@@ -1025,7 +1025,7 @@ const CompanyDashboard = ({ user }) => {
                                   ${isActive ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-600'}
                                 `} />
                               </div>
-                              
+
                               <div className="flex-1 text-left relative z-10 min-w-0">
                                 <div className={`
                                   font-medium text-xs transition-colors duration-300 truncate
@@ -1040,7 +1040,7 @@ const CompanyDashboard = ({ user }) => {
                                   {item.description}
                                 </div>
                               </div>
-                              
+
                               {item.badge && (
                                 <EmeresBadge
                                   variant={isActive ? "default" : "secondary"}
@@ -1062,7 +1062,7 @@ const CompanyDashboard = ({ user }) => {
                 );
               })}
             </div>
-            
+
             {/* Footer responsive de la sidebar */}
             {!sidebarCollapsed && (
               <div className="mt-4 sm:mt-8 p-3 sm:p-4 bg-gradient-emeres-subtle rounded-lg sm:rounded-xl border border-teal-200">
@@ -1108,7 +1108,7 @@ const CompanyDashboard = ({ user }) => {
                       {getPageConfig(activePage).description}
                     </p>
                   </div>
-                  
+
                   {/* Actions contextuelles rapides - responsive */}
                   <div className="flex items-center gap-3">
                     {activePage === 'offers' && (
@@ -1149,90 +1149,90 @@ const CompanyDashboard = ({ user }) => {
                   {renderDashboardCards()}
                 </div>
               )}
-              
+
               {activePage === 'profile' && (
                 <div className="max-w-7xl">
-                  <EnhancedCompanyProfile 
+                  <EnhancedCompanyProfile
                     user={user}
                     companyProfile={companyProfile}
                     onProfileUpdate={setCompanyProfile}
                   />
                 </div>
               )}
-              
+
               {activePage === 'offers' && (
                 <div className="max-w-7xl">
-                  <OfferManagement 
+                  <OfferManagement
                     user={user}
                     companyProfile={companyProfile}
                   />
                 </div>
               )}
-              
+
               {activePage === 'candidates' && (
                 <div className="max-w-7xl">
-                  <ApplicationTracking 
+                  <ApplicationTracking
                     user={user}
                     companyProfile={companyProfile}
                   />
                 </div>
               )}
-              
+
               {activePage === 'interns' && (
                 <div className="max-w-7xl">
-                  <InternshipTracking 
+                  <InternshipTracking
                     user={user}
                     companyProfile={companyProfile}
                   />
                 </div>
               )}
-              
+
               {activePage === 'team' && (
                 <div className="max-w-7xl">
-                  <TeamManagement 
+                  <TeamManagement
                     user={user}
                     companyProfile={companyProfile}
                   />
                 </div>
               )}
-              
+
               {activePage === 'analytics' && (
                 <div className="max-w-7xl">
-                  <AnalyticsDashboard 
+                  <AnalyticsDashboard
                     user={user}
                     companyProfile={companyProfile}
                   />
                 </div>
               )}
-              
+
               {activePage === 'communication' && (
                 <div className="max-w-7xl">
-                  <AdvancedCommunication 
+                  <AdvancedCommunication
                     user={user}
                     companyProfile={companyProfile}
                   />
                 </div>
               )}
-              
+
               {activePage === 'documents' && (
                 <div className="max-w-7xl">
-                  <DocumentManagement 
+                  <DocumentManagement
                     user={user}
                     companyProfile={companyProfile}
                   />
                 </div>
               )}
-              
+
               {activePage === 'strategy' && (
                 <div className="max-w-7xl">
-                  <StrategyModule 
+                  <StrategyModule
                     user={user}
                     userProfile={companyProfile}
                     userRole="company"
                   />
                 </div>
               )}
-              
+
               {activePage === 'satisfaction' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-7xl">
                   <EmeresCard variant="default" className="border-green-200 bg-green-50">
@@ -1247,7 +1247,7 @@ const CompanyDashboard = ({ user }) => {
                       </div>
                     </EmeresCardContent>
                   </EmeresCard>
-                  
+
                   <EmeresCard variant="default" className="border-blue-200 bg-blue-50">
                     <EmeresCardContent padding="md">
                       <div className="flex items-center justify-between">
@@ -1260,7 +1260,7 @@ const CompanyDashboard = ({ user }) => {
                       </div>
                     </EmeresCardContent>
                   </EmeresCard>
-                  
+
                   <EmeresCard variant="default" className="border-orange-200 bg-orange-50 sm:col-span-2 lg:col-span-1">
                     <EmeresCardContent padding="md">
                       <div className="flex items-center justify-between">
@@ -1275,16 +1275,16 @@ const CompanyDashboard = ({ user }) => {
                   </EmeresCard>
                 </div>
               )}
-              
+
               {activePage === 'integrations' && (
                 <div className="max-w-7xl">
-                  <IntegrationsManagement 
+                  <IntegrationsManagement
                     user={user}
                     companyProfile={companyProfile}
                   />
                 </div>
               )}
-              
+
               {activePage === 'talent-search' && (
                 <div className="max-w-7xl">
                   <div className="text-center py-12">
@@ -1304,7 +1304,7 @@ const CompanyDashboard = ({ user }) => {
                   </div>
                 </div>
               )}
-              
+
               {activePage === 'settings' && (
                 <div className="max-w-7xl">
                   <div className="space-y-6">
@@ -1326,7 +1326,7 @@ const CompanyDashboard = ({ user }) => {
                             </label>
                           </div>
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Visibilité Entreprise
@@ -1342,7 +1342,7 @@ const CompanyDashboard = ({ user }) => {
                             </label>
                           </div>
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Équipe RH
