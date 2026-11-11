@@ -76,16 +76,29 @@ class CreditsService {
 
       if (response.ok) {
         const result = await response.json();
-        
+
+        // Anti-fraude / limite atteinte : pas d'erreur, mais pas de points non plus
+        if (result.success === false) {
+          if (showNotification && window.showCreditsNotification) {
+            window.showCreditsNotification({
+              type: 'info',
+              title: 'Déjà récompensé',
+              message: result.message || 'Limite atteinte pour cette action aujourd\u2019hui.',
+              duration: 4000
+            });
+          }
+          return null;
+        }
+
         // Mettre à jour le solde
         await this.getUserBalance();
-        
+
         // Notifier les listeners
-        this.notifyListeners({ 
-          type: 'points_awarded', 
+        this.notifyListeners({
+          type: 'points_awarded',
           points: result.points_awarded,
           action: actionType,
-          message: result.message 
+          message: result.message
         });
 
         // Afficher notification si demandé
@@ -102,7 +115,7 @@ class CreditsService {
       } else {
         const error = await response.json();
         console.warn('Attribution points échouée:', error.detail);
-        
+
         // Afficher notification d'erreur si pertinente (pas de spam pour les limites)
         if (showNotification && !error.detail?.includes('limits exceeded') && window.showCreditsNotification) {
           window.showCreditsNotification({
@@ -149,10 +162,10 @@ class CreditsService {
     ctx.textBaseline = 'top';
     ctx.font = '14px Arial';
     ctx.fillText('ÉMÉRÉS fingerprint', 2, 2);
-    
+
     return btoa(
-      navigator.userAgent + 
-      screen.width + screen.height + 
+      navigator.userAgent +
+      screen.width + screen.height +
       new Date().getTimezoneOffset() +
       canvas.toDataURL()
     ).slice(0, 32);
@@ -164,16 +177,16 @@ class CreditsService {
   }
 
   async onApplicationSent(offerId, companyName) {
-    return await this.awardPoints('application_sent', { 
+    return await this.awardPoints('application_sent', {
       offer_id: offerId,
-      company_name: companyName 
+      company_name: companyName
     });
   }
 
   async onProfileCompleted(completionPercentage) {
     if (completionPercentage >= 90) {
-      return await this.awardPoints('profile_completed', { 
-        completion_percentage: completionPercentage 
+      return await this.awardPoints('profile_completed', {
+        completion_percentage: completionPercentage
       });
     }
     return null;
@@ -184,82 +197,82 @@ class CreditsService {
   }
 
   async onCompanyReview(companyId, rating) {
-    return await this.awardPoints('company_review', { 
+    return await this.awardPoints('company_review', {
       company_id: companyId,
-      rating: rating 
+      rating: rating
     });
   }
 
   async onSkillTestCompleted(testType, score) {
-    return await this.awardPoints('skill_test', { 
+    return await this.awardPoints('skill_test', {
       test_type: testType,
-      score: score 
+      score: score
     });
   }
 
   // Actions mentor
   async onCvEvaluation(studentId) {
-    return await this.awardPoints('cv_evaluation', { 
+    return await this.awardPoints('cv_evaluation', {
       student_id: studentId,
-      service_type: 'free_cv_evaluation' 
+      service_type: 'free_cv_evaluation'
     });
   }
 
   async onFlashAdvice(studentId, topic) {
-    return await this.awardPoints('flash_advice', { 
+    return await this.awardPoints('flash_advice', {
       student_id: studentId,
-      advice_topic: topic 
+      advice_topic: topic
     });
   }
 
   async onObjectiveReached(studentId, objectiveType) {
-    return await this.awardPoints('objective_reached', { 
+    return await this.awardPoints('objective_reached', {
       student_id: studentId,
-      objective_type: objectiveType 
+      objective_type: objectiveType
     });
   }
 
-  // Actions entreprise  
+  // Actions entreprise
   async onJobPosted(jobId, jobTitle) {
-    return await this.awardPoints('job_posted', { 
+    return await this.awardPoints('job_posted', {
       job_id: jobId,
-      job_title: jobTitle 
+      job_title: jobTitle
     });
   }
 
   async onInternRecruited(internId, jobId) {
-    return await this.awardPoints('intern_recruited', { 
+    return await this.awardPoints('intern_recruited', {
       intern_id: internId,
-      job_id: jobId 
+      job_id: jobId
     });
   }
 
   async onTrainingGiven(trainingType, participantCount) {
-    return await this.awardPoints('training_given', { 
+    return await this.awardPoints('training_given', {
       training_type: trainingType,
-      participant_count: participantCount 
+      participant_count: participantCount
     });
   }
 
   // Actions institution
   async onStudentSupported(studentId, supportType) {
-    return await this.awardPoints('student_supported', { 
+    return await this.awardPoints('student_supported', {
       student_id: studentId,
-      support_type: supportType 
+      support_type: supportType
     });
   }
 
   async onPartnershipCreated(partnerType, partnerName) {
-    return await this.awardPoints('partnership_created', { 
+    return await this.awardPoints('partnership_created', {
       partner_type: partnerType,
-      partner_name: partnerName 
+      partner_name: partnerName
     });
   }
 
   async onEventOrganized(eventType, participantCount) {
-    return await this.awardPoints('event_organized', { 
+    return await this.awardPoints('event_organized', {
       event_type: eventType,
-      participant_count: participantCount 
+      participant_count: participantCount
     });
   }
 
@@ -311,15 +324,15 @@ class CreditsService {
 
       if (response.ok) {
         const result = await response.json();
-        
+
         // Mettre à jour le solde
         await this.getUserBalance();
-        
+
         // Notifier les listeners
-        this.notifyListeners({ 
-          type: 'credits_spent', 
+        this.notifyListeners({
+          type: 'credits_spent',
           amount: creditsAmountEuros,
-          order_id: orderId 
+          order_id: orderId
         });
 
         return result;

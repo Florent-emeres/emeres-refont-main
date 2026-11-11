@@ -67,13 +67,35 @@ const StudentAssistant = ({ onNavigate }) => {
     [loading, scrollToBottom]
   );
 
+  const loadHistory = useCallback(async () => {
+    try {
+      const { data } = await axios.get(`${API}/student/assistant/history`);
+      const history = data.messages || [];
+      if (!history.length) {
+        ask('');
+        return;
+      }
+      const restored = [];
+      history.forEach((m) => {
+        if (m.question) restored.push({ role: 'user', content: m.question });
+        restored.push({ role: 'assistant', content: m.answer });
+      });
+      setMessages(restored);
+      const last = history[history.length - 1];
+      setSuggestions(last.suggestions || []);
+      setActions(last.actions || []);
+    } catch (e) {
+      ask('');
+    }
+  }, [ask]);
+
   const openPanel = useCallback(() => {
     setOpen(true);
     if (!greeted.current) {
       greeted.current = true;
-      ask('');
+      loadHistory();
     }
-  }, [ask]);
+  }, [loadHistory]);
 
   useEffect(() => {
     scrollToBottom();

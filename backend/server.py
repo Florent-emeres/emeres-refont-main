@@ -4,6 +4,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from fastapi import WebSocket, WebSocketDisconnect
+import contextlib
 import json
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
@@ -384,6 +385,14 @@ async def create_notification(
 
 
 app = FastAPI(title="ÉMÉRÉS API", version="1.0.0")
+
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator
+
+    with contextlib.suppress(Exception):
+        Instrumentator().instrument(app).expose(app, endpoint="/metrics", should_gzip=True)
+except ImportError:
+    pass
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -2567,14 +2576,43 @@ async def student_assistant_chat(
     context = await _build_student_assistant_context(current_user)
 
     try:
-        return await run_student_assistant(
+        response = await run_student_assistant(
             AssistantRequest(question=request.question, context=context)
         )
     except Exception as exc:
         logger.error("Assistant error for user %s: %s", current_user.id, exc)
         from app.ai.tools.student.assistant import build_local_answer
 
-        return build_local_answer(request.question, context)
+        response = build_local_answer(request.question, context)
+
+    # Historisation de la conversation Émé
+    await db.student_assistant_messages.insert_one(
+        {
+            "user_id": current_user.id,
+            "question": request.question,
+            "answer": response.answer,
+            "suggestions": response.suggestions,
+            "actions": [action.dict() for action in response.actions],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
+    return response
+
+
+@api_router.get("/student/assistant/history")
+async def student_assistant_history(current_user: User = Depends(verify_token)):
+    """Historique des conversations Émé de l'étudiant (30 derniers échanges)."""
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    messages = (
+        await db.student_assistant_messages.find({"user_id": current_user.id})
+        .sort("created_at", 1)
+        .to_list(length=30)
+    )
+    for message in messages:
+        message.pop("_id", None)
+    return {"messages": messages}
 
 
 # Company Applications Management (ATS)
@@ -8215,10 +8253,13 @@ async def award_points_to_user(
     )
 
     if not transaction:
-        raise HTTPException(
-            status_code=400,
-            detail="Points could not be awarded (limits exceeded or fraud detection)",
-        )
+        # Anti-fraude / limites atteintes : pas une erreur, l'action est simplement ignorée
+        return {
+            "success": False,
+            "awarded": False,
+            "message": "Points non attribués : limite quotidienne atteinte pour cette action.",
+            "points_awarded": 0,
+        }
 
     return {
         "success": True,
