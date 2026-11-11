@@ -78,6 +78,7 @@ from app.utils.legacy import legacy_endpoint
 # Import des outils API
 from api_tools import create_tools_router
 from company_sections import create_company_sections_router
+from school_sections import create_school_sections_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -400,6 +401,10 @@ async def startup_event():
     # Sections du tableau de bord entreprise
     company_sections_router = create_company_sections_router(db)
     app.include_router(company_sections_router)
+
+    # Sections du tableau de bord école
+    school_sections_router = create_school_sections_router(db)
+    app.include_router(school_sections_router)
 
 
 # User Role Constants
@@ -1754,6 +1759,23 @@ async def register(user_data: UserCreate):
             user_id=user.id, first_name=user_data.first_name, last_name=user_data.last_name
         )
         await db.mentor_profiles.insert_one(profile.dict())
+    elif user_data.role == "school":
+        school_profile = {
+            "id": str(uuid.uuid4()),
+            "user_id": user.id,
+            "school_name": f"{user_data.first_name} {user_data.last_name}".strip(),
+            "address": None,
+            "city": None,
+            "postal_code": None,
+            "phone": None,
+            "website": None,
+            "description": None,
+            "institution_type": None,
+            "academic_fields": [],
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        await db.school_profiles.insert_one(school_profile)
 
     # Return access token immediately (email confirmation disabled for testing)
     access_token = create_access_token(data={"sub": user.id})
@@ -9685,6 +9707,7 @@ async def rbac_security_middleware(request, call_next):
         "/api/mentor/": ["mentor"],
         "/api/company/": ["company"],
         "/api/institution/": ["institution"],
+        "/api/school/": ["school", "admin"],
         "/api/profile/student": ["student"],
         "/api/profile/mentor": ["mentor"],
         "/api/profile/company": ["company"],

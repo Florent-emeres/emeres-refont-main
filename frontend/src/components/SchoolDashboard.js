@@ -8,12 +8,12 @@ import EmeresBreadcrumb from './ui/EmeresBreadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { 
-  GraduationCap, 
-  Users, 
-  FileText, 
-  Settings, 
-  CheckCircle, 
+import {
+  GraduationCap,
+  Users,
+  FileText,
+  Settings,
+  CheckCircle,
   Star,
   PlusCircle,
   Search,
@@ -53,6 +53,17 @@ const SchoolDashboard = ({ user }) => {
   const [schoolProfile, setSchoolProfile] = useState(null);
   const [students, setStudents] = useState([]);
   const [partnerships, setPartnerships] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [creatingPartnership, setCreatingPartnership] = useState(false);
+  const [newPartnership, setNewPartnership] = useState({
+    company_name: '',
+    sector: '',
+    contact_email: '',
+    partnership_type: 'stage',
+    description: ''
+  });
+  const [profileForm, setProfileForm] = useState(null);
   const [schoolStats, setSchoolStats] = useState({
     total_students: 0,
     active_students: 0,
@@ -68,7 +79,7 @@ const SchoolDashboard = ({ user }) => {
   const [expandedCategories, setExpandedCategories] = useState({
     'tools': true,
     'resources': false,
-    'tracking': false, 
+    'tracking': false,
     'discovery': false,
     'profile-settings': false
   });
@@ -96,7 +107,7 @@ const SchoolDashboard = ({ user }) => {
 
     // Écouter les changements de taille d'écran
     window.addEventListener('resize', handleResize);
-    
+
     // Appliquer la logique au chargement
     handleResize();
 
@@ -120,23 +131,23 @@ const SchoolDashboard = ({ user }) => {
       description: 'Gestion étudiants et administration',
       gradient: 'from-blue-500 to-purple-600',
       items: [
-        { 
-          id: 'students-management', 
-          label: 'Gestion Étudiants', 
-          icon: Users, 
+        {
+          id: 'students-management',
+          label: 'Gestion Étudiants',
+          icon: Users,
           description: 'Suivi et administration'
         },
-        { 
-          id: 'curriculum-builder', 
-          label: 'Créateur Cursus', 
-          icon: BookOpen, 
+        {
+          id: 'curriculum-builder',
+          label: 'Créateur Cursus',
+          icon: BookOpen,
           description: 'Conception programmes',
           badge: 'Nouveau'
         },
-        { 
-          id: 'partnerships-tool', 
-          label: 'Outil Partenariats', 
-          icon: Handshake, 
+        {
+          id: 'partnerships-tool',
+          label: 'Outil Partenariats',
+          icon: Handshake,
           description: 'Création partenariats'
         }
       ]
@@ -148,22 +159,22 @@ const SchoolDashboard = ({ user }) => {
       description: 'Contenus pédagogiques et communication',
       gradient: 'from-emerald-500 to-green-600',
       items: [
-        { 
-          id: 'library', 
-          label: 'Bibliothèque', 
-          icon: Library, 
+        {
+          id: 'library',
+          label: 'Bibliothèque',
+          icon: Library,
           description: 'Ressources pédagogiques'
         },
-        { 
-          id: 'communication', 
-          label: 'Communication', 
-          icon: MessageSquare, 
+        {
+          id: 'communication',
+          label: 'Communication',
+          icon: MessageSquare,
           description: 'Messages et annonces'
         },
-        { 
-          id: 'documents', 
-          label: 'Documents', 
-          icon: FileText, 
+        {
+          id: 'documents',
+          label: 'Documents',
+          icon: FileText,
           description: 'Conventions et contrats'
         }
       ]
@@ -175,28 +186,28 @@ const SchoolDashboard = ({ user }) => {
       description: 'Performance et statistiques',
       gradient: 'from-orange-500 to-red-500',
       items: [
-        { 
-          id: 'student-progress', 
-          label: 'Progression Étudiants', 
-          icon: TrendingUp, 
+        {
+          id: 'student-progress',
+          label: 'Progression Étudiants',
+          icon: TrendingUp,
           description: 'Suivi des performances'
         },
-        { 
-          id: 'placement-stats', 
-          label: 'Taux de Placement', 
-          icon: Target, 
+        {
+          id: 'placement-stats',
+          label: 'Taux de Placement',
+          icon: Target,
           description: 'Statistiques d\'insertion'
         },
-        { 
-          id: 'analytics', 
-          label: 'Analytics École', 
-          icon: BarChart3, 
+        {
+          id: 'analytics',
+          label: 'Analytics École',
+          icon: BarChart3,
           description: 'Métriques et KPIs'
         },
-        { 
-          id: 'satisfaction', 
-          label: 'Satisfaction', 
-          icon: Award, 
+        {
+          id: 'satisfaction',
+          label: 'Satisfaction',
+          icon: Award,
           description: 'Évaluations formations'
         }
       ]
@@ -208,22 +219,22 @@ const SchoolDashboard = ({ user }) => {
       description: 'Entreprises et opportunités',
       gradient: 'from-purple-500 to-pink-600',
       items: [
-        { 
-          id: 'partnerships', 
-          label: 'Partenaires', 
-          icon: Building, 
+        {
+          id: 'partnerships',
+          label: 'Partenaires',
+          icon: Building,
           description: 'Entreprises partenaires'
         },
-        { 
-          id: 'opportunities', 
-          label: 'Opportunités', 
-          icon: Search, 
+        {
+          id: 'opportunities',
+          label: 'Opportunités',
+          icon: Search,
           description: 'Stages et emplois'
         },
-        { 
-          id: 'mentor-network', 
-          label: 'Réseau Mentors', 
-          icon: UserCheck, 
+        {
+          id: 'mentor-network',
+          label: 'Réseau Mentors',
+          icon: UserCheck,
           description: 'Mentors disponibles'
         }
       ]
@@ -235,22 +246,22 @@ const SchoolDashboard = ({ user }) => {
       description: 'Configuration école',
       gradient: 'from-gray-500 to-slate-600',
       items: [
-        { 
-          id: 'school-profile', 
-          label: 'Profil École', 
-          icon: GraduationCap, 
+        {
+          id: 'school-profile',
+          label: 'Profil École',
+          icon: GraduationCap,
           description: 'Informations publiques'
         },
-        { 
-          id: 'team-management', 
-          label: 'Gestion Équipe', 
-          icon: Users, 
+        {
+          id: 'team-management',
+          label: 'Gestion Équipe',
+          icon: Users,
           description: 'Administration équipe'
         },
-        { 
-          id: 'settings', 
-          label: 'Paramètres', 
-          icon: Settings, 
+        {
+          id: 'settings',
+          label: 'Paramètres',
+          icon: Settings,
           description: 'Configuration système'
         }
       ]
@@ -346,13 +357,69 @@ const SchoolDashboard = ({ user }) => {
         description: 'Configuration générale du système'
       }
     };
-    
+
     return configs[pageId] || configs.dashboard;
   };
 
   // Navigation vers une page spécifique
   const navigateToPage = (page) => {
     setActivePage(page);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSavingProfile(true);
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const res = await axios.put(`${backendUrl}/api/school/profile`, profileForm, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setSchoolProfile(res.data);
+      setProfileForm(res.data);
+      toast.success('Profil mis à jour');
+    } catch (error) {
+      console.error('Error saving school profile:', error);
+      toast.error("Impossible d'enregistrer le profil.");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleCreatePartnership = async () => {
+    if (!newPartnership.company_name.trim()) {
+      toast.error('Le nom de l\'entreprise partenaire est obligatoire.');
+      return;
+    }
+    try {
+      setCreatingPartnership(true);
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const res = await axios.post(`${backendUrl}/api/school/partnerships`, newPartnership, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setPartnerships([res.data, ...partnerships]);
+      setNewPartnership({ company_name: '', sector: '', contact_email: '', partnership_type: 'stage', description: '' });
+      toast.success(`${res.data.company_name} a été ajouté aux partenaires.`);
+    } catch (error) {
+      console.error('Error creating partnership:', error);
+      toast.error('Impossible de créer le partenariat.');
+    } finally {
+      setCreatingPartnership(false);
+    }
+  };
+
+  const handleUpdatePartnershipStatus = async (partnershipId, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      await axios.put(`${backendUrl}/api/school/partnerships/${partnershipId}`, { status }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setPartnerships(partnerships.map(p => p.id === partnershipId ? { ...p, status } : p));
+    } catch (error) {
+      console.error('Error updating partnership:', error);
+      toast.error('Impossible de mettre à jour le partenariat.');
+    }
   };
 
   // Rendu des cartes du dashboard avec design ÉMÉRÉS optimisé
@@ -410,7 +477,7 @@ const SchoolDashboard = ({ user }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {cards.map((card) => {
           const Icon = card.icon;
-          
+
           return (
             <EmeresCard
               key={card.id}
@@ -443,16 +510,16 @@ const SchoolDashboard = ({ user }) => {
                     </div>
                     <p className="text-xs text-white/80 truncate">{card.description}</p>
                   </div>
-                  
+
                   {card.urgent && (
                     <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse flex-shrink-0"></div>
                   )}
                 </div>
-                
+
                 {/* Effet de brillance au hover */}
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               </div>
-              
+
               {/* Contenu de la carte - responsive */}
               <div className="p-3 sm:p-4">
                 <div className="flex items-end justify-between mb-2 sm:mb-3">
@@ -464,18 +531,18 @@ const SchoolDashboard = ({ user }) => {
                       {card.stats}
                     </div>
                   </div>
-                  
+
                   <div className="text-right flex-shrink-0 ml-2">
                     <div className={`
                       text-xs font-medium truncate
-                      ${card.change.includes('Excellent') || card.change.includes('Très bien') ? 'text-green-600' : 
+                      ${card.change.includes('Excellent') || card.change.includes('Très bien') ? 'text-green-600' :
                         card.change.includes('À') ? 'text-orange-600' : 'text-gray-600'}
                     `}>
                       {card.change}
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Actions rapides - responsive */}
                 <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-100">
                   <EmeresButton
@@ -490,7 +557,7 @@ const SchoolDashboard = ({ user }) => {
                   >
                     <span className="hidden sm:inline">Voir</span>
                   </EmeresButton>
-                  
+
                   <EmeresButton
                     variant="ghost"
                     size="sm"
@@ -518,16 +585,22 @@ const SchoolDashboard = ({ user }) => {
       try {
         const token = localStorage.getItem('token');
         const headers = { 'Authorization': `Bearer ${token}` };
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
 
-        // Simuler le chargement des données école
-        setSchoolStats({
-          total_students: 245,
-          active_students: 198,
-          partnerships_count: 12,
-          placement_rate: 87,
-          average_satisfaction: 4.3
-        });
+        const [profileRes, statsRes, studentsRes, partnershipsRes, activityRes] = await Promise.all([
+          axios.get(`${backendUrl}/api/school/profile`, { headers }),
+          axios.get(`${backendUrl}/api/school/stats`, { headers }),
+          axios.get(`${backendUrl}/api/school/students`, { headers }),
+          axios.get(`${backendUrl}/api/school/partnerships`, { headers }),
+          axios.get(`${backendUrl}/api/school/activity`, { headers })
+        ]);
 
+        setSchoolProfile(profileRes.data);
+        setProfileForm(profileRes.data);
+        setSchoolStats(statsRes.data);
+        setStudents(studentsRes.data);
+        setPartnerships(partnershipsRes.data);
+        setRecentActivity(activityRes.data);
       } catch (error) {
         console.error('Error fetching school data:', error);
         // En cas d'erreur, garder les valeurs par défaut
@@ -556,17 +629,17 @@ const SchoolDashboard = ({ user }) => {
             {/* Logo ÉMÉRÉS avec navigation contextuelle */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2 sm:space-x-3">
-                <img 
-                  src="/emeres-logo.png" 
-                  alt="ÉMÉRÉS" 
-                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer" 
+                <img
+                  src="/emeres-logo.png"
+                  alt="ÉMÉRÉS"
+                  className="h-6 w-6 sm:h-8 sm:w-8 cursor-pointer"
                   onClick={() => setActivePage('dashboard')}
                   onError={(e) => {
                     e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%2314B8A6"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="40" font-family="Arial, sans-serif">É</text></svg>';
                   }}
                 />
                 <div>
-                  <span 
+                  <span
                     className="text-lg sm:text-xl font-bold text-blue-600 cursor-pointer"
                     onClick={() => setActivePage('dashboard')}
                   >
@@ -575,7 +648,7 @@ const SchoolDashboard = ({ user }) => {
                   <div className="text-xs text-gray-500 hidden sm:block">Dashboard École</div>
                 </div>
               </div>
-              
+
               {/* Menu burger - uniquement mobile/tablette */}
               <EmeresButton
                 variant="ghost"
@@ -597,7 +670,7 @@ const SchoolDashboard = ({ user }) => {
               >
                 <span className="hidden lg:inline">Accueil</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'students-management' ? 'primary' : 'ghost'}
                 size="sm"
@@ -607,7 +680,7 @@ const SchoolDashboard = ({ user }) => {
               >
                 <span className="hidden lg:inline">Étudiants</span>
               </EmeresButton>
-              
+
               <EmeresButton
                 variant={activePage === 'partnerships' ? 'primary' : 'ghost'}
                 size="sm"
@@ -664,10 +737,10 @@ const SchoolDashboard = ({ user }) => {
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400 hidden lg:block" />
                 </button>
-                
+
                 {/* Dropdown menu */}
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-emeres-lg border border-gray-100 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <button 
+                  <button
                     onClick={() => navigateToPage('school-profile')}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
@@ -679,7 +752,7 @@ const SchoolDashboard = ({ user }) => {
                     Paramètres
                   </button>
                   <div className="border-t border-gray-100 mt-2 pt-2">
-                    <button 
+                    <button
                       onClick={() => {
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');
@@ -702,7 +775,7 @@ const SchoolDashboard = ({ user }) => {
       <div className="flex relative">
         {/* Overlay mobile pour fermer la sidebar */}
         {!sidebarCollapsed && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-20 lg:hidden"
             onClick={() => setSidebarCollapsed(true)}
           />
@@ -710,11 +783,11 @@ const SchoolDashboard = ({ user }) => {
 
         {/* Sidebar responsive avec breakpoints */}
         <aside className={`
-          ${sidebarCollapsed ? 'w-12' : 'w-56'} 
-          bg-white/95 backdrop-blur-md border-r border-gray-200 
+          ${sidebarCollapsed ? 'w-12' : 'w-56'}
+          bg-white/95 backdrop-blur-md border-r border-gray-200
           fixed left-0 top-16 bottom-0 z-30 transition-all duration-300 overflow-hidden shadow-emeres-sm
-          ${sidebarCollapsed 
-            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0' 
+          ${sidebarCollapsed
+            ? 'lg:translate-x-0 -translate-x-full lg:-translate-x-0'
             : 'translate-x-0'
           }
         `}>
@@ -725,7 +798,7 @@ const SchoolDashboard = ({ user }) => {
                   // Traitement spécial pour l'Accueil
                   const Icon = category.icon;
                   const isActive = activePage === category.id;
-                  
+
                   return (
                     <button
                       key={category.id}
@@ -737,8 +810,8 @@ const SchoolDashboard = ({ user }) => {
                       }}
                       className={`
                         w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                        ${isActive 
-                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md transform scale-[1.02]` 
+                        ${isActive
+                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md transform scale-[1.02]`
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }
                       `}
@@ -752,7 +825,7 @@ const SchoolDashboard = ({ user }) => {
                           ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}
                         `} />
                       </div>
-                      
+
                       {!sidebarCollapsed && (
                         <div className="flex-1 text-left relative z-10 min-w-0">
                           <div className={`
@@ -769,7 +842,7 @@ const SchoolDashboard = ({ user }) => {
                           </div>
                         </div>
                       )}
-                      
+
                       {sidebarCollapsed && (
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                           {category.label}
@@ -778,12 +851,12 @@ const SchoolDashboard = ({ user }) => {
                     </button>
                   );
                 }
-                
+
                 // Traitement pour les catégories avec sous-éléments
                 const CategoryIcon = category.icon;
                 const isExpanded = expandedCategories[category.id];
                 const hasActiveChild = category.items.some(item => activePage === item.id);
-                
+
                 return (
                   <div key={category.id} className="space-y-1">
                     {/* En-tête de catégorie */}
@@ -791,8 +864,8 @@ const SchoolDashboard = ({ user }) => {
                       onClick={() => toggleCategory(category.id)}
                       className={`
                         w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                        ${hasActiveChild 
-                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md` 
+                        ${hasActiveChild
+                          ? `bg-gradient-to-r ${category.gradient} text-white shadow-emeres-md`
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }
                       `}
@@ -806,7 +879,7 @@ const SchoolDashboard = ({ user }) => {
                           ${hasActiveChild ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}
                         `} />
                       </div>
-                      
+
                       {!sidebarCollapsed && (
                         <>
                           <div className="flex-1 text-left relative z-10 min-w-0">
@@ -823,7 +896,7 @@ const SchoolDashboard = ({ user }) => {
                               {category.description}
                             </div>
                           </div>
-                          
+
                           {/* Chevron d'expansion */}
                           <ChevronRight className={`
                             h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-300 relative z-10
@@ -832,21 +905,21 @@ const SchoolDashboard = ({ user }) => {
                           `} />
                         </>
                       )}
-                      
+
                       {sidebarCollapsed && (
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                           {category.label}
                         </div>
                       )}
                     </button>
-                    
+
                     {/* Sous-éléments de la catégorie */}
                     {!sidebarCollapsed && isExpanded && (
                       <div className="ml-6 space-y-1">
                         {category.items.map((item) => {
                           const ItemIcon = item.icon;
                           const isActive = activePage === item.id;
-                          
+
                           return (
                             <button
                               key={item.id}
@@ -858,8 +931,8 @@ const SchoolDashboard = ({ user }) => {
                               }}
                               className={`
                                 w-full group flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg transition-all duration-300 relative overflow-hidden text-left
-                                ${isActive 
-                                  ? 'bg-gray-100 text-teal-700 border-l-2 border-teal-500' 
+                                ${isActive
+                                  ? 'bg-gray-100 text-teal-700 border-l-2 border-teal-500'
                                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                 }
                               `}
@@ -873,7 +946,7 @@ const SchoolDashboard = ({ user }) => {
                                   ${isActive ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-600'}
                                 `} />
                               </div>
-                              
+
                               <div className="flex-1 text-left relative z-10 min-w-0">
                                 <div className={`
                                   font-medium text-xs transition-colors duration-300 truncate
@@ -888,7 +961,7 @@ const SchoolDashboard = ({ user }) => {
                                   {item.description}
                                 </div>
                               </div>
-                              
+
                               {item.badge && (
                                 <EmeresBadge
                                   variant={isActive ? "default" : "secondary"}
@@ -910,7 +983,7 @@ const SchoolDashboard = ({ user }) => {
                 );
               })}
             </div>
-            
+
             {/* Footer responsive de la sidebar */}
             {!sidebarCollapsed && (
               <div className="mt-4 sm:mt-8 p-3 sm:p-4 bg-gradient-emeres-subtle rounded-lg sm:rounded-xl border border-teal-200">
@@ -956,7 +1029,7 @@ const SchoolDashboard = ({ user }) => {
                       {getPageConfig(activePage).description}
                     </p>
                   </div>
-                  
+
                   {/* Actions contextuelles rapides - responsive */}
                   <div className="flex items-center gap-3">
                     {activePage === 'students-management' && (
@@ -1001,13 +1074,13 @@ const SchoolDashboard = ({ user }) => {
                       {getPageConfig('dashboard').description}
                     </p>
                   </div>
-                  
+
                   {/* Cartes principales */}
                   {renderDashboardCards()}
-                  
+
                   {/* Contenu principal du dashboard */}
                   <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
-                    
+
                     {/* Activité récente */}
                     <div className="xl:col-span-2">
                       <EmeresCard>
@@ -1019,40 +1092,37 @@ const SchoolDashboard = ({ user }) => {
                         </EmeresCardHeader>
                         <EmeresCardContent>
                           <div className="space-y-4">
-                            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                              <Users className="h-5 w-5 text-blue-600" />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">
-                                  12 nouveaux étudiants inscrits
-                                </p>
-                                <p className="text-xs text-gray-500">Il y a 2 heures</p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                              <Building className="h-5 w-5 text-green-600" />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">
-                                  Nouveau partenariat avec TechCorp
-                                </p>
-                                <p className="text-xs text-gray-500">Il y a 1 jour</p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                              <Award className="h-5 w-5 text-purple-600" />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">
-                                  Évaluation de la formation Data Science: 4.8/5
-                                </p>
-                                <p className="text-xs text-gray-500">Il y a 3 jours</p>
-                              </div>
-                            </div>
+                            {recentActivity.length === 0 && (
+                              <p className="text-sm text-gray-500 text-center py-4">
+                                Aucune activité pour le moment.
+                              </p>
+                            )}
+                            {recentActivity.map((item, index) => {
+                              const config = {
+                                student: { icon: Users, className: 'bg-blue-50', iconClassName: 'text-blue-600' },
+                                partnership: { icon: Building, className: 'bg-green-50', iconClassName: 'text-green-600' },
+                                evaluation: { icon: Award, className: 'bg-purple-50', iconClassName: 'text-purple-600' }
+                              }[item.type] || { icon: Clock, className: 'bg-gray-50', iconClassName: 'text-gray-600' };
+                              const Icon = config.icon;
+                              return (
+                                <div key={index} className={`flex items-center gap-3 p-3 ${config.className} rounded-lg`}>
+                                  <Icon className={`h-5 w-5 ${config.iconClassName}`} />
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-900">{item.label}</p>
+                                    {item.date && (
+                                      <p className="text-xs text-gray-500">
+                                        {new Date(item.date).toLocaleDateString('fr-FR')}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </EmeresCardContent>
                       </EmeresCard>
                     </div>
-                    
+
                     {/* Actions rapides */}
                     <div>
                       <EmeresCard>
@@ -1071,7 +1141,7 @@ const SchoolDashboard = ({ user }) => {
                           >
                             Gérer les étudiants
                           </EmeresButton>
-                          
+
                           <EmeresButton
                             variant="outline"
                             fullWidth
@@ -1080,7 +1150,7 @@ const SchoolDashboard = ({ user }) => {
                           >
                             Voir les partenaires
                           </EmeresButton>
-                          
+
                           <EmeresButton
                             variant="outline"
                             fullWidth
@@ -1089,7 +1159,7 @@ const SchoolDashboard = ({ user }) => {
                           >
                             Analytics détaillés
                           </EmeresButton>
-                          
+
                           <EmeresButton
                             variant="outline"
                             fullWidth
@@ -1104,9 +1174,222 @@ const SchoolDashboard = ({ user }) => {
                   </div>
                 </div>
               )}
-              
+
+              {/* Gestion des étudiants - données réelles */}
+              {activePage === 'students-management' && (
+                <EmeresCard>
+                  <EmeresCardHeader>
+                    <EmeresCardTitle>Étudiants rattachés à l'école</EmeresCardTitle>
+                    <EmeresCardDescription>
+                      {students.length} étudiant(s) avec le profil renseigné à votre établissement
+                    </EmeresCardDescription>
+                  </EmeresCardHeader>
+                  <EmeresCardContent>
+                    {students.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center py-8">
+                        Aucun étudiant rattaché. Les étudiants qui renseignent votre établissement
+                        dans leur profil apparaîtront ici automatiquement.
+                      </p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-gray-500 border-b border-gray-200">
+                              <th className="py-2 pr-4 font-medium">Étudiant</th>
+                              <th className="py-2 pr-4 font-medium">Formation</th>
+                              <th className="py-2 pr-4 font-medium">Candidatures</th>
+                              <th className="py-2 pr-4 font-medium">Acceptées</th>
+                              <th className="py-2 font-medium">Statut</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {students.map((student) => (
+                              <tr key={student.id} className="border-b border-gray-100">
+                                <td className="py-3 pr-4 font-medium text-gray-900">
+                                  {student.first_name} {student.last_name}
+                                </td>
+                                <td className="py-3 pr-4 text-gray-600">
+                                  {student.field_of_study || student.degree_preparing || '—'}
+                                </td>
+                                <td className="py-3 pr-4 text-gray-600">{student.applications_count}</td>
+                                <td className="py-3 pr-4 text-gray-600">{student.accepted_count}</td>
+                                <td className="py-3">
+                                  <EmeresBadge variant={student.is_active ? 'primary' : 'secondary'} size="sm">
+                                    {student.is_active ? 'Actif' : 'Inactif'}
+                                  </EmeresBadge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </EmeresCardContent>
+                </EmeresCard>
+              )}
+
+              {/* Partenariats - données réelles */}
+              {activePage === 'partnerships' && (
+                <div className="space-y-6">
+                  <EmeresCard>
+                    <EmeresCardHeader>
+                      <EmeresCardTitle>Nouveau partenariat</EmeresCardTitle>
+                      <EmeresCardDescription>
+                        Ajouter une entreprise partenaire de l'école
+                      </EmeresCardDescription>
+                    </EmeresCardHeader>
+                    <EmeresCardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <EmeresInput
+                          placeholder="Nom de l'entreprise *"
+                          value={newPartnership.company_name}
+                          onChange={(e) => setNewPartnership({ ...newPartnership, company_name: e.target.value })}
+                        />
+                        <EmeresInput
+                          placeholder="Secteur"
+                          value={newPartnership.sector}
+                          onChange={(e) => setNewPartnership({ ...newPartnership, sector: e.target.value })}
+                        />
+                        <EmeresInput
+                          placeholder="Email de contact"
+                          value={newPartnership.contact_email}
+                          onChange={(e) => setNewPartnership({ ...newPartnership, contact_email: e.target.value })}
+                        />
+                        <EmeresInput
+                          placeholder="Type de partenariat (stage, alternance...)"
+                          value={newPartnership.partnership_type}
+                          onChange={(e) => setNewPartnership({ ...newPartnership, partnership_type: e.target.value })}
+                        />
+                      </div>
+                      <EmeresButton
+                        variant="primary"
+                        className="mt-4"
+                        onClick={handleCreatePartnership}
+                        disabled={creatingPartnership}
+                      >
+                        {creatingPartnership ? 'Création...' : 'Créer le partenariat'}
+                      </EmeresButton>
+                    </EmeresCardContent>
+                  </EmeresCard>
+
+                  <EmeresCard>
+                    <EmeresCardHeader>
+                      <EmeresCardTitle>Entreprises partenaires</EmeresCardTitle>
+                      <EmeresCardDescription>
+                        {partnerships.length} partenariat(s) enregistré(s)
+                      </EmeresCardDescription>
+                    </EmeresCardHeader>
+                    <EmeresCardContent>
+                      {partnerships.length === 0 ? (
+                        <p className="text-sm text-gray-500 text-center py-8">
+                          Aucun partenariat enregistré pour le moment.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {partnerships.map((partnership) => (
+                            <div key={partnership.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg">
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-gray-900">{partnership.company_name}</p>
+                                <p className="text-xs text-gray-500">
+                                  {partnership.sector || 'Secteur non spécifié'} · {partnership.partnership_type}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <EmeresBadge
+                                  variant={partnership.status === 'active' ? 'primary' : partnership.status === 'pending' ? 'secondary' : 'error'}
+                                  size="sm"
+                                >
+                                  {partnership.status === 'active' ? 'Actif' : partnership.status === 'pending' ? 'En attente' : 'Terminé'}
+                                </EmeresBadge>
+                                {partnership.status !== 'active' && (
+                                  <EmeresButton
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUpdatePartnershipStatus(partnership.id, 'active')}
+                                  >
+                                    Activer
+                                  </EmeresButton>
+                                )}
+                                {partnership.status === 'active' && (
+                                  <EmeresButton
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUpdatePartnershipStatus(partnership.id, 'ended')}
+                                  >
+                                    Clôturer
+                                  </EmeresButton>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </EmeresCardContent>
+                  </EmeresCard>
+                </div>
+              )}
+
+              {/* Profil école - données réelles */}
+              {activePage === 'school-profile' && profileForm && (
+                <EmeresCard>
+                  <EmeresCardHeader>
+                    <EmeresCardTitle>Informations de l'école</EmeresCardTitle>
+                    <EmeresCardDescription>
+                      Ces informations servent à rattacher automatiquement vos étudiants
+                    </EmeresCardDescription>
+                  </EmeresCardHeader>
+                  <EmeresCardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <EmeresInput
+                        placeholder="Nom de l'école *"
+                        value={profileForm.school_name || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, school_name: e.target.value })}
+                      />
+                      <EmeresInput
+                        placeholder="Type d'établissement (Lycée, Université, CFA...)"
+                        value={profileForm.institution_type || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, institution_type: e.target.value })}
+                      />
+                      <EmeresInput
+                        placeholder="Adresse"
+                        value={profileForm.address || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                      />
+                      <EmeresInput
+                        placeholder="Ville"
+                        value={profileForm.city || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
+                      />
+                      <EmeresInput
+                        placeholder="Code postal"
+                        value={profileForm.postal_code || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, postal_code: e.target.value })}
+                      />
+                      <EmeresInput
+                        placeholder="Téléphone"
+                        value={profileForm.phone || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                      />
+                      <EmeresInput
+                        placeholder="Site web"
+                        value={profileForm.website || ''}
+                        onChange={(e) => setProfileForm({ ...profileForm, website: e.target.value })}
+                      />
+                    </div>
+                    <EmeresButton
+                      variant="primary"
+                      className="mt-4"
+                      onClick={handleSaveProfile}
+                      disabled={savingProfile}
+                    >
+                      {savingProfile ? 'Enregistrement...' : 'Enregistrer'}
+                    </EmeresButton>
+                  </EmeresCardContent>
+                </EmeresCard>
+              )}
+
               {/* Pages avec contenu placeholder */}
-              {activePage !== 'dashboard' && (
+              {!['dashboard', 'students-management', 'partnerships', 'school-profile'].includes(activePage) && (
                 <EmeresCard>
                   <EmeresCardContent className="text-center py-12">
                     <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
