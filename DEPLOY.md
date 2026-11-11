@@ -101,6 +101,21 @@ Coût estimé : ~1,5–3 $/mois pour 50 étudiants actifs, ~30 $/mois pour 1 000
 (rate limiting 10 req/min/utilisateur sur la génération de lettres, historique
 du coach plafonné, compteur `usage.llm_calls` par session).
 
+## Variante — Frontend sur Vercel (optionnel)
+
+Le frontend React peut être hébergé sur Vercel au lieu du site statique Render.
+**Le backend FastAPI reste sur Render** : Vercel est serverless et ne peut pas
+exécuter le backend Docker (websockets, MongoDB, process longue durée).
+
+1. [vercel.com](https://vercel.com) → **Add New** → **Project** → importez le repo
+2. **Root Directory** : `frontend` (Vercel détecte Create React App automatiquement)
+3. **Environment Variables** : `REACT_APP_BACKEND_URL` = URL complète du backend Render
+4. **Deploy** — le routage SPA est déjà géré par `frontend/vercel.json`
+5. Sur le backend Render, mettez `CORS_ORIGINS` et `FRONTEND_URL` à l'URL Vercel
+   (ex : `https://emeres.vercel.app`), puis laissez redéployer
+
+> Chaque push sur `main` redéploie automatiquement le frontend sur Vercel.
+
 ## Vérifier
 
 1. Backend : ouvrez `https://emeres-backend-xxxx.onrender.com/health` → `{"status": "ok"}`
