@@ -73,18 +73,18 @@
     width: 6px;
     height: 6px;
   }
-  
+
   .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
     background-color: var(--emeres-gray-300);
     border-radius: var(--emeres-radius-full);
     transition: background-color var(--emeres-duration-fast);
   }
-  
+
   .scrollbar-track-gray-100::-webkit-scrollbar-track {
     background-color: var(--emeres-gray-100);
     border-radius: var(--emeres-radius-full);
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: var(--emeres-gray-400);
   }
@@ -345,59 +345,60 @@
 
 /* Shadcn/UI Variables - Palette officielle ÉMÉRÉS */
 :root {
-  /* Variables shadcn/ui basées sur la palette SAPHIR • ÉMERAUDE • AMBRE • ONYX */
-  --background: 249 250 251; /* emeres-onyx-50 */
-  --foreground: 17 24 39;    /* emeres-onyx-900 */
-  --card: 255 255 255;
-  --card-foreground: 17 24 39;
-  --popover: 255 255 255;
-  --popover-foreground: 17 24 39;
-  --primary: 59 130 246;     /* emeres-saphir-500 */
-  --primary-foreground: 239 246 255;
-  --secondary: 16 185 129;   /* emeres-emeraude-500 */
-  --secondary-foreground: 17 24 39;
-  --muted: 243 244 246;
-  --muted-foreground: 107 114 128;
-  --accent: 184 118 26;      /* emeres-ambre-600 (marron doré) */
-  --accent-foreground: 17 24 39;
-  --destructive: 239 68 68;
-  --destructive-foreground: 249 250 251;
-  --border: 229 231 235;     /* emeres-onyx-200 */
-  --input: 229 231 235;
-  --ring: 59 130 246;        /* emeres-saphir-500 */
+  /* Variables shadcn/ui basées sur la palette SAPHIR • ÉMERAUDE • AMBRE • ONYX
+     Format triplets HSL (exigé par le mapping Tailwind hsl(var(--x))) */
+  --background: 210 20% 98%; /* emeres-onyx-50 */
+  --foreground: 221 39% 11%; /* emeres-onyx-900 */
+  --card: 0 0% 100%;
+  --card-foreground: 221 39% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 221 39% 11%;
+  --primary: 217 91% 60%;    /* emeres-saphir-500 */
+  --primary-foreground: 214 100% 97%;
+  --secondary: 160 84% 39%;  /* emeres-emeraude-500 */
+  --secondary-foreground: 221 39% 11%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 35 75% 41%;      /* emeres-ambre-600 (marron doré) */
+  --accent-foreground: 221 39% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 220 13% 91%;     /* emeres-onyx-200 */
+  --input: 220 13% 91%;
+  --ring: 217 91% 60%;       /* emeres-saphir-500 */
   --radius: 0.5rem;
-  --chart-1: 59 130 246;     /* emeres-saphir-500 */
-  --chart-2: 16 185 129;     /* emeres-emeraude-500 */
-  --chart-3: 245 158 11;     /* emeres-ambre-500 */
-  --chart-4: 52 211 153;     /* emeraude-400 */
-  --chart-5: 251 191 36;     /* ambre-400 */
+  --chart-1: 217 91% 60%;    /* emeres-saphir-500 */
+  --chart-2: 160 84% 39%;    /* emeres-emeraude-500 */
+  --chart-3: 38 92% 50%;     /* emeres-ambre-500 */
+  --chart-4: 158 64% 52%;    /* emeraude-400 */
+  --chart-5: 43 96% 56%;     /* ambre-400 */
 }
 
 .dark {
-  --background: 17 24 39;    /* emeres-onyx-900 */
-  --foreground: 249 250 251; /* emeres-onyx-50 */
-  --card: 31 41 55;         /* emeres-onyx-800 */
-  --card-foreground: 249 250 251;
-  --popover: 31 41 55;
-  --popover-foreground: 249 250 251;
-  --primary: 96 165 250;     /* emeres-saphir-400 */
-  --primary-foreground: 30 58 138;
-  --secondary: 52 211 153;   /* emeres-emeraude-400 */
-  --secondary-foreground: 249 250 251;
-  --muted: 75 85 99;
-  --muted-foreground: 156 163 175;
-  --accent: 196 164 107;     /* emeres-ambre-400 (marron doré clair) */
-  --accent-foreground: 17 24 39;
-  --destructive: 220 38 38;
-  --destructive-foreground: 249 250 251;
-  --border: 75 85 99;
-  --input: 75 85 99;
-  --ring: 96 165 250;
-  --chart-1: 96 165 250;
-  --chart-2: 52 211 153;
-  --chart-3: 251 191 36;
-  --chart-4: 110 231 183;
-  --chart-5: 252 211 77;
+  --background: 221 39% 11%; /* emeres-onyx-900 */
+  --foreground: 210 20% 98%; /* emeres-onyx-50 */
+  --card: 215 28% 17%;       /* emeres-onyx-800 */
+  --card-foreground: 210 20% 98%;
+  --popover: 215 28% 17%;
+  --popover-foreground: 210 20% 98%;
+  --primary: 213 94% 68%;    /* emeres-saphir-400 */
+  --primary-foreground: 224 64% 33%;
+  --secondary: 158 64% 52%;  /* emeres-emeraude-400 */
+  --secondary-foreground: 210 20% 98%;
+  --muted: 215 14% 34%;
+  --muted-foreground: 218 11% 65%;
+  --accent: 38 43% 59%;      /* emeres-ambre-400 (marron doré clair) */
+  --accent-foreground: 221 39% 11%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 215 14% 34%;
+  --input: 215 14% 34%;
+  --ring: 213 94% 68%;
+  --chart-1: 213 94% 68%;
+  --chart-2: 158 64% 52%;
+  --chart-3: 43 96% 56%;
+  --chart-4: 156 72% 67%;
+  --chart-5: 46 97% 65%;
 }
 
 @layer base {
