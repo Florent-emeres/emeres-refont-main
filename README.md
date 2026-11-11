@@ -63,6 +63,12 @@ Voir `.env.example` pour la liste complète.
 - **Institutions** : cohortes, analytics d'insertion
 - **Transverse** : messagerie, calendrier, crédits, modules premium, coach IA
 
+## Décision d'architecture
+
+Le backend fonctionne actuellement en **monolithe unique** (`backend/server.py`), monté comme application FastAPI. Les modules récents (school, institution, company sections) sont des routers Fabrique (`create_X_sections_router(db)`) montés au démarrage — le code est déjà organisé par domaine.
+
+**Décision : conserver le monolithe pour le pilote.** La migration vers le package `backend/app/` (déjà présent) est prévue après le pilote, quand les contours réels des modules seront stabilisés par l'usage. Une refonte prématurée ajouterait du risque sans bénéfice utilisateur ; les routers par domaine rendent la découpe future mécanique.
+
 ## Données du pilote (seed)
 
 Pour alimenter la plateforme avec un jeu de données réaliste (1 école, 1 institution, 10 entreprises, 50 étudiants, 5 mentors, offres/candidatures/sessions/évaluations) :

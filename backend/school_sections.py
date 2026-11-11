@@ -594,6 +594,40 @@ def create_school_sections_router(db: AsyncIOMotorDatabase) -> APIRouter:
         return [clean(item) for item in activity[:15]]
 
     # ==========================================================================
+    # RÉSEAU MENTORS (profils réels disponibles pour les étudiants)
+    # ==========================================================================
+
+    @router.get("/school/mentors")
+    async def list_mentors(current_user: dict = Depends(require_school)):
+        mentors = await db.mentor_profiles.find({}).sort("created_at", -1).to_list(None)
+        mentors_list = []
+        for mentor in mentors:
+            mentor_user_id = mentor.get("user_id")
+            active_relations = await db.mentor_student_relations.count_documents(
+                {"mentor_id": mentor_user_id, "status": "active"}
+            )
+            completed_relations = await db.mentor_student_relations.count_documents(
+                {"mentor_id": mentor_user_id, "status": "completed"}
+            )
+            mentors_list.append(
+                clean(
+                    {
+                        "user_id": mentor_user_id,
+                        "name": get_display_name(mentor) or "Mentor",
+                        "company": mentor.get("company", ""),
+                        "position": mentor.get("position", ""),
+                        "specializations": mentor.get("specializations", []),
+                        "experience_years": mentor.get("experience_years", 0),
+                        "bio": mentor.get("bio", ""),
+                        "availability_hours_per_week": mentor.get("availability_hours_per_week", 0),
+                        "active_relations": active_relations,
+                        "completed_relations": completed_relations,
+                    }
+                )
+            )
+        return mentors_list
+
+    # ==========================================================================
     # DOCUMENTS ADMINISTRATIFS
     # ==========================================================================
 

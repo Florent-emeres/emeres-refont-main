@@ -548,6 +548,9 @@ class StudentProfile(BaseModel):
         False  # True si créé par un établissement, False si inscription directe
     )
 
+    # Rattachement établissement (géré uniquement via /api/school/*, jamais modifiable par le client)
+    school_id: Optional[str] = None
+
     # Anciens champs maintenus pour compatibilité
     education_level: Optional[str] = None
     school_name: Optional[str] = None
@@ -2093,6 +2096,12 @@ async def update_student_profile(
 
     profile_data.user_id = current_user.id
     profile_data.updated_at = datetime.now(timezone.utc)
+
+    # Préserver le rattachement établissement : géré uniquement par /api/school/*
+    existing_profile = await db.student_profiles.find_one({"user_id": current_user.id})
+    if existing_profile:
+        profile_data.school_id = existing_profile.get("school_id")
+        profile_data.school_name = existing_profile.get("school_name")
 
     # Synchroniser l'email avec la table users (identifiant de connexion)
     if profile_data.email and profile_data.email != current_user.email:

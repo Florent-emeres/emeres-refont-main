@@ -14,7 +14,8 @@ import {
   BookOpen,
   Trash2,
   Plus,
-  TrendingUp
+  TrendingUp,
+  UserCheck
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
@@ -574,6 +575,78 @@ export const CommunicationPage = () => {
         </EmeresCardContent>
       </EmeresCard>
     </div>
+  );
+};
+
+export const MentorNetworkPage = () => {
+  const [mentors, setMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`${API}/school/mentors`, authHeaders())
+      .then((res) => setMentors(res.data))
+      .catch(() => setMentors([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <EmeresCard>
+        <EmeresCardContent className="text-center py-12 text-gray-600">
+          Chargement du réseau de mentors…
+        </EmeresCardContent>
+      </EmeresCard>
+    );
+  }
+
+  return (
+    <EmeresCard>
+      <EmeresCardHeader>
+        <EmeresCardTitle className="flex items-center gap-2">
+          <UserCheck className="h-5 w-5 text-teal-600" />
+          Mentors disponibles sur la plateforme
+        </EmeresCardTitle>
+        <EmeresCardDescription>
+          {mentors.length} mentor(s) — vos étudiants peuvent les contacter depuis leur espace
+        </EmeresCardDescription>
+      </EmeresCardHeader>
+      <EmeresCardContent className="space-y-3">
+        {mentors.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-4">
+            Aucun mentor sur la plateforme pour le moment.
+          </p>
+        ) : (
+          mentors.map((mentor) => (
+            <div key={mentor.user_id} className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="min-w-0">
+                  <div className="font-medium text-sm text-gray-900">{mentor.name}</div>
+                  <div className="text-xs text-gray-600">
+                    {mentor.position || 'Mentor'}{mentor.company ? ` · ${mentor.company}` : ''}
+                    {mentor.experience_years ? ` · ${mentor.experience_years} ans d'expérience` : ''}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <EmeresBadge variant="primary" size="xs">
+                    {mentor.active_relations} suivi(s) actif(s)
+                  </EmeresBadge>
+                  {mentor.completed_relations > 0 && (
+                    <EmeresBadge variant="success" size="xs">
+                      {mentor.completed_relations} terminé(s)
+                    </EmeresBadge>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-1 flex-wrap mt-2">
+                {(mentor.specializations || []).slice(0, 4).map((spec) => (
+                  <EmeresBadge key={spec} variant="secondary" size="xs">{spec}</EmeresBadge>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+      </EmeresCardContent>
+    </EmeresCard>
   );
 };
 

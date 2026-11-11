@@ -55,7 +55,8 @@ import {
   OpportunitiesPage,
   DocumentsPage,
   CommunicationPage,
-  LibraryPage
+  LibraryPage,
+  MentorNetworkPage
 } from './school/SchoolExtraPages';
 
 const SchoolDashboard = ({ user }) => {
@@ -272,12 +273,6 @@ const SchoolDashboard = ({ user }) => {
           label: 'Gestion Équipe',
           icon: Users,
           description: 'Administration équipe'
-        },
-        {
-          id: 'settings',
-          label: 'Paramètres',
-          icon: Settings,
-          description: 'Configuration système'
         }
       ]
     }
@@ -1626,11 +1621,12 @@ const SchoolDashboard = ({ user }) => {
               {activePage === 'documents' && <DocumentsPage />}
               {activePage === 'communication' && <CommunicationPage />}
               {activePage === 'library' && <LibraryPage />}
+              {activePage === 'mentor-network' && <MentorNetworkPage />}
 
               {/* Pages avec contenu placeholder */}
               {!['dashboard', 'students-management', 'partnerships', 'school-profile',
                 'student-progress', 'placement-stats', 'analytics', 'satisfaction',
-                'opportunities', 'documents', 'communication', 'library'
+                'opportunities', 'documents', 'communication', 'library', 'mentor-network'
               ].includes(activePage) && (
                 <EmeresCard>
                   <EmeresCardContent className="text-center py-12">
