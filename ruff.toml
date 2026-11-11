@@ -28,3 +28,6 @@ extend-exclude = [
 [lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E203"]
+
+[lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Form", "fastapi.Query"]

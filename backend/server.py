@@ -77,6 +77,7 @@ from app.utils.legacy import legacy_endpoint
 
 # Import des outils API
 from api_tools import create_tools_router
+from company_sections import create_company_sections_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -395,6 +396,10 @@ async def startup_event():
     # Nouveau système d'outils ÉMÉRÉS
     tools_router = create_tools_router(db)
     app.include_router(tools_router)
+
+    # Sections du tableau de bord entreprise
+    company_sections_router = create_company_sections_router(db)
+    app.include_router(company_sections_router)
 
 
 # User Role Constants
@@ -5078,12 +5083,30 @@ async def create_thread_by_context(
 
 
 @api_router.put("/threads/{thread_id}/read")
+@legacy_endpoint
 async def mark_thread_read(thread_id: str, current_user: User = Depends(verify_token)):
-    """PATCH /threads/:id/read → mettre à jour lastReadAt pour l'utilisateur courant"""
+    """PUT /threads/:id/read → marquer les messages du thread comme lus"""
     try:
-        await messaging_service.mark_thread_as_read(thread_id, current_user.id)
+        if not await verify_thread_access(thread_id, current_user.id, "read"):
+            raise HTTPException(status_code=403, detail="Accès refusé")
+
+        await db.internal_messages.update_many(
+            {
+                "thread_id": thread_id,
+                "sender_id": {"$ne": current_user.id},
+                "read_by.user_id": {"$ne": current_user.id},
+            },
+            {
+                "$push": {
+                    "read_by": {"user_id": current_user.id, "read_at": datetime.now(timezone.utc)}
+                }
+            },
+        )
+
         return {"success": True, "marked_as_read": True}
 
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Erreur mark_thread_read: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -9279,41 +9302,41 @@ async def send_message(data: dict, current_user: User = Depends(verify_token)):
     try:
         thread_id = data.get("thread_id")
         content = data.get("content", "")
-        recipient_id = data.get("recipient_id")
 
         if not content:
             raise HTTPException(status_code=400, detail="Contenu du message requis")
+        if not thread_id:
+            raise HTTPException(status_code=400, detail="thread_id requis")
 
-        # Create thread if doesn't exist
-        if not thread_id and recipient_id:
-            thread_id = str(uuid.uuid4())
-            thread_data = {
-                "id": thread_id,
-                "participants": [current_user.id, recipient_id],
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            }
-            await db.threads.insert_one(thread_data)
+        thread = await db.internal_threads.find_one({"id": thread_id})
+        if not thread:
+            raise HTTPException(status_code=404, detail="Thread non trouvé")
+        participant_ids = [
+            p.get("user_id") if isinstance(p, dict) else p for p in thread.get("participants", [])
+        ]
+        if current_user.id not in participant_ids:
+            raise HTTPException(status_code=403, detail="Accès refusé à ce thread")
 
-        # Create message
-        message_data = {
-            "id": str(uuid.uuid4()),
-            "thread_id": thread_id,
-            "sender_id": current_user.id,
-            "content": content,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "read": False,
-        }
-
-        await db.messages.insert_one(message_data)
-
-        # Update thread timestamp
-        await db.threads.update_one(
-            {"id": thread_id}, {"$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+        user_name = f"{current_user.first_name} {current_user.last_name}"
+        message = InternalMessage(
+            thread_id=thread_id,
+            sender_id=current_user.id,
+            sender_role=current_user.role,
+            sender_name=user_name,
+            content=encrypt_content(content),
+            read_by=[{"user_id": current_user.id, "read_at": datetime.now(timezone.utc)}],
         )
 
-        return {"success": True, "message_id": message_data["id"], "thread_id": thread_id}
+        await db.internal_messages.insert_one(message.dict())
 
+        await db.internal_threads.update_one(
+            {"id": thread_id}, {"$set": {"last_activity_at": datetime.now(timezone.utc)}}
+        )
+
+        return {"success": True, "message_id": message.id, "thread_id": thread_id}
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur envoi message: {str(e)}")
 
