@@ -5,6 +5,7 @@ import EmeresCard, { EmeresCardContent, EmeresCardDescription, EmeresCardHeader,
 import EmeresBadge from './ui/EmeresBadge';
 import EmeresInput from './ui/EmeresInput';
 import EmeresBreadcrumb from './ui/EmeresBreadcrumb';
+import OnboardingChecklist from './ui/OnboardingChecklist';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -93,11 +94,8 @@ const SchoolDashboard = ({ user }) => {
 
   // État pour gérer l'expansion des catégories
   const [expandedCategories, setExpandedCategories] = useState({
-    'tools': true,
-    'resources': false,
     'tracking': false,
-    'discovery': false,
-    'profile-settings': false
+    'discovery': false
   });
 
   // Toggle expansion d'une catégorie
@@ -136,68 +134,47 @@ const SchoolDashboard = ({ user }) => {
       id: 'dashboard',
       label: 'Accueil',
       icon: GraduationCap,
-      description: 'Vue d\'ensemble',
+      description: "Vue d'ensemble",
       gradient: 'from-teal-500 to-teal-600',
       isStandalone: true
     },
     {
-      id: 'tools',
-      label: 'Outils Pédagogiques',
-      icon: Zap,
-      description: 'Gestion étudiants et administration',
+      id: 'students-management',
+      label: 'Étudiants',
+      icon: Users,
+      description: 'Rattacher, inviter, suivre',
       gradient: 'from-blue-500 to-purple-600',
-      items: [
-        {
-          id: 'students-management',
-          label: 'Gestion Étudiants',
-          icon: Users,
-          description: 'Suivi et administration'
-        },
-        {
-          id: 'curriculum-builder',
-          label: 'Créateur Cursus',
-          icon: BookOpen,
-          description: 'Conception programmes',
-          badge: 'Nouveau'
-        },
-        {
-          id: 'partnerships-tool',
-          label: 'Outil Partenariats',
-          icon: Handshake,
-          description: 'Création partenariats'
-        }
-      ]
+      badge: students.length > 0 ? students.length.toString() : null,
+      isStandalone: true
     },
     {
-      id: 'resources',
-      label: 'Ressources',
-      icon: Library,
-      description: 'Contenus pédagogiques et communication',
+      id: 'partnerships',
+      label: 'Partenariats',
+      icon: Handshake,
+      description: 'Entreprises partenaires',
+      gradient: 'from-purple-500 to-pink-600',
+      badge: partnerships.length > 0 ? partnerships.length.toString() : null,
+      isStandalone: true
+    },
+    {
+      id: 'documents',
+      label: 'Documents',
+      icon: FileText,
+      description: 'Conventions et contrats',
+      gradient: 'from-orange-500 to-red-500',
+      isStandalone: true
+    },
+    {
+      id: 'communication',
+      label: 'Communication',
+      icon: MessageSquare,
+      description: 'Messages et annonces',
       gradient: 'from-emerald-500 to-green-600',
-      items: [
-        {
-          id: 'library',
-          label: 'Bibliothèque',
-          icon: Library,
-          description: 'Ressources pédagogiques'
-        },
-        {
-          id: 'communication',
-          label: 'Communication',
-          icon: MessageSquare,
-          description: 'Messages et annonces'
-        },
-        {
-          id: 'documents',
-          label: 'Documents',
-          icon: FileText,
-          description: 'Conventions et contrats'
-        }
-      ]
+      isStandalone: true
     },
     {
       id: 'tracking',
-      label: 'Suivi & Analytics',
+      label: 'Suivi & Analyses',
       icon: BarChart3,
       description: 'Performance et statistiques',
       gradient: 'from-orange-500 to-red-500',
@@ -212,7 +189,7 @@ const SchoolDashboard = ({ user }) => {
           id: 'placement-stats',
           label: 'Taux de Placement',
           icon: Target,
-          description: 'Statistiques d\'insertion'
+          description: "Statistiques d'insertion"
         },
         {
           id: 'analytics',
@@ -232,15 +209,9 @@ const SchoolDashboard = ({ user }) => {
       id: 'discovery',
       label: 'Découverte',
       icon: Search,
-      description: 'Entreprises et opportunités',
+      description: 'Opportunités et réseau',
       gradient: 'from-purple-500 to-pink-600',
       items: [
-        {
-          id: 'partnerships',
-          label: 'Partenaires',
-          icon: Building,
-          description: 'Entreprises partenaires'
-        },
         {
           id: 'opportunities',
           label: 'Opportunités',
@@ -252,29 +223,22 @@ const SchoolDashboard = ({ user }) => {
           label: 'Réseau Mentors',
           icon: UserCheck,
           description: 'Mentors disponibles'
+        },
+        {
+          id: 'library',
+          label: 'Bibliothèque',
+          icon: Library,
+          description: 'Ressources pédagogiques'
         }
       ]
     },
     {
-      id: 'profile-settings',
-      label: 'Profil & Paramètres',
-      icon: Settings,
-      description: 'Configuration école',
+      id: 'school-profile',
+      label: 'Profil École',
+      icon: GraduationCap,
+      description: 'Informations publiques',
       gradient: 'from-gray-500 to-slate-600',
-      items: [
-        {
-          id: 'school-profile',
-          label: 'Profil École',
-          icon: GraduationCap,
-          description: 'Informations publiques'
-        },
-        {
-          id: 'team-management',
-          label: 'Gestion Équipe',
-          icon: Users,
-          description: 'Administration équipe'
-        }
-      ]
+      isStandalone: true
     }
   ];
 
@@ -936,6 +900,15 @@ const SchoolDashboard = ({ user }) => {
                           </div>
                         </div>
                       )}
+                      {!sidebarCollapsed && category.badge && (
+                        <EmeresBadge
+                          variant="error"
+                          size="xs"
+                          className="relative z-10 flex-shrink-0"
+                        >
+                          {category.badge}
+                        </EmeresBadge>
+                      )}
 
                       {sidebarCollapsed && (
                         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
@@ -1168,6 +1141,33 @@ const SchoolDashboard = ({ user }) => {
                       {getPageConfig('dashboard').description}
                     </p>
                   </div>
+
+                  {/* Checklist premiers pas */}
+                  <OnboardingChecklist
+                    className="mb-6"
+                    title="Premiers pas"
+                    steps={[
+                      {
+                        label: 'Compléter le profil de votre école',
+                        description: 'Présentation visible par les entreprises et partenaires',
+                        done: !!(schoolProfile && schoolProfile.description),
+                        page: 'school-profile'
+                      },
+                      {
+                        label: 'Rattacher vos étudiants',
+                        description: 'Recherchez vos étudiants inscrits et rattachez-les',
+                        done: students.length > 0,
+                        page: 'students-management'
+                      },
+                      {
+                        label: 'Inviter un étudiant par code',
+                        description: 'Générez un code d\'invitation à 7 jours',
+                        done: invitations.length > 0,
+                        page: 'students-management'
+                      }
+                    ]}
+                    onNavigate={navigateToPage}
+                  />
 
                   {/* Cartes principales */}
                   {renderDashboardCards()}

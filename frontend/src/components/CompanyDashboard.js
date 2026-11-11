@@ -5,6 +5,7 @@ import EmeresCard, { EmeresCardContent, EmeresCardDescription, EmeresCardHeader,
 import EmeresBadge from './ui/EmeresBadge';
 import EmeresInput from './ui/EmeresInput';
 import EmeresBreadcrumb from './ui/EmeresBreadcrumb';
+import OnboardingChecklist from './ui/OnboardingChecklist';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -116,11 +117,8 @@ const CompanyDashboard = ({ user }) => {
 
   // État pour gérer l'expansion des catégories
   const [expandedCategories, setExpandedCategories] = useState({
-    'tools': true,
-    'resources': false,
-    'tracking': false,
-    'discovery': false,
-    'profile-settings': false
+    'tools': false,
+    'management': false
   });
 
   // Toggle expansion d'une catégorie
@@ -137,23 +135,54 @@ const CompanyDashboard = ({ user }) => {
       id: 'dashboard',
       label: 'Accueil',
       icon: Building2,
-      description: 'Vue d\'ensemble',
+      description: "Vue d'ensemble",
       gradient: 'from-teal-500 to-teal-600',
+      isStandalone: true
+    },
+    {
+      id: 'offers',
+      label: 'Offres',
+      icon: Briefcase,
+      description: 'Publier et gérer vos postes',
+      gradient: 'from-blue-500 to-purple-600',
+      badge: companyOffers.length > 0 ? companyOffers.length.toString() : null,
+      isStandalone: true
+    },
+    {
+      id: 'candidates',
+      label: 'Candidatures',
+      icon: Users,
+      description: 'Suivi des candidats',
+      gradient: 'from-orange-500 to-red-500',
+      badge:
+        companyStats.new_applications_today > 0
+          ? `${companyStats.new_applications_today} nouvelles`
+          : null,
+      isStandalone: true
+    },
+    {
+      id: 'interns',
+      label: 'Stagiaires',
+      icon: UserCheck,
+      description: 'Suivi des stages en cours',
+      gradient: 'from-purple-500 to-pink-600',
+      isStandalone: true
+    },
+    {
+      id: 'talent-search',
+      label: 'Recherche Talents',
+      icon: Search,
+      description: 'Découvrir les candidats',
+      gradient: 'from-emerald-500 to-green-600',
       isStandalone: true
     },
     {
       id: 'tools',
       label: 'Outils RH',
       icon: Zap,
-      description: 'Outils de recrutement et RH',
+      description: 'Pilotage et intégrations',
       gradient: 'from-blue-500 to-purple-600',
       items: [
-        {
-          id: 'offers',
-          label: 'Gestion Offres',
-          icon: Briefcase,
-          description: 'Créer et gérer vos postes'
-        },
         {
           id: 'strategy',
           label: 'Stratégie RH',
@@ -170,10 +199,10 @@ const CompanyDashboard = ({ user }) => {
       ]
     },
     {
-      id: 'resources',
-      label: 'Ressources',
+      id: 'management',
+      label: 'Gestion',
       icon: FileText,
-      description: 'Documents et communication',
+      description: 'Documents, équipe et analyses',
       gradient: 'from-emerald-500 to-green-600',
       items: [
         {
@@ -193,22 +222,6 @@ const CompanyDashboard = ({ user }) => {
           label: 'Équipe RH',
           icon: Users,
           description: 'Collaboration équipe'
-        }
-      ]
-    },
-    {
-      id: 'tracking',
-      label: 'Suivi & Analytics',
-      icon: BarChart3,
-      description: 'Métriques et performance',
-      gradient: 'from-orange-500 to-red-500',
-      items: [
-        {
-          id: 'candidates',
-          label: 'Candidatures',
-          icon: Users,
-          description: 'Suivi candidats',
-          badge: companyStats.new_applications_today > 0 ? `${companyStats.new_applications_today} nouvelles` : null
         },
         {
           id: 'analytics',
@@ -225,46 +238,12 @@ const CompanyDashboard = ({ user }) => {
       ]
     },
     {
-      id: 'discovery',
-      label: 'Découverte',
-      icon: Search,
-      description: 'Candidats et stagiaires',
-      gradient: 'from-purple-500 to-pink-600',
-      items: [
-        {
-          id: 'interns',
-          label: 'Stagiaires',
-          icon: UserCheck,
-          description: 'Gestion des stages'
-        },
-        {
-          id: 'talent-search',
-          label: 'Recherche Talents',
-          icon: Search,
-          description: 'Découvrir candidats'
-        }
-      ]
-    },
-    {
-      id: 'profile-settings',
-      label: 'Profil & Paramètres',
-      icon: Settings,
-      description: 'Configuration entreprise',
+      id: 'profile',
+      label: 'Profil Entreprise',
+      icon: Building2,
+      description: 'Informations publiques',
       gradient: 'from-gray-500 to-slate-600',
-      items: [
-        {
-          id: 'profile',
-          label: 'Profil Entreprise',
-          icon: Building2,
-          description: 'Informations publiques'
-        },
-        {
-          id: 'settings',
-          label: 'Paramètres',
-          icon: Settings,
-          description: 'Configuration compte'
-        }
-      ]
+      isStandalone: true
     }
   ];
 
@@ -826,7 +805,10 @@ const CompanyDashboard = ({ user }) => {
                     <Building2 className="w-4 h-4" />
                     Mon Entreprise
                   </button>
-                  <button className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <button
+                    onClick={() => navigateToPage('settings')}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
                     <Settings className="w-4 h-4" />
                     Paramètres
                   </button>
@@ -920,6 +902,15 @@ const CompanyDashboard = ({ user }) => {
                             {category.description}
                           </div>
                         </div>
+                      )}
+                      {!sidebarCollapsed && category.badge && (
+                        <EmeresBadge
+                          variant="error"
+                          size="xs"
+                          className="relative z-10 flex-shrink-0"
+                        >
+                          {category.badge}
+                        </EmeresBadge>
                       )}
 
                       {sidebarCollapsed && (
@@ -1146,6 +1137,33 @@ const CompanyDashboard = ({ user }) => {
                       {getPageConfig('dashboard').description}
                     </p>
                   </div>
+                  {/* Checklist premiers pas */}
+                  <OnboardingChecklist
+                    className="mb-6"
+                    title="Premiers pas"
+                    steps={[
+                      {
+                        label: 'Compléter le profil entreprise',
+                        description: 'Présentation visible par les candidats',
+                        done: !!(companyProfile && companyProfile.description),
+                        page: 'profile'
+                      },
+                      {
+                        label: 'Publier une première offre',
+                        description: 'Votre offre sera visible par tous les étudiants',
+                        done: companyOffers.length > 0,
+                        page: 'offers'
+                      },
+                      {
+                        label: 'Examiner les candidatures reçues',
+                        description: 'Avancez les candidats dans votre pipeline',
+                        done: applications.length > 0,
+                        page: 'candidates'
+                      }
+                    ]}
+                    onNavigate={navigateToPage}
+                  />
+
                   {renderDashboardCards()}
                 </div>
               )}
