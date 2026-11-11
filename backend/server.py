@@ -4257,6 +4257,117 @@ async def respond_to_mentorship_request(
 # =====================================
 
 
+@api_router.get("/mentor/impact")
+async def get_mentor_impact(current_user: User = Depends(verify_token)):
+    """Mentor valorization: real impact stats and earned badges"""
+    if current_user.role != "mentor":
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    relations = await db.mentor_student_relations.find({"mentor_id": current_user.id}).to_list(None)
+    students_mentored = len({r.get("student_id") for r in relations if r.get("student_id")})
+    active_relations = sum(1 for r in relations if r.get("status") == "active")
+    completed_relations = sum(1 for r in relations if r.get("status") == "completed")
+
+    sessions = await db.mentor_sessions.find({"mentor_id": current_user.id}).to_list(None)
+    sessions_completed = sum(1 for s in sessions if s.get("status") == "completed")
+
+    objectives_total = await db.smart_objectives.count_documents({"created_by": current_user.id})
+    objectives_completed = await db.smart_objectives.count_documents(
+        {"created_by": current_user.id, "status": "completed"}
+    )
+
+    student_ids = [r.get("student_id") for r in relations if r.get("student_id")]
+    placed_students = 0
+    if student_ids:
+        placed_apps = await db.applications.find(
+            {"student_id": {"$in": student_ids}, "status": "accepted"}
+        ).to_list(None)
+        placed_students = len({a.get("student_id") for a in placed_apps if a.get("student_id")})
+
+    evaluations = await db.mentor_evaluations.find({"mentor_id": current_user.id}).to_list(None)
+    ratings = [e["overall_score"] for e in evaluations if e.get("overall_score") is not None]
+    average_rating = round(sum(ratings) / len(ratings), 1) if ratings else 0
+
+    mentees = []
+    for relation in relations:
+        student = await db.student_profiles.find_one({"user_id": relation.get("student_id")})
+        if student:
+            mentees.append(
+                {
+                    "name": f"{student.get('first_name', '')} {student.get('last_name', '')}".strip(),
+                    "status": relation.get("status", "active"),
+                    "program_type": relation.get("program_type"),
+                    "since": relation.get("start_date") or relation.get("created_at"),
+                }
+            )
+
+    badges = [
+        {
+            "id": "premier_mentorat",
+            "label": "Premier mentorat",
+            "description": "Accompagner un premier étudiant",
+            "earned": students_mentored >= 1,
+        },
+        {
+            "id": "mentor_engage",
+            "label": "Mentor engagé",
+            "description": "Accompagner au moins 3 étudiants",
+            "earned": students_mentored >= 3,
+        },
+        {
+            "id": "mentor_confirme",
+            "label": "Mentor confirmé",
+            "description": "Accompagner au moins 5 étudiants",
+            "earned": students_mentored >= 5,
+        },
+        {
+            "id": "sessions_10",
+            "label": "10 sessions animées",
+            "description": "Mener 10 sessions de mentorat",
+            "earned": sessions_completed >= 10,
+        },
+        {
+            "id": "objectifs_5",
+            "label": "Objectifs atteints",
+            "description": "Faire atteindre 5 objectifs SMART à vos mentorés",
+            "earned": objectives_completed >= 5,
+        },
+        {
+            "id": "talent_place",
+            "label": "Talent placé",
+            "description": "Un de vos mentorés a obtenu un stage ou un emploi",
+            "earned": placed_students >= 1,
+        },
+        {
+            "id": "talent_places_5",
+            "label": "5 talents placés",
+            "description": "Cinq de vos mentorés ont obtenu un stage ou un emploi",
+            "earned": placed_students >= 5,
+        },
+        {
+            "id": "mentor_apprecie",
+            "label": "Mentor apprécié",
+            "description": "Note moyenne de 4/5 ou plus sur vos évaluations",
+            "earned": average_rating >= 4,
+        },
+    ]
+
+    return {
+        "students_mentored": students_mentored,
+        "active_relations": active_relations,
+        "completed_relations": completed_relations,
+        "sessions_completed": sessions_completed,
+        "objectives_total": objectives_total,
+        "objectives_completed": objectives_completed,
+        "placed_students": placed_students,
+        "average_rating": average_rating,
+        "evaluations_count": len(evaluations),
+        "badges": badges,
+        "earned_badges": sum(1 for b in badges if b["earned"]),
+        "mentees": mentees,
+    }
+
+
 @api_router.get("/student/discover-mentors")
 async def discover_available_mentors(current_user: User = Depends(verify_token)):
     """Get list of mentors available for mentorship with matching scores"""
@@ -4281,6 +4392,11 @@ async def discover_available_mentors(current_user: User = Depends(verify_token))
 
     # Get real mentor profiles from database
     real_mentors = await db.mentor_profiles.find({}).to_list(None)
+
+    all_relations = await db.mentor_student_relations.find({}).to_list(None)
+    relations_by_mentor: dict = {}
+    for relation in all_relations:
+        relations_by_mentor.setdefault(relation.get("mentor_id"), []).append(relation)
 
     mentors_with_matching = []
 
@@ -4319,10 +4435,18 @@ async def discover_available_mentors(current_user: User = Depends(verify_token))
             "availability_hours_per_week": mentor_profile.get("availability_hours_per_week", 0),
             "preferred_communication": mentor_profile.get("preferred_communication", []),
             "linkedin_url": mentor_profile.get("linkedin_url", ""),
-            "current_students_count": 0,  # TODO: Calculate from relations
+            "current_students_count": sum(
+                1
+                for r in relations_by_mentor.get(mentor_user_id, [])
+                if r.get("status") == "active"
+            ),
             "max_students": 5,  # Default value
             "mentorship_style": "Personnalisé",
-            "success_stories": 0,  # TODO: Calculate from completed relations
+            "success_stories": sum(
+                1
+                for r in relations_by_mentor.get(mentor_user_id, [])
+                if r.get("status") == "completed"
+            ),
             "matching_keywords": matching_keywords,
             "matching_score": round(matching_score, 1),
         }
@@ -6722,6 +6846,8 @@ async def session_checkout(
     duration = None
 
     if actual_start:
+        if getattr(actual_start, "tzinfo", None) is None:
+            actual_start = actual_start.replace(tzinfo=timezone.utc)
         duration = int((now - actual_start).total_seconds() / 60)
 
     update_data = {
@@ -6819,12 +6945,15 @@ async def create_student_evaluation(
     ]
     overall_score = sum(scores) / len(scores)
 
+    evaluation_data = eval_data.dict()
+    evaluation_data.pop("student_id", None)
+
     evaluation = MentorEvaluation(
         mentor_student_relation_id=relation["id"],
         mentor_id=current_user.id,
         student_id=student_id,
         overall_score=overall_score,
-        **eval_data.dict(),
+        **evaluation_data,
     )
 
     await db.mentor_evaluations.insert_one(evaluation.dict())

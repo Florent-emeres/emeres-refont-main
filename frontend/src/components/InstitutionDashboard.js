@@ -85,6 +85,7 @@ const InstitutionDashboard = () => {
     partnerCompanies: 0
   });
   const [institutionStudents, setInstitutionStudents] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   // Charger les vraies données depuis le backend
   useEffect(() => {
@@ -92,6 +93,7 @@ const InstitutionDashboard = () => {
   }, []);
 
   const loadInstitutionData = async () => {
+    setDataLoading(true);
     try {
       const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
       const API = `${BACKEND_URL}/api`;
@@ -165,6 +167,8 @@ const InstitutionDashboard = () => {
     } catch (error) {
       console.error('Erreur lors du chargement des données institution:', error);
       // Garder les valeurs par défaut (0) en cas d'erreur
+    } finally {
+      setDataLoading(false);
     }
   };
 
@@ -291,14 +295,14 @@ const InstitutionDashboard = () => {
           label: 'Rapports Personnalisés',
           icon: FileText,
           description: 'Créer vos analyses',
-          badge: 'IA'
+          badge: 'Démo'
         },
         {
           id: 'predictive-analytics',
           label: 'Analytics Prédictifs',
           icon: TrendingUp,
           description: 'Prédictions marché',
-          badge: 'IA'
+          badge: 'Démo'
         },
         {
           id: 'data-export',
@@ -319,8 +323,8 @@ const InstitutionDashboard = () => {
           id: 'external-data',
           label: 'Données Externes',
           icon: Database,
-          description: 'DARES, INSEE, France Travail',
-          badge: 'Live'
+          description: 'Connecteurs partenaires (à venir)',
+          badge: 'À venir'
         },
         {
           id: 'documentation',
@@ -354,7 +358,7 @@ const InstitutionDashboard = () => {
           label: 'Demande Marché',
           icon: TrendingUp,
           description: 'Offres & entreprises',
-          badge: 'DARES'
+          badge: 'Démo'
         },
         {
           id: 'talent-supply',
@@ -367,7 +371,7 @@ const InstitutionDashboard = () => {
           label: 'Adéquation',
           icon: Target,
           description: 'Matching & tensions',
-          badge: 'IA'
+          badge: 'Démo'
         },
         {
           id: 'quality',
@@ -389,7 +393,7 @@ const InstitutionDashboard = () => {
           label: 'Analyse Géographique',
           icon: MapPin,
           description: 'Cartes & territoires',
-          badge: 'INSEE'
+          badge: 'Démo'
         },
         {
           id: 'emerging-trends',
@@ -451,7 +455,7 @@ const InstitutionDashboard = () => {
       'market-demand': {
         title: 'Analyse de la demande marché',
         breadcrumbs: ['Pilotage', 'Demande Marché'],
-        description: 'Offres, entreprises et tensions métiers avec données DARES'
+        description: 'Offres, entreprises et tensions métiers (échantillon de démonstration)'
       },
       'talent-supply': {
         title: 'Offre de talent et formations',
@@ -461,12 +465,12 @@ const InstitutionDashboard = () => {
       adequation: {
         title: 'Adéquation formation-emploi',
         breadcrumbs: ['Pilotage', 'Adéquation'],
-        description: 'Gap de compétences et matching avec IA prédictive'
+        description: 'Gap de compétences entre enseignement et demande marché'
       },
       geography: {
         title: 'Analyse géographique des tensions',
         breadcrumbs: ['Pilotage', 'Géographie'],
-        description: 'Cartes choroplèthes et données territoriales INSEE'
+        description: 'Équilibres régionaux offres/candidats (échantillon de démonstration)'
       },
       quality: {
         title: 'Qualité et impact des formations',
@@ -481,7 +485,7 @@ const InstitutionDashboard = () => {
       'external-data': {
         title: 'Intégration données externes',
         breadcrumbs: ['Pilotage', 'Données Externes'],
-        description: 'Sources DARES, INSEE, France Travail, ONISEP/RNCP'
+        description: 'Connecteurs DARES, INSEE, France Travail (à venir)'
       }
     };
 
@@ -1017,8 +1021,8 @@ const InstitutionDashboard = () => {
                   fullWidth
                   className="text-xs"
                 >
-                  <span className="hidden sm:inline">Rapport Exécutif IA</span>
-                  <span className="sm:hidden">Rapport IA</span>
+                  <span className="hidden sm:inline">Rapport Exécutif</span>
+                  <span className="sm:hidden">Rapport</span>
                 </EmeresButton>
               </div>
             )}
@@ -1067,14 +1071,23 @@ const InstitutionDashboard = () => {
             )}
 
             <div className="space-y-4 sm:space-y-6">
-              {activePage === 'dashboard' && (
+              {dataLoading && (
+                <EmeresCard>
+                  <EmeresCardContent className="flex items-center justify-center gap-3 py-12">
+                    <RefreshCw className="h-6 w-6 text-teal-600 animate-spin" />
+                    <span className="text-gray-600">Chargement des données de votre institution…</span>
+                  </EmeresCardContent>
+                </EmeresCard>
+              )}
+
+              {activePage === 'dashboard' && !dataLoading && (
                 <div>
                   <div className="mb-6 sm:mb-8">
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                       Pilotage Formation ↔ Débouchés
                     </h1>
                     <p className="text-gray-600 text-base sm:text-lg">
-                      Vision 360° croisée données internes et externes (DARES, INSEE, France Travail)
+                      Vision 360° de votre institution : cohortes, placement et adéquation formation-débouchés
                     </p>
                   </div>
 
@@ -1091,7 +1104,7 @@ const InstitutionDashboard = () => {
                           <EmeresCardTitle className="flex items-center gap-2">
                             <Target className="h-5 w-5 text-orange-600" />
                             Tensions par Métier
-                            <EmeresBadge variant="secondary" size="sm">DARES</EmeresBadge>
+                            <EmeresBadge variant="secondary" size="sm">Démo</EmeresBadge>
                           </EmeresCardTitle>
                           <EmeresCardDescription>
                             Indice offres/candidats avec évolution et alertes
@@ -1178,7 +1191,7 @@ const InstitutionDashboard = () => {
                         <EmeresCardTitle className="flex items-center gap-2">
                           <AlertTriangle className="h-5 w-5 text-red-600" />
                           Gap Compétences par Formation
-                          <EmeresBadge variant="primary" size="sm">IA</EmeresBadge>
+                          <EmeresBadge variant="primary" size="sm">Démo</EmeresBadge>
                         </EmeresCardTitle>
                         <EmeresCardDescription>
                           Écart entre enseignement et demande marché
@@ -1219,7 +1232,7 @@ const InstitutionDashboard = () => {
                         <EmeresCardTitle className="flex items-center gap-2">
                           <MapPin className="h-5 w-5 text-purple-600" />
                           Tensions Géographiques
-                          <EmeresBadge variant="secondary" size="sm">INSEE</EmeresBadge>
+                          <EmeresBadge variant="secondary" size="sm">Démo</EmeresBadge>
                         </EmeresCardTitle>
                         <EmeresCardDescription>
                           Équilibres régionaux offres/candidats
@@ -1255,7 +1268,7 @@ const InstitutionDashboard = () => {
                 </div>
               )}
 
-              {activePage === 'cohorts' && (
+              {activePage === 'cohorts' && !dataLoading && (
                 <EmeresCard>
                   <EmeresCardHeader>
                     <EmeresCardTitle>Étudiants de l'institution</EmeresCardTitle>
@@ -1311,7 +1324,7 @@ const InstitutionDashboard = () => {
                 </EmeresCard>
               )}
 
-              {activePage !== 'dashboard' && activePage !== 'cohorts' && (
+              {activePage !== 'dashboard' && activePage !== 'cohorts' && !dataLoading && (
                 <EmeresCard>
                   <EmeresCardContent className="text-center py-12">
                     <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
