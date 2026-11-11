@@ -4,13 +4,13 @@ import EmeresButton from '../ui/EmeresButton';
 import EmeresCard, { EmeresCardContent, EmeresCardDescription, EmeresCardHeader, EmeresCardTitle } from '../ui/EmeresCard';
 import EmeresBadge from '../ui/EmeresBadge';
 import EmeresInput from '../ui/EmeresInput';
-import { 
-  Brain, 
-  Send, 
-  MessageSquare, 
-  BookOpen, 
-  Target, 
-  Clock, 
+import {
+  Brain,
+  Send,
+  MessageSquare,
+  BookOpen,
+  Target,
+  Clock,
   Star,
   TrendingUp,
   Plus,
@@ -56,7 +56,7 @@ const CoachIAEtudes = ({ user }) => {
 
       if (response.data.sessions) {
         setSessions(response.data.sessions);
-        
+
         // Si pas de session courante et qu'il y a des sessions, prendre la plus récente
         if (!currentSession && response.data.sessions.length > 0) {
           const latestSession = response.data.sessions[0];
@@ -164,17 +164,19 @@ const CoachIAEtudes = ({ user }) => {
           aiMessage
         ]);
       } else {
-        throw new Error(response.data.error || 'Erreur de communication');
+        throw new Error(response.data.message || response.data.error || 'Erreur de communication');
       }
     } catch (error) {
       console.error('Erreur envoi message:', error);
-      
+
       // Supprimer le message temporaire en cas d'erreur
       setMessages(prev => prev.filter(msg => msg.message_id !== tempUserMessage.message_id));
-      
+
       toast({
-        title: "Erreur",
-        description: "Impossible d'envoyer le message. Réessayez.",
+        title: error.message === 'ai_unavailable' ? "IA indisponible" : "Erreur",
+        description: error.message === 'ai_unavailable'
+          ? "L'IA conversationnelle n'est pas encore activée. Réessayez plus tard."
+          : error.message || "Impossible d'envoyer le message. Réessayez.",
         variant: "destructive",
       });
     } finally {
@@ -206,15 +208,15 @@ const CoachIAEtudes = ({ user }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
       {/* Background Image */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
         }}
       />
-      
+
       <div className="container mx-auto px-4 py-6 max-w-7xl relative z-10">
-        
+
         {/* Header avec design amélioré */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-4 relative">
@@ -237,7 +239,7 @@ const CoachIAEtudes = ({ user }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 border border-blue-200 hover:border-blue-300 transition-colors duration-300 relative overflow-hidden group">
               {/* Image de fond pour Méthodes d'étude */}
-              <div 
+              <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5 group-hover:opacity-10 transition-opacity duration-300"
                 style={{
                   backgroundImage: `url('https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')`
@@ -251,10 +253,10 @@ const CoachIAEtudes = ({ user }) => {
                 <p className="text-sm text-gray-600">Techniques de mémorisation, planning de révisions, organisation</p>
               </div>
             </div>
-            
+
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 border border-purple-200 hover:border-purple-300 transition-colors duration-300 relative overflow-hidden group">
               {/* Image de fond pour Productivité */}
-              <div 
+              <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5 group-hover:opacity-10 transition-opacity duration-300"
                 style={{
                   backgroundImage: `url('https://images.unsplash.com/photo-1606248896999-387b3a9f621c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')`
@@ -268,10 +270,10 @@ const CoachIAEtudes = ({ user }) => {
                 <p className="text-sm text-gray-600">Gestion du temps, motivation, élimination de la procrastination</p>
               </div>
             </div>
-            
+
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 border border-pink-200 hover:border-pink-300 transition-colors duration-300 relative overflow-hidden group">
               {/* Image de fond pour Orientation */}
-              <div 
+              <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5 group-hover:opacity-10 transition-opacity duration-300"
                 style={{
                   backgroundImage: `url('https://images.unsplash.com/photo-1664526937033-fe2c11f1be25?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')`
@@ -289,7 +291,7 @@ const CoachIAEtudes = ({ user }) => {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
-          
+
           {/* Sidebar des sessions - Responsive */}
           <div className="xl:col-span-1 order-2 xl:order-1">
             <EmeresCard>
@@ -340,7 +342,7 @@ const CoachIAEtudes = ({ user }) => {
                       </div>
                     </button>
                   ))}
-                  
+
                   {sessions.length === 0 && (
                     <div className="text-center py-4 sm:py-8">
                       <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-2 sm:mb-3" />
@@ -367,14 +369,14 @@ const CoachIAEtudes = ({ user }) => {
                         {currentSession ? `Session de Coaching` : 'Aucune session active'}
                       </EmeresCardTitle>
                       <EmeresCardDescription>
-                        {currentSession 
-                          ? 'Posez vos questions sur l\'apprentissage et la productivité' 
+                        {currentSession
+                          ? 'Posez vos questions sur l\'apprentissage et la productivité'
                           : 'Créez une nouvelle session pour commencer'
                         }
                       </EmeresCardDescription>
                     </div>
                   </div>
-                  
+
                   {currentSession && (
                     <EmeresBadge variant="secondary" className="bg-green-100 text-green-700">
                       <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
@@ -425,7 +427,7 @@ const CoachIAEtudes = ({ user }) => {
                               <Bot className="h-4 w-4 text-white" />
                             </div>
                           )}
-                          
+
                           <div className={`max-w-[80%] rounded-xl p-4 ${
                             message.role === 'user'
                               ? 'bg-blue-500 text-white ml-auto'
@@ -440,7 +442,7 @@ const CoachIAEtudes = ({ user }) => {
                               {formatTime(message.timestamp)}
                             </div>
                           </div>
-                          
+
                           {message.role === 'user' && (
                             <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
                               <User className="h-4 w-4 text-gray-600" />
@@ -448,7 +450,7 @@ const CoachIAEtudes = ({ user }) => {
                           )}
                         </div>
                       ))}
-                      
+
                       {isLoading && (
                         <div className="flex gap-3 justify-start">
                           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -487,7 +489,7 @@ const CoachIAEtudes = ({ user }) => {
                         {isLoading ? '' : 'Envoyer'}
                       </EmeresButton>
                     </div>
-                    
+
                     <div className="mt-2 text-xs text-gray-500">
                       Appuyez sur Entrée pour envoyer • Shift + Entrée pour une nouvelle ligne
                     </div>

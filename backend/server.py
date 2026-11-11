@@ -75,6 +75,11 @@ from premium_modules import (
 
 from app.models.schemas import AssistantRequest, AssistantResponse
 from app.ai.tools.student.assistant import student_assistant as run_student_assistant
+from app.ai.tools.student.local_scoring import (
+    analyze_cv_text,
+    evaluate_interview_answers,
+    score_offer_match,
+)
 from app.utils.legacy import legacy_endpoint
 
 # Import des outils API
@@ -2516,14 +2521,8 @@ async def get_my_applications(current_user: User = Depends(verify_token)):
 
 
 # ===== Assistant IA Étudiant (Émé) =====
-@api_router.post("/student/assistant", response_model=AssistantResponse)
-async def student_assistant_chat(
-    request: AssistantRequest, current_user: User = Depends(verify_token)
-):
-    """Assistant conversationnel Étudiant : guidage personnalisé basé sur les données réelles."""
-    if current_user.role != "student":
-        raise HTTPException(status_code=403, detail="Access denied")
-
+async def _build_student_assistant_context(current_user: User) -> Dict[str, Any]:
+    """Construit le contexte réel de l'étudiant partagé par Émé et le Coach IA Études."""
     profile = await db.student_profiles.find_one({"user_id": current_user.id}) or {}
     completion_fields = ["first_name", "last_name", "email", "school", "field", "level"]
     filled = [f for f in completion_fields if profile.get(f)]
@@ -2543,7 +2542,7 @@ async def student_assistant_chat(
         "accepted": sum(1 for m in mentorships if m.get("status") == "accepted"),
     }
 
-    context = {
+    return {
         "user_id": current_user.id,
         "first_name": profile.get("first_name") or current_user.first_name or "",
         "field": profile.get("field") or "",
@@ -2555,6 +2554,17 @@ async def student_assistant_chat(
         "offers_available": offers_count,
         "mentorships": mentor_counts,
     }
+
+
+@api_router.post("/student/assistant", response_model=AssistantResponse)
+async def student_assistant_chat(
+    request: AssistantRequest, current_user: User = Depends(verify_token)
+):
+    """Assistant conversationnel Étudiant : guidage personnalisé basé sur les données réelles."""
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    context = await _build_student_assistant_context(current_user)
 
     try:
         return await run_student_assistant(
@@ -2779,10 +2789,10 @@ async def get_matching_offers_for_student(
     if not offers:
         return []
 
-    # Calculate AI matching scores for each offer
+    # Matching local déterministe : scores différenciés, explicables, <100 ms
     matching_results = []
-    for offer in offers[: request.limit]:  # Limit to avoid excessive AI calls
-        ai_result = await calculate_ai_match_score(student_profile, offer)
+    for offer in offers[: request.limit]:
+        ai_result = score_offer_match(student_profile, offer)
 
         matching_results.append(
             {
@@ -8745,6 +8755,21 @@ async def logout_user(current_user: User = Depends(verify_token)):
 # =============================================================================
 
 
+@api_router.get("/ai/status")
+async def ai_status(current_user: User = Depends(verify_token)):
+    """Statut honnête de la couche IA : LLM disponible ou mode local déterministe."""
+    provider = os.getenv("LLM_PROVIDER", "stub").strip().lower() or "stub"
+    model = os.getenv("LLM_MODEL", "")
+    api_key = bool(os.getenv("OPENAI_API_KEY") or os.getenv("EMERGENT_LLM_KEY"))
+    llm_available = provider in {"openai", "ollama"} and (provider == "ollama" or api_key)
+    return {
+        "llm_available": llm_available,
+        "provider": provider if llm_available else "local",
+        "model": model if llm_available else "",
+        "mode": "llm" if llm_available else "local",
+    }
+
+
 @api_router.post("/ai-coach/session")
 async def create_ai_coach_session(current_user: User = Depends(verify_token)):
     """Create a new AI Coach session"""
@@ -8807,42 +8832,24 @@ async def ai_coach_chat(data: dict, current_user: User = Depends(verify_token)):
         if not message:
             raise HTTPException(status_code=400, detail="Message requis")
 
-        # Réponses IA optimisées et pré-calculées pour performance rapide
-        coach_responses_bank = [
-            f"Excellente question, {current_user.first_name} ! Pour améliorer vos méthodes d'étude, je recommande la technique Pomodoro : 25 min de concentration intense suivies de 5 min de pause.",
-            "D'après votre profil, vous pourriez bénéficier d'une approche d'apprentissage multimodale. Avez-vous essayé de combiner lecture, écriture et révision orale ?",
-            "Pour optimiser votre temps d'étude, commencez par identifier vos heures de pic de concentration. Êtes-vous plutôt matinal ou préférez-vous étudier le soir ?",
-            "Je vois que vous travaillez dur ! N'oubliez pas l'importance des pauses et du sommeil pour consolider vos apprentissages. Quelle est votre routine de sommeil actuelle ?",
-            "La règle des 3R peut vous aider : Révision espacée, Répétition active, et Réflexion sur ce que vous apprenez. Quelle méthode utilisez-vous actuellement ?",
-            "Pour mémoriser efficacement, essayez la technique des palais mentaux ou créez des associations visuelles. Votre cerveau retiendra mieux l'information !",
-            "L'organisation est clé ! Avez-vous un planning de révisions ? Je peux vous aider à structurer vos sessions d'étude pour maximiser l'efficacité.",
-        ]
+        # Moteur Émé : guidage déterministe basé sur les données réelles de l'étudiant
+        context = await _build_student_assistant_context(current_user)
+        eme = await run_student_assistant(AssistantRequest(question=message, context=context))
+        ai_response = eme.answer
 
-        # Sélection rapide basée sur le hash du message pour consistance
-        response_index = hash(message + current_user.id) % len(coach_responses_bank)
-        ai_response = coach_responses_bank[response_index]
-
-        # Sauvegarder l'échange (non-bloquant avec asyncio)
         chat_entry = {
             "session_id": session_id,
             "user_id": current_user.id,
             "user_message": message,
             "ai_response": ai_response,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "response_time_optimized": True,
         }
-
-        # Insertion synchrone pour éviter les problèmes de coroutine
         await db.ai_coach_chats.insert_one(chat_entry)
 
         return {
             "response": ai_response,
-            "suggestions": [
-                "Demandez des conseils sur la gestion du temps",
-                "Explorez des techniques de mémorisation",
-                "Obtenez des stratégies anti-procrastination",
-            ],
-            "optimized": True,
+            "suggestions": eme.suggestions,
+            "actions": [action.dict() for action in eme.actions],
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur AI Coach: {str(e)}")
@@ -8862,32 +8869,8 @@ async def cv_evaluator_analyze(data: dict, current_user: User = Depends(verify_t
         if not cv_content:
             raise HTTPException(status_code=400, detail="Contenu CV requis")
 
-        # Simulation d'analyse IA de CV
-        analysis_result = {
-            "overall_score": 8.5,
-            "strengths": [
-                "Expériences professionnelles bien détaillées",
-                "Compétences techniques pertinentes",
-                "Formation cohérente avec le projet professionnel",
-            ],
-            "improvement_areas": [
-                "Ajouter des mots-clés sectoriels",
-                "Quantifier davantage les réalisations",
-                "Optimiser la mise en page pour l'ATS",
-            ],
-            "detailed_analysis": {
-                "structure": {"score": 9, "comment": "Excellente organisation"},
-                "content": {"score": 8, "comment": "Contenu pertinent et bien rédigé"},
-                "keywords": {"score": 7, "comment": "Mots-clés présents mais peut être renforcé"},
-                "formatting": {"score": 9, "comment": "Mise en page professionnelle"},
-            },
-            "recommendations": [
-                "Utiliser des verbes d'action forts (développé, optimisé, dirigé)",
-                "Ajouter une section projets personnels si applicable",
-                "Personnaliser le CV selon le poste visé",
-            ],
-            "ats_compatibility": 85,
-        }
+        # Analyse locale réelle : scores calculés sur le contenu fourni
+        analysis_result = analyze_cv_text(cv_content)
 
         # Sauvegarder l'analyse
         evaluation_record = {
@@ -8992,24 +8975,9 @@ async def submit_interview_answer(data: dict, current_user: User = Depends(verif
             session["status"] = "completed"
             session["completed_at"] = datetime.now(timezone.utc).isoformat()
 
-            # Générer feedback final
-            feedback = {
-                "overall_performance": 8.2,
-                "strengths": [
-                    "Réponses structurées et claires",
-                    "Bonne connaissance du secteur",
-                    "Motivation évidente",
-                ],
-                "improvement_areas": [
-                    "Développer davantage les exemples concrets",
-                    "Préparer des questions plus spécifiques sur l'entreprise",
-                ],
-                "tips": [
-                    "Utilisez la méthode STAR (Situation, Tâche, Action, Résultat)",
-                    "Préparez 3-4 questions pertinentes sur l'entreprise",
-                    "Entraînez-vous devant un miroir pour la gestuelle",
-                ],
-            }
+            # Feedback final calculé sur les réponses réelles de l'étudiant
+            answers = [r.get("answer", "") for r in session.get("responses", [])]
+            feedback = evaluate_interview_answers(session.get("questions", []), answers)
 
             session["final_feedback"] = feedback
 
